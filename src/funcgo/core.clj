@@ -4,9 +4,9 @@
 (def funcgo-parser
      (insta/parser "
 
-SourceFile     = PackageClause <_> <NL> ( <_> ImportDecl <_> NL ) { <_> Expression <_> <NL> }
-PackageClause  = <'package'> <__> identifier
-ImportDecl     = <'import'> <_> <'('>  { <_> ImportSpec <_> <NL> } <')'>
+SourceFile     = PackageClause _  { _ Expression _ NL }
+PackageClause  = <'package'> <__> identifier NL  _ ImportDecl _ NL
+<ImportDecl>   = <'import'> _ <'('>  { _ ImportSpec _ NL } <')'>
 ImportSpec     = [ '.' | identifier ] ImportPath
 ImportPath     = identifier { <'.'> identifier }
 Expression     = UnaryExpr         (* | Expression binary_op UnaryExpr *)
@@ -29,7 +29,7 @@ identifier     = #'[\\p{L}_][\\p{L}_\\p{Digit}]*'  (* letter { letter | unicode_
 letter         = unicode_letter | '_'
 unicode_letter = #'\\p{L}'
 unicode_digit  = #'\\p{Digit}'
-_              = #'[ \\t\\x0B\\f\\r]*'     (* optional non-newline whitespace *)
+<_>            = <#'[ \\t\\x0B\\f\\r]*'>   (* optional non-newline whitespace *)
 __             = #'[ \\t\\x0B\\f\\r]+'     (* non-newline whitespace *)
 <NL>           = [ nl | comment ]
 <nl>           = <#'\\s*[\\n;]\\s*'>       (* whitespace with at least one newline or semicolon *)
@@ -37,3 +37,8 @@ comment        = #'//[^\\n]*\\n'
 "))
 
 
+(defn funcgo-parse [fgo]
+  (insta/transform {
+                    :PackageClause (fn [identifier & import-decl] (str "(ns " (second identifier) ")"))
+                    }
+                   (funcgo-parser fgo)))
