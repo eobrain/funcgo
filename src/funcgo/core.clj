@@ -9,9 +9,9 @@ PackageClause  = <'package'> <__> identifier NL  _ ImportDecl _ NL
 <ImportDecl>   = <'import'> _ <'('>  { _ ImportSpec _ NL } <')'>
 ImportSpec     = [ '.' | identifier ] ImportPath
 ImportPath     = identifier { <'.'> identifier }
-Expression     = UnaryExpr         (* | Expression binary_op UnaryExpr *)
-UnaryExpr      = PrimaryExpr           (* | unary_op UnaryExpr *)
-PrimaryExpr = Operand        (*|
+<Expression>     = UnaryExpr         (* | Expression binary_op UnaryExpr *)
+<UnaryExpr>      = PrimaryExpr           (* | unary_op UnaryExpr *)
+<PrimaryExpr> = Operand        (*|
 	Conversion |
 	BuiltinCall |
 	PrimaryExpr Selector |
@@ -19,10 +19,10 @@ PrimaryExpr = Operand        (*|
 	PrimaryExpr Slice |
 	PrimaryExpr TypeAssertion |
 	PrimaryExpr Call *)
-Operand     = Literal        (*| OperandName | MethodExpr | '(' Expression ')' *)
-Literal     = BasicLit       (*| CompositeLit | FunctionLit *)
-BasicLit    = int_lit        (*| float_lit | imaginary_lit | rune_lit | string_lit *)
-int_lit     = decimal_lit    (*| octal_lit | hex_lit .*)
+<Operand>     = Literal        (*| OperandName | MethodExpr | '(' Expression ')' *)
+<Literal>     = BasicLit       (*| CompositeLit | FunctionLit *)
+<BasicLit>    = int_lit        (*| float_lit | imaginary_lit | rune_lit | string_lit *)
+<int_lit>     = decimal_lit    (*| octal_lit | hex_lit .*)
 decimal_lit = #'[1-9][0-9]*'
 
 identifier     = #'[\\p{L}_][\\p{L}_\\p{Digit}]*'  (* letter { letter | unicode_digit } *)
@@ -36,9 +36,11 @@ __             = #'[ \\t\\x0B\\f\\r]+'     (* non-newline whitespace *)
 comment        = #'//[^\\n]*\\n'
 "))
 
-
 (defn funcgo-parse [fgo]
   (insta/transform
    {
-    :PackageClause (fn [identifier & import-decl] (str "(ns " (second identifier) ")")) }
+    :SourceFile (fn [header body] (str header " " body))
+    :PackageClause (fn [identifier & import-decl] (str "(ns " (second identifier) ")"))
+    :decimal_lit (fn [s] s)}
    (funcgo-parser fgo)))
+ 
