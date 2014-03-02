@@ -22,7 +22,7 @@ PrimaryExpr = Operand        (*|
 Operand     = Literal        (*| OperandName | MethodExpr | '(' Expression ')' *)
 Literal     = BasicLit       (*| CompositeLit | FunctionLit *)
 BasicLit    = int_lit        (*| float_lit | imaginary_lit | rune_lit | string_lit *)
-int_lit     = decimal_lit   (*| octal_lit | hex_lit .*)
+int_lit     = decimal_lit    (*| octal_lit | hex_lit .*)
 decimal_lit = #'[1-9][0-9]*'
 
 identifier     = #'[\\p{L}_][\\p{L}_\\p{Digit}]*'  (* letter { letter | unicode_digit } *)
@@ -38,7 +38,7 @@ comment        = #'//[^\\n]*\\n'
 
 
 (defn funcgo-parse [fgo]
-  (insta/transform {
-                    :PackageClause (fn [identifier & import-decl] (str "(ns " (second identifier) ")"))
-                    }
-                   (funcgo-parser fgo)))
+  (insta/transform
+   {
+    :PackageClause (fn [identifier & import-decl] (str "(ns " (second identifier) ")")) }
+   (funcgo-parser fgo)))
