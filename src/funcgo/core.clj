@@ -4,9 +4,9 @@
 (def funcgo-parser
      (insta/parser "
 
-SourceFile     = PackageClause <_> <NL> ( <_> ImportDecl <_> NL )? { <_> Expression <_> <NL> }
+SourceFile     = PackageClause <_> <NL> ( <_> ImportDecl <_> NL ) { <_> Expression <_> <NL> }
 PackageClause  = <'package'> <__> identifier
-ImportDecl     = <'import'> <_> '('  { <_> ImportSpec <_> <NL> } ')'
+ImportDecl     = <'import'> <_> <'('>  { <_> ImportSpec <_> <NL> } <')'>
 ImportSpec     = [ '.' | identifier ] ImportPath
 ImportPath     = identifier { <'.'> identifier }
 Expression     = UnaryExpr         (* | Expression binary_op UnaryExpr *)
@@ -31,8 +31,8 @@ unicode_letter = #'\\p{L}'
 unicode_digit  = #'\\p{Digit}'
 _              = #'[ \\t\\x0B\\f\\r]*'     (* optional non-newline whitespace *)
 __             = #'[ \\t\\x0B\\f\\r]+'     (* non-newline whitespace *)
-NL             = [ nl | comment ]
-nl             = #'\\s*[\\n;]\\s*'         (* whitespace with at least one newline or semicolon *)
+<NL>           = [ nl | comment ]
+<nl>           = <#'\\s*[\\n;]\\s*'>       (* whitespace with at least one newline or semicolon *)
 comment        = #'//[^\\n]*\\n'
 "))
 

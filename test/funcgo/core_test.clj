@@ -4,7 +4,7 @@
 
 (fact "smallest complete program has no import and a single expression"
       (funcgo-parser "package foo;import ();12345") => [:SourceFile
-   [:PackageClause]
+   [:PackageClause [:identifier "foo"]]
    [:ImportDecl]
    [:Expression
     [:UnaryExpr
