@@ -4,7 +4,7 @@
 (def funcgo-parser
      (insta/parser "
 
-SourceFile     = PackageClause _  { _ Expression _ NL }
+SourceFile     = [ NL ] PackageClause _  { _ Expression _ NL }
 PackageClause  = <'package'> <__> dotted NL  _ ImportDecl _ NL
 ImportDecl   = <'import'> _ <'('>  NL { _ ImportSpec _ NL } <')'>
 ImportSpec     = identifier _ dotted
