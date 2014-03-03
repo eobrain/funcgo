@@ -5,7 +5,7 @@
      (insta/parser "
 
 SourceFile     = PackageClause _  { _ Expression _ NL }
-PackageClause  = <'package'> <__> identifier NL  _ ImportDecl _ NL
+PackageClause  = <'package'> <__> dotted NL  _ ImportDecl _ NL
 <ImportDecl>   = <'import'> _ <'('>  { _ ImportSpec _ NL } <')'>
 ImportSpec     = [ '.' | identifier ] ImportPath
 ImportPath     = identifier { <'.'> identifier }
@@ -25,6 +25,7 @@ ImportPath     = identifier { <'.'> identifier }
 <int_lit>     = decimal_lit    (*| octal_lit | hex_lit .*)
 decimal_lit = #'[1-9][0-9]*'
 
+dotted         = identifier { <'.'> identifier }
 identifier     = #'[\\p{L}_][\\p{L}_\\p{Digit}]*'  (* letter { letter | unicode_digit } *)
 letter         = unicode_letter | '_'
 unicode_letter = #'\\p{L}'
@@ -40,7 +41,12 @@ comment        = #'//[^\\n]*\\n'
   (insta/transform
    {
     :SourceFile (fn [header body] (str header " " body))
-    :PackageClause (fn [identifier & import-decl] (str "(ns " (second identifier) ")"))
+    :PackageClause (fn [dotted & import-decls]
+                     (str "(ns " dotted ")"))
+    :dotted (fn [idf0 & idf-rest]
+              (reduce
+               (fn [acc idf] (str acc "." (second idf)))
+               (second idf0)
+               idf-rest))
     :decimal_lit (fn [s] s)}
    (funcgo-parser fgo)))
- 
