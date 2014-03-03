@@ -39,35 +39,13 @@ import(
 12345
 ")
 
-(fact "can define things" (funcgo-parse "
-package foo
-import (
-)
 
-a := 12345
-") => "(ns foo)
+(defn parse [expr]
+  (funcgo-parse (str "package foo;import (;)" expr)))
 
-(def a 12345)
-")
+(defn parsed [expr]
+  (str "(ns foo)\n\n" expr "\n"))
 
-(fact "can call functions" (funcgo-parse "
-package foo
-import (
-)
-
-f(x)
-") => "(ns foo)
-
-(f x)
-")
-
-(fact "labels are all-caps" (funcgo-parse "
-package foo
-import (
-)
-
-FOO
-") => "(ns foo)
-
-:foo
-")
+(fact "can define things"   (parse "a := 12345") => (parsed "(def a 12345)"))
+(fact "can call functions"  (parse "f(x)")       => (parsed "(f x)"))
+(fact "labels are all-caps" (parse "FOO")        => (parsed ":foo"))
