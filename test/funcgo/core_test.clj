@@ -49,3 +49,16 @@ import(
 12345
 ")
 
+(fact "can define things"
+      (funcgo-parse "
+package foo
+import (
+)
+
+a := 12345
+")
+      =>
+      "(ns foo)
+
+(def a 12345)
+")

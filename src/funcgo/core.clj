@@ -8,7 +8,7 @@ SourceFile     = [ NL ] PackageClause _  { _ Expression _ NL }
 PackageClause  = <'package'> <__> dotted NL  _ ImportDecl _ NL
 ImportDecl   = <'import'> _ <'('>  NL { _ ImportSpec _ NL } <')'>
 ImportSpec     = identifier _ dotted
-<Expression>     = UnaryExpr         (* | Expression binary_op UnaryExpr *)
+<Expression>     = UnaryExpr | ShortVarDecl  (* | Expression binary_op UnaryExpr *)
 <UnaryExpr>      = PrimaryExpr           (* | unary_op UnaryExpr *)
 <PrimaryExpr> = Operand        (*|
 	Conversion |
@@ -21,6 +21,7 @@ ImportSpec     = identifier _ dotted
 <Operand>     = Literal        (*| OperandName | MethodExpr | '(' Expression ')' *)
 <Literal>     = BasicLit       (*| CompositeLit | FunctionLit *)
 <BasicLit>    = int_lit        (*| float_lit | imaginary_lit | rune_lit | string_lit *)
+ShortVarDecl = identifier _ <':='> _ Expression
 <int_lit>     = decimal_lit    (*| octal_lit | hex_lit .*)
 decimal_lit = #'[1-9][0-9]*'
 
@@ -47,6 +48,8 @@ comment        = #'//[^\\n]*\\n'
     :ImportDecl (fn [ & import-specs] (apply str import-specs))
     :ImportSpec (fn [identifier dotted]
                   (str "\n  (:require [" dotted " :as " (second identifier) "])"))
+    :ShortVarDecl (fn [identifier expression]
+                    (str "(def " (second identifier) " " expression ")"))
     :dotted (fn [idf0 & idf-rest]
               (reduce
                (fn [acc idf] (str acc "." (second idf)))
