@@ -1,5 +1,6 @@
 (ns funcgo.core
-  (:require [instaparse.core :as insta]))
+  (:require [instaparse.core :as insta]
+            [clojure.string :as string]))
 
 (def funcgo-parser
      (insta/parser "
@@ -21,7 +22,7 @@ PrimaryExpr    = Operand        |
 <Call>         = <'('> [ ArgumentList ] <')'>
 <ArgumentList> = ExpressionList                                                      (* [ _ '...' ] *)
 ExpressionList = Expression { _ <','> _ Expression }
-<Operand>      = Literal | OperandName                          (*| MethodExpr | '(' Expression ')' *)
+<Operand>      = Literal | OperandName | label                  (*| MethodExpr | '(' Expression ')' *)
 <OperandName>  = identifier                                                       (*| QualifiedIdent*)
 <Literal>      = BasicLit                                            (*| CompositeLit | FunctionLit *)
 <BasicLit>     = int_lit                      (*| float_lit | imaginary_lit | rune_lit | string_lit *)
@@ -31,6 +32,7 @@ decimal_lit = #'[1-9][0-9]*'
 
 dotted         = identifier { <'.'> identifier }
 <identifier>   = #'[\\p{L}_][\\p{L}_\\p{Digit}]*'              (* letter { letter | unicode_digit } *)
+label          = #'[\\p{Lu}]+'
 letter         = unicode_letter | '_'
 unicode_letter = #'\\p{L}'
 unicode_digit  = #'\\p{Digit}'
@@ -62,6 +64,7 @@ comment        = #'//[^\\n]*\\n'
                        (fn [acc expr] (str acc ", " expr))
                        expr0
                        expr-rest))
+    :label (fn [s] (str ":" (string/lower-case s)))
     :dotted (fn [idf0 & idf-rest]
               (reduce
                (fn [acc idf] (str acc "." idf))

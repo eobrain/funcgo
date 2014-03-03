@@ -50,7 +50,7 @@ a := 12345
 (def a 12345)
 ")
 
-(fact "can call functions"(funcgo-parse "
+(fact "can call functions" (funcgo-parse "
 package foo
 import (
 )
@@ -59,4 +59,15 @@ f(x)
 ") => "(ns foo)
 
 (f x)
+")
+
+(fact "labels are all-caps" (funcgo-parse "
+package foo
+import (
+)
+
+FOO
+") => "(ns foo)
+
+:foo
 ")
