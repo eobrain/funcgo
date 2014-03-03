@@ -6,9 +6,8 @@
 
 SourceFile     = PackageClause _  { _ Expression _ NL }
 PackageClause  = <'package'> <__> dotted NL  _ ImportDecl _ NL
-<ImportDecl>   = <'import'> _ <'('>  { _ ImportSpec _ NL } <')'>
-ImportSpec     = [ '.' | identifier ] ImportPath
-ImportPath     = identifier { <'.'> identifier }
+ImportDecl   = <'import'> _ <'('>  NL { _ ImportSpec _ NL } <')'>
+ImportSpec     = identifier _ dotted
 <Expression>     = UnaryExpr         (* | Expression binary_op UnaryExpr *)
 <UnaryExpr>      = PrimaryExpr           (* | unary_op UnaryExpr *)
 <PrimaryExpr> = Operand        (*|
@@ -37,12 +36,17 @@ __             = #'[ \\t\\x0B\\f\\r]+'     (* non-newline whitespace *)
 comment        = #'//[^\\n]*\\n'
 "))
 
+
+
 (defn funcgo-parse [fgo]
   (insta/transform
    {
-    :SourceFile (fn [header body] (str header " " body))
-    :PackageClause (fn [dotted & import-decls]
-                     (str "(ns " dotted ")"))
+    :SourceFile (fn [header body] (str header body "\n"))
+    :PackageClause (fn [dotted  import-decl]
+                     (str "(ns " dotted import-decl ")\n\n"))
+    :ImportDecl (fn [ & import-specs] (apply str import-specs))
+    :ImportSpec (fn [identifier dotted]
+                  (str "\n  (:require [" dotted " :as " (second identifier) "])"))
     :dotted (fn [idf0 & idf-rest]
               (reduce
                (fn [acc idf] (str acc "." (second idf)))
