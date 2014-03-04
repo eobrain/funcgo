@@ -24,11 +24,13 @@ PrimaryExpr    = Operand        |
 ExpressionList = Expression { _ <','> _ Expression }
 <Operand>      = Literal | OperandName | label                  (*| MethodExpr | '(' Expression ')' *)
 <OperandName>  = identifier                                                       (*| QualifiedIdent*)
-<Literal>      = BasicLit                                            (*| CompositeLit | FunctionLit *)
+<Literal>      = BasicLit | DictLit                                                 (*| FunctionLit *)
 <BasicLit>     = int_lit                      (*| float_lit | imaginary_lit | rune_lit | string_lit *)
 ShortVarDecl   = identifier _ <':='> _ Expression
+DictLit        = '{' _ ( DictElement _ [ <','> _ DictElement ] )? _ '}'
+DictElement    = Expression _ <':'> _ Expression
 <int_lit>      = decimal_lit    (*| octal_lit | hex_lit .*)
-decimal_lit = #'[1-9][0-9]*'
+decimal_lit    = #'[1-9][0-9]*'
 
 dotted         = identifier { <'.'> identifier }
 <identifier>   = #'[\\p{L}_][\\p{L}_\\p{Digit}]*'              (* letter { letter | unicode_digit } *)
@@ -48,27 +50,29 @@ comment        = #'//[^\\n]*\\n'
 (defn funcgo-parse [fgo]
   (insta/transform
    {
-    :SourceFile (fn [header body] (str header body "\n"))
-    :PackageClause (fn [dotted  import-decl]
-                     (str "(ns " dotted import-decl ")\n\n"))
-    :ImportDecl (fn [ & import-specs] (apply str import-specs))
-    :ImportSpec (fn [identifier dotted]
-                  (str "\n  (:require [" dotted " :as " identifier "])"))
-    :ShortVarDecl (fn [identifier expression]
+    :SourceFile     (fn [header body] (str header body "\n"))
+    :PackageClause  (fn [dotted  import-decl]
+                      (str "(ns " dotted import-decl ")\n\n"))
+    :ImportDecl     (fn [ & import-specs] (apply str import-specs))
+    :ImportSpec     (fn [identifier dotted]
+                      (str "\n  (:require [" dotted " :as " identifier "])"))
+    :ShortVarDecl   (fn [identifier expression]
                     (str "(def " identifier " " expression ")"))
-    :PrimaryExpr (fn
-                   ([operand] operand)
-                   ([primary-expr call] (str "(" primary-expr " " call ")")))
+    :PrimaryExpr    (fn
+                      ([operand] operand)
+                      ([primary-expr call] (str "(" primary-expr " " call ")")))
     :ExpressionList (fn [expr0 & expr-rest]
                       (reduce
                        (fn [acc expr] (str acc ", " expr))
                        expr0
                        expr-rest))
-    :label (fn [s] (str ":" (string/lower-case s)))
-    :dotted (fn [idf0 & idf-rest]
-              (reduce
-               (fn [acc idf] (str acc "." idf))
-               idf0
-               idf-rest))
-    :decimal_lit (fn [s] s)}
+    :DictLit        (fn [& dict-elems] (apply str dict-elems))
+    :DictElement    (fn [key value] (str key " " value " "))
+    :label          (fn [s] (str ":" (string/lower-case s)))
+    :dotted         (fn [idf0 & idf-rest]
+                      (reduce
+                       (fn [acc idf] (str acc "." idf))
+                       idf0
+                       idf-rest))
+    :decimal_lit    (fn [s] s)}
    (funcgo-parser fgo)))
