@@ -49,4 +49,6 @@ import(
 (fact "can define things"   (parse "a := 12345") => (parsed "(def a 12345)"))
 (fact "can call functions"  (parse "f(x)")       => (parsed "(f x)"))
 (fact "labels are all-caps" (parse "FOO")        => (parsed ":foo"))
-(fact "dictionary literals" (parse "{A:1, B:2}") => (parsed "{:a 2 :b 2 }"))
+(fact "dictionary literals" (parse "{A:1, B:2}") => (parsed "{:a 1 :b 2 }"))
+(fact "named functions" (parse "func n(a,b){c}") => (parsed "(defn n [a b] c)"))
+(fact "anonymous functions" (parse "func(a,b){c}") => (parsed "(fn [a b] c)"))

@@ -11,7 +11,7 @@ ImportDecl     = <'import'> _ <'('>  NL { _ ImportSpec _ NL } <')'>
 ImportSpec     = identifier _ dotted
 <Expression>   = UnaryExpr | ShortVarDecl                       (* | Expression binary_op UnaryExpr *)
 <UnaryExpr>    = PrimaryExpr                                                (* | unary_op UnaryExpr *)
-PrimaryExpr    = Operand        |
+PrimaryExpr    = Operand | FunctionDecl |
                                                                          (*Conversion |
                                                                          BuiltinCall |
                                                                          PrimaryExpr Selector |
@@ -24,9 +24,14 @@ PrimaryExpr    = Operand        |
 ExpressionList = Expression { _ <','> _ Expression }
 <Operand>      = Literal | OperandName | label                  (*| MethodExpr | '(' Expression ')' *)
 <OperandName>  = identifier                                                       (*| QualifiedIdent*)
-<Literal>      = BasicLit | DictLit                                                 (*| FunctionLit *)
+<Literal>      = BasicLit | DictLit | FunctionLit
 <BasicLit>     = int_lit                      (*| float_lit | imaginary_lit | rune_lit | string_lit *)
 ShortVarDecl   = identifier _ <':='> _ Expression
+FunctionDecl   = <'func'> _ identifier _ Function
+FunctionLit    = <'func'> _ Function
+Function       = <'('> _ Parameters _ <')'> _ <'{'> _ Expression _ <'}'>
+Parameters     = ( identifier { <','> _ identifier }  )? ( _ Varadic)?
+Varadic        = identifier _ <'...'>
 DictLit        = '{' _ ( DictElement _ [ <','> _ DictElement ] )? _ '}'
 DictElement    = Expression _ <':'> _ Expression
 <int_lit>      = decimal_lit    (*| octal_lit | hex_lit .*)
@@ -66,6 +71,14 @@ comment        = #'//[^\\n]*\\n'
                        (fn [acc expr] (str acc ", " expr))
                        expr0
                        expr-rest))
+    :FunctionDecl   (fn [identifier function] (str "(defn " identifier function ")"))
+    :FunctionLit    (fn [function] (str "(fn" function ")"))
+    :Function       (fn [parameters expression] (str " [" parameters "] " expression))
+    :Parameters     (fn [& args]
+                      (when (seq args)
+                        (reduce
+                         (fn [acc arg] (str acc " " arg))
+                         args)))
     :DictLit        (fn [& dict-elems] (apply str dict-elems))
     :DictElement    (fn [key value] (str key " " value " "))
     :label          (fn [s] (str ":" (string/lower-case s)))
