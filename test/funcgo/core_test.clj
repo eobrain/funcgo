@@ -39,7 +39,6 @@ import(
 12345
 ")
 
-
 (defn parse [expr]
   (funcgo-parse (str "package foo;import (;)" expr)))
 

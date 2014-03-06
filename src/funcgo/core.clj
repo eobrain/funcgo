@@ -1,10 +1,10 @@
 (ns funcgo.core
+  (:gen-class)
   (:require [instaparse.core :as insta]
             [clojure.string :as string]))
 
 (def funcgo-parser
      (insta/parser "
-
 SourceFile     = [ NL ] PackageClause _  { _ Expression _ NL }
 PackageClause  = <'package'> <__> dotted NL  _ ImportDecl _ NL
 ImportDecl     = <'import'> _ <'('>  NL { _ ImportSpec _ NL } <')'>
@@ -51,7 +51,6 @@ comment        = #'//[^\\n]*\\n'
 "))
 
 
-
 (defn funcgo-parse [fgo]
   (insta/transform
    {
@@ -89,3 +88,8 @@ comment        = #'//[^\\n]*\\n'
                        idf-rest))
     :decimal_lit    (fn [s] s)}
    (funcgo-parser fgo)))
+
+(defn -main
+  "Convert funcgo to clojure."
+  [& args]
+  (println (funcgo-parse (slurp (first args)))))
