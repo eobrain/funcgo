@@ -54,3 +54,5 @@ import(
 (fact "dictionary literals"   (parse "{A:1, B:2}")     => (parsed "{:a 1 :b 2 }"))
 (fact "named functions"       (parse "func n(a,b){c}") => (parsed "(defn n [a b] c)"))
 (fact "anonymous functions"   (parse "func(a,b){c}")   => (parsed "(fn [a b] c)"))
+(fact "can have raw strings"  (parse "`one two`")      => (parsed "\"one two\""))
+(fact "characters in strings" (parse "`\n'\"\b`")      => (parsed "\"\\n'\\\"\\b\""))

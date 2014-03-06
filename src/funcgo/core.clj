@@ -25,7 +25,7 @@ expressionlist = Expression { _ <','> _ Expression }
 <Operand>      = Literal | OperandName | label                  (*| MethodExpr | '(' Expression ')' *)
 <OperandName>  = symbol                                                           (*| QualifiedIdent*)
 <Literal>      = BasicLit | dictlit | functionlit
-<BasicLit>     = int_lit                      (*| float_lit | imaginary_lit | rune_lit | string_lit *)
+<BasicLit>     = int_lit | string_lit                      (*| float_lit | imaginary_lit | rune_lit *)
 shortvardecl   = identifier _ <':='> _ Expression
 functiondecl   = <'func'> _ identifier _ function
 functionlit    = <'func'> _ function
@@ -36,7 +36,8 @@ dictlit        = '{' _ ( dictelement _ [ <','> _ dictelement ] )? _ '}'
 dictelement    = Expression _ <':'> _ Expression
 <int_lit>      = decimal_lit    (*| octal_lit | hex_lit .*)
 decimal_lit    = #'[1-9][0-9]*'
-
+<string_lit>   = raw_string_lit                                      (* | interpreted_string_lit *)
+raw_string_lit = <#'\\x60'> #'[^\\x60]*' <#'\\x60'>      (* \\x60 is back quote character *)
 dotted         = identifier { <'.'> identifier }
 symbol         = ( identifier <'.'> )? identifier
 <identifier>   = #'[\\p{L}_][\\p{L}_\\p{Digit}]*'              (* letter { letter | unicode_digit } *)
@@ -90,7 +91,8 @@ comment        = #'//[^\\n]*\\n'
                        (fn [acc idf] (str acc "." idf))
                        idf0
                        idf-rest))
-    :decimal_lit    (fn [s] s)}
+    :decimal_lit    (fn [s] s)
+    :raw_string_lit (fn [s] (str "\"" (string/escape s char-escape-string) "\""))}
    (funcgo-parser fgo)))
 
 (defn -main
