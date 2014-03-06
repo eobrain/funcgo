@@ -5,39 +5,40 @@
 
 (def funcgo-parser
      (insta/parser "
-SourceFile     = [ NL ] PackageClause _  { _ Expression _ NL }
-PackageClause  = <'package'> <__> dotted NL  _ ImportDecl _ NL
-ImportDecl     = <'import'> _ <'('>  NL { _ ImportSpec _ NL } <')'>
-ImportSpec     = identifier _ dotted
-<Expression>   = UnaryExpr | ShortVarDecl                       (* | Expression binary_op UnaryExpr *)
-<UnaryExpr>    = PrimaryExpr                                                (* | unary_op UnaryExpr *)
-PrimaryExpr    = Operand | FunctionDecl |
+sourcefile     = [ NL ] packageclause _  { _ Expression _ NL }
+packageclause  = <'package'> <__> dotted NL  _ importdecl _ NL
+importdecl     = <'import'> _ <'('>  NL { _ importspec _ NL } <')'>
+importspec     = identifier _ dotted
+<Expression>   = UnaryExpr | shortvardecl                       (* | Expression binary_op UnaryExpr *)
+<UnaryExpr>    = primaryexpr                                                (* | unary_op UnaryExpr *)
+primaryexpr    = Operand | functiondecl |
                                                                          (*Conversion |
                                                                          BuiltinCall |
                                                                          PrimaryExpr Selector |
                                                                          PrimaryExpr Index |
                                                                          PrimaryExpr Slice |
                                                                          PrimaryExpr TypeAssertion |*)
-	         PrimaryExpr Call
+	         primaryexpr Call
 <Call>         = <'('> [ ArgumentList ] <')'>
-<ArgumentList> = ExpressionList                                                      (* [ _ '...' ] *)
-ExpressionList = Expression { _ <','> _ Expression }
+<ArgumentList> = expressionlist                                                      (* [ _ '...' ] *)
+expressionlist = Expression { _ <','> _ Expression }
 <Operand>      = Literal | OperandName | label                  (*| MethodExpr | '(' Expression ')' *)
-<OperandName>  = identifier                                                       (*| QualifiedIdent*)
-<Literal>      = BasicLit | DictLit | FunctionLit
+<OperandName>  = symbol                                                           (*| QualifiedIdent*)
+<Literal>      = BasicLit | dictlit | functionlit
 <BasicLit>     = int_lit                      (*| float_lit | imaginary_lit | rune_lit | string_lit *)
-ShortVarDecl   = identifier _ <':='> _ Expression
-FunctionDecl   = <'func'> _ identifier _ Function
-FunctionLit    = <'func'> _ Function
-Function       = <'('> _ Parameters _ <')'> _ <'{'> _ Expression _ <'}'>
-Parameters     = ( identifier { <','> _ identifier }  )? ( _ Varadic)?
-Varadic        = identifier _ <'...'>
-DictLit        = '{' _ ( DictElement _ [ <','> _ DictElement ] )? _ '}'
-DictElement    = Expression _ <':'> _ Expression
+shortvardecl   = identifier _ <':='> _ Expression
+functiondecl   = <'func'> _ identifier _ function
+functionlit    = <'func'> _ function
+function       = <'('> _ parameters _ <')'> _ <'{'> _ Expression _ <'}'>
+parameters     = ( identifier { <','> _ identifier }  )? ( _ varadic)?
+varadic        = identifier _ <'...'>
+dictlit        = '{' _ ( dictelement _ [ <','> _ dictelement ] )? _ '}'
+dictelement    = Expression _ <':'> _ Expression
 <int_lit>      = decimal_lit    (*| octal_lit | hex_lit .*)
 decimal_lit    = #'[1-9][0-9]*'
 
 dotted         = identifier { <'.'> identifier }
+symbol         = ( identifier <'.'> )? identifier
 <identifier>   = #'[\\p{L}_][\\p{L}_\\p{Digit}]*'              (* letter { letter | unicode_digit } *)
 label          = #'[\\p{Lu}]+'
 letter         = unicode_letter | '_'
@@ -54,32 +55,35 @@ comment        = #'//[^\\n]*\\n'
 (defn funcgo-parse [fgo]
   (insta/transform
    {
-    :SourceFile     (fn [header body] (str header body "\n"))
-    :PackageClause  (fn [dotted  import-decl]
+    :sourcefile     (fn [header body] (str header body "\n"))
+    :packageclause  (fn [dotted  import-decl]
                       (str "(ns " dotted import-decl ")\n\n"))
-    :ImportDecl     (fn [ & import-specs] (apply str import-specs))
-    :ImportSpec     (fn [identifier dotted]
+    :importdecl     (fn [ & import-specs] (apply str import-specs))
+    :importspec     (fn [identifier dotted]
                       (str "\n  (:require [" dotted " :as " identifier "])"))
-    :ShortVarDecl   (fn [identifier expression]
+    :shortvardecl   (fn [identifier expression]
                     (str "(def " identifier " " expression ")"))
-    :PrimaryExpr    (fn
-                      ([operand] operand)
+    :primaryexpr    (fn
+                      ([operand]           operand)
                       ([primary-expr call] (str "(" primary-expr " " call ")")))
-    :ExpressionList (fn [expr0 & expr-rest]
+    :expressionlist (fn [expr0 & expr-rest]
                       (reduce
                        (fn [acc expr] (str acc ", " expr))
                        expr0
                        expr-rest))
-    :FunctionDecl   (fn [identifier function] (str "(defn " identifier function ")"))
-    :FunctionLit    (fn [function] (str "(fn" function ")"))
-    :Function       (fn [parameters expression] (str " [" parameters "] " expression))
-    :Parameters     (fn [& args]
+    :symbol         (fn
+                      ([identifier]        identifier)
+                      ([package identifier] (str package "/" identifier)))
+    :functiondecl   (fn [identifier function] (str "(defn " identifier function ")"))
+    :functionlit    (fn [function] (str "(fn" function ")"))
+    :function       (fn [parameters expression] (str " [" parameters "] " expression))
+    :parameters     (fn [& args]
                       (when (seq args)
                         (reduce
                          (fn [acc arg] (str acc " " arg))
                          args)))
-    :DictLit        (fn [& dict-elems] (apply str dict-elems))
-    :DictElement    (fn [key value] (str key " " value " "))
+    :dictlit        (fn [& dict-elems] (apply str dict-elems))
+    :dictelement    (fn [key value] (str key " " value " "))
     :label          (fn [s] (str ":" (string/lower-case s)))
     :dotted         (fn [idf0 & idf-rest]
                       (reduce
