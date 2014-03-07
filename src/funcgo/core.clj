@@ -20,7 +20,7 @@ primaryexpr    = Operand | functiondecl |
                                                                          PrimaryExpr Slice |
                                                                          PrimaryExpr TypeAssertion |*)
 	         primaryexpr Call
-<Call>         = <'('> [ ArgumentList ] <')'>
+<Call>         = <'('> _ [ ArgumentList ] _ <')'>
 <ArgumentList> = expressionlist                                                      (* [ _ '...' ] *)
 expressionlist = Expression { _ <','> _ Expression }
 <Operand>      = Literal | OperandName | label                  (*| MethodExpr | '(' Expression ')' *)
@@ -31,7 +31,7 @@ shortvardecl   = identifier _ <':='> _ Expression
 functiondecl   = <'func'> _ identifier _ function
 functionlit    = <'func'> _ function
 function       = <'('> _ parameters _ <')'> _ <'{'> _ Expression _ <'}'>
-parameters     = ( identifier { <','> _ identifier }  )? ( _ varadic)?
+parameters     = ( identifier [ <','> _ identifier ]  )? ( _ varadic)?
 varadic        = identifier _ <'...'>
 dictlit        = '{' _ ( dictelement _ [ <','> _ dictelement ] )? _ '}'
 dictelement    = Expression _ <':'> _ Expression
@@ -46,8 +46,8 @@ label          = #'[\\p{Lu}]+'
 letter         = unicode_letter | '_'
 unicode_letter = #'\\p{L}'
 unicode_digit  = #'\\p{Digit}'
-<_>            = <#'[ \\t\\x0B\\f\\r]*'>   (* optional non-newline whitespace *)
-__             = #'[ \\t\\x0B\\f\\r]+'     (* non-newline whitespace *)
+<_>            = <#'[ \\t\\x0B\\f\\r\\n]*'>   (* optional whitespace *)
+__             =  #'[ \\t\\x0B\\f\\r\\n]+'    (* whitespace *)
 <NL>           = [ nl | comment ]
 <nl>           = <#'\\s*[\\n;]\\s*'>       (* whitespace with at least one newline or semicolon *)
 comment        = #'//[^\\n]*\\n'
@@ -83,7 +83,7 @@ comment        = #'//[^\\n]*\\n'
                       ([package identifier] (str package "/" identifier)))
     :functiondecl   (fn [identifier function] (str "(defn " identifier function ")"))
     :functionlit    (fn [function] (str "(fn" function ")"))
-    :function       (fn [parameters expression] (str " [" parameters "] " expression))
+    :function       (fn [parameters expression] (str " [" parameters "]\n  " expression))
     :parameters     (fn [& args]
                       (when (seq args)
                         (reduce

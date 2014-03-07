@@ -52,10 +52,35 @@ import(
 (fact "can outside functions" (parse "o.f(x)")         => (parsed "(o/f x)"))
 (fact "labels are all-caps"   (parse "FOO")            => (parsed ":foo"))
 (fact "dictionary literals"   (parse "{A:1, B:2}")     => (parsed "{:a 1 :b 2 }"))
-(fact "named functions"       (parse "func n(a,b){c}") => (parsed "(defn n [a b] c)"))
-(fact "named functions 2"     (parse "func n(a,b) {c}")=> (parsed "(defn n [a b] c)"))
-(fact "anonymous functions"   (parse "func(a,b){c}")   => (parsed "(fn [a b] c)"))
+(fact "named functions"       (parse "func n(a,b){c}") => (parsed "(defn n [a b]\n  c)"))
+(fact "named functions 2"     (parse "func n(a,b) {c}")=> (parsed "(defn n [a b]\n  c)"))
+(fact "anonymous functions"   (parse "func(a,b){c}")   => (parsed "(fn [a b]\n  c)"))
 (fact "can have raw strings"  (parse "`one two`")      => (parsed "\"one two\""))
 (fact "characters in strings" (parse "`\n'\"\b`")      => (parsed "\"\\n'\\\"\\b\""))
 (fact "multiple expr"         (parse "1;2;3")          => (parsed "1\n\n2\n\n3"))
 (fact "multiple expr 2"       (parse "1\n2\n3")        => (parsed "1\n\n2\n\n3"))
+
+
+(fact "full source file" (funcgo-parse "
+package foo
+import(
+  b bar.baz
+  ff foo.faz.fedudle
+)
+
+x := b.bbb(`blah blah`)
+
+func FooBar(iii, jjj) {
+  ff.fumanchu(
+    333
+  )
+}
+")  => "(ns foo
+  (:require [bar.baz :as b])
+  (:require [foo.faz.fedudle :as ff]))
+
+(def x (b/bbb \"blah blah\"))
+
+(defn FooBar [iii jjj]
+  (ff/fumanchu 333))
+")
