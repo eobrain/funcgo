@@ -5,8 +5,9 @@
 
 (def funcgo-parser
      (insta/parser "
-sourcefile     = [ NL ] packageclause _  { _ Expression _ NL }
+sourcefile     = [ NL ] packageclause NL expressions NL
 packageclause  = <'package'> <__> dotted NL  _ importdecl _ NL
+expressions    = Expression { NL Expression }
 importdecl     = <'import'> _ <'('>  NL { _ importspec _ NL } <')'>
 importspec     = identifier _ dotted
 <Expression>   = UnaryExpr | shortvardecl                       (* | Expression binary_op UnaryExpr *)
@@ -70,6 +71,11 @@ comment        = #'//[^\\n]*\\n'
     :expressionlist (fn [expr0 & expr-rest]
                       (reduce
                        (fn [acc expr] (str acc ", " expr))
+                       expr0
+                       expr-rest))
+    :expressions    (fn [expr0 & expr-rest]
+                      (reduce
+                       (fn [acc expr] (str acc "\n\n" expr))
                        expr0
                        expr-rest))
     :symbol         (fn
