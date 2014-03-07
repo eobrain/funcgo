@@ -37,8 +37,9 @@ dictlit        = '{' _ ( dictelement _ [ <','> _ dictelement ] )? _ '}'
 dictelement    = Expression _ <':'> _ Expression
 <int_lit>      = decimal_lit    (*| octal_lit | hex_lit .*)
 decimal_lit    = #'[1-9][0-9]*'
-<string_lit>   = raw_string_lit                                      (* | interpreted_string_lit *)
+<string_lit>   = raw_string_lit   | interpreted_string_lit
 raw_string_lit = <#'\\x60'> #'[^\\x60]*' <#'\\x60'>      (* \\x60 is back quote character *)
+interpreted_string_lit = <#'\"'> #'[^\\\"]*' <#'\"'>      (* TODO: handle string escape *)
 dotted         = identifier { <'.'> identifier }
 symbol         = ( identifier <'.'> )? identifier
 <identifier>   = #'[\\p{L}_][\\p{L}_\\p{Digit}]*'              (* letter { letter | unicode_digit } *)
@@ -98,6 +99,7 @@ comment        = #'//[^\\n]*\\n'
                        idf0
                        idf-rest))
     :decimal_lit    (fn [s] s)
+    :interpreted_string_lit (fn [s] (str "\"" s "\""))
     :raw_string_lit (fn [s] (str "\"" (string/escape s char-escape-string) "\""))}
    (funcgo-parser fgo)))
 

@@ -56,7 +56,10 @@ import(
 (fact "named functions 2"     (parse "func n(a,b) {c}")=> (parsed "(defn n [a b]\n  c)"))
 (fact "anonymous functions"   (parse "func(a,b){c}")   => (parsed "(fn [a b]\n  c)"))
 (fact "can have raw strings"  (parse "`one two`")      => (parsed "\"one two\""))
-(fact "characters in strings" (parse "`\n'\"\b`")      => (parsed "\"\\n'\\\"\\b\""))
+(fact "can have strings"      (parse "\"one two\"")    => (parsed "\"one two\""))
+(fact "characters in raw"     (parse "`\n'\"\b`")      => (parsed "\"\\n'\\\"\\b\""))
+(fact "characters in strings" (parse "\"\n'\b\"")      => (parsed "\"\n'\b\""))
+;; (fact "quotes in strings"     (parse "\"foo\"bar\"")   => (parsed "\"foo\"bar\""))  TODO implement
 (fact "multiple expr"         (parse "1;2;3")          => (parsed "1\n\n2\n\n3"))
 (fact "multiple expr 2"       (parse "1\n2\n3")        => (parsed "1\n\n2\n\n3"))
 
