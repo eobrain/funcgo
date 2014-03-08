@@ -31,7 +31,7 @@ shortvardecl   = identifier _ <':='> _ Expression
 functiondecl   = <'func'> _ identifier _ Function
 functionlit    = <'func'> _ Function
 <Function>     = functionpart | functionparts
-functionparts  = functionpart functionpart+
+functionparts  = functionpart _ functionpart { _ functionpart }
 functionpart   = <'('> _ parameters _ <')'> _ <'{'> _ Expression _ <'}'>
 parameters     = ( identifier [ <','> _ identifier ]  )? ( _ varadic)?
 varadic        = identifier _ <'...'>
