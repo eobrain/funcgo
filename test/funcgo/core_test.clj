@@ -51,7 +51,10 @@ import(
 (fact "can call functions"    (parse "f(x)")           => (parsed "(f x)"))
 (fact "can outside functions" (parse "o.f(x)")         => (parsed "(o/f x)"))
 (fact "labels are all-caps"   (parse "FOO")            => (parsed ":foo"))
-(fact "dictionary literals"   (parse "{A:1, B:2}")     => (parsed "{:a 1 :b 2 }"))
+(fact "dictionary literals 0" (parse "{}")             => (parsed "{}"))
+(fact "dictionary literals 1" (parse "{A:1}")          => (parsed "{:a 1 }"))
+(fact "dictionary literals 2" (parse "{A:1, B:2}")     => (parsed "{:a 1 :b 2 }"))
+(fact "dictionary literals 3" (parse "{A:1, B:2, C:3}")=> (parsed "{:a 1 :b 2 :c 3 }"))
 (fact "named functions"       (parse "func n(a,b){c}") => (parsed "(defn n [a b]\n  c)"))
 (fact "named functions 2"     (parse "func n(a,b) {c}")=> (parsed "(defn n [a b]\n  c)"))
 (fact "anonymous functions"   (parse "func(a,b){c}")   => (parsed "(fn [a b]\n  c)"))
@@ -75,7 +78,13 @@ x := b.bbb(`blah blah`)
 
 func FooBar(iii, jjj) {
   ff.fumanchu(
-    333
+    {
+      OOO: func(m,n) {str(m,n)},
+      PPP: func(m,n) {
+        str(m,n)
+      },
+      QQQ: qq
+    }
   )
 }
 ")  => "(ns foo
@@ -85,5 +94,7 @@ func FooBar(iii, jjj) {
 (def x (b/bbb \"blah blah\"))
 
 (defn FooBar [iii jjj]
-  (ff/fumanchu 333))
+  (ff/fumanchu {:ooo (fn [m n]
+  (str m n)) :ppp (fn [m n]
+  (str m n)) :qqq qq }))
 ")

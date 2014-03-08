@@ -33,7 +33,7 @@ functionlit    = <'func'> _ function
 function       = <'('> _ parameters _ <')'> _ <'{'> _ Expression _ <'}'>
 parameters     = ( identifier [ <','> _ identifier ]  )? ( _ varadic)?
 varadic        = identifier _ <'...'>
-dictlit        = '{' _ ( dictelement _ [ <','> _ dictelement ] )? _ '}'
+dictlit        = '{' _ ( dictelement _ { <','> _ dictelement } )? _ '}'
 dictelement    = Expression _ <':'> _ Expression
 <int_lit>      = decimal_lit    (*| octal_lit | hex_lit .*)
 decimal_lit    = #'[1-9][0-9]*'
@@ -71,7 +71,7 @@ comment        = #'//[^\\n]*\\n'
                       ([primary-expr call] (str "(" primary-expr " " call ")")))
     :expressionlist (fn [expr0 & expr-rest]
                       (reduce
-                       (fn [acc expr] (str acc ", " expr))
+                       (fn [acc expr] (str acc " " expr))
                        expr0
                        expr-rest))
     :expressions    (fn [expr0 & expr-rest]
