@@ -55,9 +55,11 @@ import(
 (fact "dictionary literals 1" (parse "{A:1}")          => (parsed "{:a 1 }"))
 (fact "dictionary literals 2" (parse "{A:1, B:2}")     => (parsed "{:a 1 :b 2 }"))
 (fact "dictionary literals 3" (parse "{A:1, B:2, C:3}")=> (parsed "{:a 1 :b 2 :c 3 }"))
-(fact "named functions"       (parse "func n(a,b){c}") => (parsed "(defn n [a b]\n  c)"))
-(fact "named functions 2"     (parse "func n(a,b) {c}")=> (parsed "(defn n [a b]\n  c)"))
-(fact "anonymous functions"   (parse "func(a,b){c}")   => (parsed "(fn [a b]\n  c)"))
+(fact "named functions"       (parse "func n(a,b){c}") => (parsed "(defn n [a b] c)"))
+(fact "named functions 2"     (parse "func n(a,b) {c}")=> (parsed "(defn n [a b] c)"))
+(fact "named multifunctions"  (parse "func n(a){b}(c){d}")=> (parsed "(defn n ([a] b) ([c] d))"))
+(fact "anonymous functions"   (parse "func(a,b){c}")   => (parsed "(fn [a b] c)"))
+(fact "anon multifunctions"   (parse "func(a){b}(c){d}")=> (parsed "(fn ([a] b) ([c] d))"))
 (fact "can have raw strings"  (parse "`one two`")      => (parsed "\"one two\""))
 (fact "can have strings"      (parse "\"one two\"")    => (parsed "\"one two\""))
 (fact "characters in raw"     (parse "`\n'\"\b`")      => (parsed "\"\\n'\\\"\\b\""))
@@ -93,8 +95,5 @@ func FooBar(iii, jjj) {
 
 (def x (b/bbb \"blah blah\"))
 
-(defn FooBar [iii jjj]
-  (ff/fumanchu {:ooo (fn [m n]
-  (str m n)) :ppp (fn [m n]
-  (str m n)) :qqq qq }))
+(defn FooBar [iii jjj] (ff/fumanchu {:ooo (fn [m n] (str m n)) :ppp (fn [m n] (str m n)) :qqq qq }))
 ")

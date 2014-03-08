@@ -28,9 +28,11 @@ expressionlist = Expression { _ <','> _ Expression }
 <Literal>      = BasicLit | dictlit | functionlit
 <BasicLit>     = int_lit | string_lit                      (*| float_lit | imaginary_lit | rune_lit *)
 shortvardecl   = identifier _ <':='> _ Expression
-functiondecl   = <'func'> _ identifier _ function
-functionlit    = <'func'> _ function
-function       = <'('> _ parameters _ <')'> _ <'{'> _ Expression _ <'}'>
+functiondecl   = <'func'> _ identifier _ Function
+functionlit    = <'func'> _ Function
+<Function>     = functionpart | functionparts
+functionparts  = functionpart functionpart+
+functionpart   = <'('> _ parameters _ <')'> _ <'{'> _ Expression _ <'}'>
 parameters     = ( identifier [ <','> _ identifier ]  )? ( _ varadic)?
 varadic        = identifier _ <'...'>
 dictlit        = '{' _ ( dictelement _ { <','> _ dictelement } )? _ '}'
@@ -82,9 +84,16 @@ comment        = #'//[^\\n]*\\n'
     :symbol         (fn
                       ([identifier]        identifier)
                       ([package identifier] (str package "/" identifier)))
-    :functiondecl   (fn [identifier function] (str "(defn " identifier function ")"))
-    :functionlit    (fn [function] (str "(fn" function ")"))
-    :function       (fn [parameters expression] (str " [" parameters "]\n  " expression))
+    :functiondecl   (fn [identifier function] (str "(defn " identifier " " function ")"))
+    :functionlit    (fn [function] (str "(fn " function ")"))
+    :functionparts   (fn [& functionpart]
+                       (str "("
+                            (reduce
+                             (fn [acc fp] (str acc ") (" fp))
+                             functionpart)
+                            ")"))
+    :functionpart   (fn [parameters expression]
+                      (str "[" parameters "] " expression))
     :parameters     (fn [& args]
                       (when (seq args)
                         (reduce
