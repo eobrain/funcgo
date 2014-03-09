@@ -8,12 +8,14 @@
 
 (def funcgo-parser
      (insta/parser "
-sourcefile     = [ NL ] packageclause <NL> expressions NL
+sourcefile     = [ NL ] packageclause _ expressions _
 packageclause  = <'package'> <__> dotted NL importdecl
 expressions    = Expression { NL Expression }
-importdecl     = <'import'> _ <'('>  NL { importspec NL } <')'>
+importdecl     = <'import'> _ <'('>  _ { importspec _ } <')'>
 importspec     = identifier _ dotted
-<Expression>   = UnaryExpr | shortvardecl                       (* | Expression binary_op UnaryExpr *)
+<Expression>   = UnaryExpr | shortvardecl | ifelseexpr           (* | Expression binary_op UnaryExpr *)
+ifelseexpr     = <'if'> _ Expression _ ( ( block _ <'else'> _ block ) | ( _ <'{'> _ expressions _ <'}'> )   )
+block          = <'{'> _ Expression { NL Expression } _ <'}'>
 <UnaryExpr>    = PrimaryExpr                                                (* | unary_op UnaryExpr *)
 <PrimaryExpr>  = functioncall | Operand | functiondecl | withconst
                                                                          (*Conversion |
@@ -22,7 +24,8 @@ importspec     = identifier _ dotted
                                                                          PrimaryExpr Index |
                                                                          PrimaryExpr Slice |
                                                                          PrimaryExpr TypeAssertion |*)
-withconst      = <'const'> _ <'('> NL { const NL } <')'> NL expressions
+withconst      = <'const'> _ <'('> _ { consts } _ <')'> _ expressions
+consts         = [ const { NL const } ]
 const          = identifier _ <'='> _ Expression 
 functioncall   = PrimaryExpr Call
 <Call>         = <'('> _ ( ArgumentList _ )? <')'>
@@ -74,6 +77,7 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
       (do
         (failure/pprint-failure parsed)
         (throw (Exception. "\"SYNTAX ERROR\"")))
+      ;;(do
       ;;(clojure.pprint/pprint parsed)
       (insta/transform
        {
@@ -83,6 +87,9 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
         :importdecl     (fn [ & import-specs] (apply str import-specs))
         :importspec     (fn [identifier dotted]
                           (str "\n  (:require [" dotted " :as " identifier "])"))
+        :ifelseexpr (fn
+                      ([condition exprs] (str "(when " condition " " exprs ")"))
+		      ([condition block1 block2] (str "(if " condition " " block1 " " block2 ")")))
         :shortvardecl   (fn [identifier expression]
                           (str "(def " identifier " " expression ")"))
         :functioncall   (fn
@@ -95,9 +102,22 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
                            expr-rest))
         :expressions    (fn [expr0 & expr-rest]
                           (reduce
-                           (fn [acc expr] (str acc "\n\n" expr))
+                           (fn [acc expr] (str acc "\n" expr))
                            expr0
                            expr-rest))
+        :consts         (fn [& consts]
+                          (reduce
+                           (fn [acc const] (str acc "\n" const))
+                           consts))
+        :block          (fn
+                          ([expr] expr)
+                          ([expr0 & expr-rest]
+                             (str "(do "
+                                  (reduce
+                                   (fn [acc expr] (str acc "\n" expr))
+                                   expr0
+                                   expr-rest)
+                                  ")")))
         :withconst      (fn [& xs]
                           (let [
                                 consts (butlast xs)

@@ -6,12 +6,14 @@ import (
 )
 
 funcgoParser := insta.parser(`
-sourcefile     = [ NL ] packageclause <NL> expressions NL
+sourcefile     = [ NL ] packageclause _ expressions _
 packageclause  = <'package'> <__> dotted NL importdecl
 expressions    = Expression { NL Expression }
-importdecl     = <'import'> _ <'('>  NL { importspec NL } <')'>
+importdecl     = <'import'> _ <'('>  _ { importspec _ } <')'>
 importspec     = identifier _ dotted
-<Expression>   = UnaryExpr | shortvardecl                       (* | Expression binary_op UnaryExpr *)
+<Expression>   = UnaryExpr | shortvardecl | ifelseexpr           (* | Expression binary_op UnaryExpr *)
+ifelseexpr     = <'if'> _ Expression _ ( ( block _ <'else'> _ block ) | ( _ <'{'> _ expressions _ <'}'> )   )
+block          = <'{'> _ Expression { NL Expression } _ <'}'>
 <UnaryExpr>    = PrimaryExpr                                                (* | unary_op UnaryExpr *)
 <PrimaryExpr>  = functioncall | Operand | functiondecl | withconst
                                                                          (*Conversion |
@@ -20,7 +22,8 @@ importspec     = identifier _ dotted
                                                                          PrimaryExpr Index |
                                                                          PrimaryExpr Slice |
                                                                          PrimaryExpr TypeAssertion |*)
-withconst      = <'const'> _ <'('> NL { const NL } <')'> NL expressions
+withconst      = <'const'> _ <'('> _ { consts } _ <')'> _ expressions
+consts         = [ const { NL const } ]
 const          = identifier _ <'='> _ Expression 
 functioncall   = PrimaryExpr Call
 <Call>         = <'('> _ ( ArgumentList _ )? <')'>
@@ -83,6 +86,11 @@ func FuncgoParse(fgo) {
                         IMPORTSPEC:     func(identifier, dotted) {
                                 str("\n  (:require [", dotted, " :as ", identifier, "])")
                         },
+			IFELSEEXPR: func(condition, exprs) {
+				str("(when ", condition, " ", exprs, ")")
+			} (condition, block1, block2) {
+				str("(if ", condition, " ", block1, " ", block2, ")")
+			},
                         SHORTVARDECL:   func(identifier, expression) {
                                 str("(def ", identifier, " ", expression, ")")
                         },
@@ -99,10 +107,25 @@ func FuncgoParse(fgo) {
                         },
                         EXPRESSIONS: func(expr0, &exprRest){
                                 reduce(
-                                        func(acc, expr) {str(acc, "\n\n", expr)},
+                                        func(acc, expr) {str(acc, "\n", expr)},
                                         expr0,
                                         exprRest)
                         },
+			CONSTS:  func(&consts) {
+                          reduce(
+				  func(acc,konst) {str(acc, "\n", konst)},
+				  consts)
+			},
+			BLOCK: func (expr){
+				expr
+			} (expr0 &exprRest) {
+				str("(do ",
+                                  reduce(
+					  func(acc, expr) {str(acc, "\n", expr)},
+					  expr0,
+					  exprRest),
+					")"))
+		        },
                         WITHCONST: func(&xs){
                                 const(
                                         consts = dropLast(xs)
