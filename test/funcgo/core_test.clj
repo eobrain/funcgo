@@ -3,7 +3,7 @@
   (:require [funcgo.core :refer :all]))
 
 (fact "smallest complete program has no import and a single expression"
-      (funcgo-parse "package foo;import ();12345")
+      (funcgo-parse "package foo;import (;);12345;")
       => "(ns foo)
 
 12345
@@ -11,7 +11,8 @@
 
 (fact "Can use newlines instead of semicolons"  (funcgo-parse "
 package foo
-import ()
+import (
+)
 12345
 ")  =>  "(ns foo)
 
@@ -20,7 +21,8 @@ import ()
 
 (fact "package can be dotted" (funcgo-parse "
 package foo.bar
-import ()
+import (
+)
 12345
 ")  =>  "(ns foo.bar)
 
@@ -40,7 +42,7 @@ import(
 ")
 
 (defn parse [expr]
-  (funcgo-parse (str "package foo;import (;)" expr)))
+  (funcgo-parse (str "package foo;import (;);" expr ";")))
 
 (defn parsed [expr]
   (str "(ns foo)\n\n" expr "\n"))
@@ -81,6 +83,9 @@ import(
 (fact "multiple expr 2"       (parse "1\n2\n3")        => (parsed "1\n\n2\n\n3"))
 (fact "const"                 (parse "const(\na=2\n)\na")=> (parsed "(let [a 2] a)"))
 (fact "const indent"          (parse " const(\n  a=2\n )\n a")=> (parsed "(let [a 2] a)"))
+(fact "comment"               (parse "//blah blah\naaa")=> (parsed "aaa"))
+(fact "comment 1"             (parse " //blah blah \naaa")=> (parsed "aaa"))
+(fact "comment 2"             (parse "\n //blah blah\n \naaa")=> (parsed "aaa"))
 
 
 (fact "full source file" (funcgo-parse "

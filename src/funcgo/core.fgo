@@ -6,10 +6,10 @@ import (
 )
 
 funcgoParser := insta.parser(`
-sourcefile     = [ NL ] packageclause NL expressions NL
-packageclause  = <'package'> <__> dotted NL  _ importdecl _ NL
+sourcefile     = [ NL ] packageclause <NL> expressions NL
+packageclause  = <'package'> <__> dotted NL importdecl
 expressions    = Expression { NL Expression }
-importdecl     = <'import'> _ <'('>  NL { _ importspec _ NL } <')'>
+importdecl     = <'import'> _ <'('>  NL { importspec NL } <')'>
 importspec     = identifier _ dotted
 <Expression>   = UnaryExpr | shortvardecl                       (* | Expression binary_op UnaryExpr *)
 <UnaryExpr>    = PrimaryExpr                                                (* | unary_op UnaryExpr *)
@@ -48,7 +48,7 @@ dictelement    = Expression _ <':'> _ Expression
 decimal_lit    = #'[1-9][0-9]*'
 <string_lit>   = raw_string_lit   | interpreted_string_lit
 raw_string_lit = <#'\x60'> #'[^\x60]*' <#'\x60'>      (* \x60 is back quote character *)
-interpreted_string_lit = <#'"'> #'[^\"]*' <#'"'>      (* TODO: handle string escape *)
+interpreted_string_lit = <#'\"'> #'[^\\"]*' <#'\"'>      (* TODO: handle string escape *)
 dotted         = identifier { <'.'> identifier }
 symbol         = ( identifier <'.'> )? identifier
 <identifier>   = #'[\p{L}_][\p{L}_\p{Digit}]*'              (* letter { letter | unicode_digit } *)
@@ -58,9 +58,9 @@ unicode_letter = #'\p{L}'
 unicode_digit  = #'\p{Digit}'
 <_>            = <#'[ \t\x0B\f\r\n]*'> | comment  (* optional whitespace *)
 __             =  #'[ \t\x0B\f\r\n]+' | comment     (* whitespace *)
-<NL>           = [ nl | comment ]
+<NL>           = nl | comment
 <nl>           = <#'\s*[\n;]\s*'>       (* whitespace with at least one newline or semicolon *)
-<comment>      = #'[ \t\x0B\f\r\n]*//[^\n]*\n[ \t\x0B\f\r\n]*'
+<comment>      = <#'[;\s]*//[^\n]*\n\s*'>
 `)
 
 func FuncgoParse(fgo) {

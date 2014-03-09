@@ -2,15 +2,15 @@
   (:gen-class)
   (:require [instaparse.core :as insta]
             [clojure.string :as string])
-  ;; (:require clojure.pprint)
+  (:require clojure.pprint)
   )
 
 (def funcgo-parser
      (insta/parser "
-sourcefile     = [ NL ] packageclause NL expressions NL
-packageclause  = <'package'> <__> dotted NL  _ importdecl _ NL
+sourcefile     = [ NL ] packageclause <NL> expressions NL
+packageclause  = <'package'> <__> dotted NL importdecl
 expressions    = Expression { NL Expression }
-importdecl     = <'import'> _ <'('>  NL { _ importspec _ NL } <')'>
+importdecl     = <'import'> _ <'('>  NL { importspec NL } <')'>
 importspec     = identifier _ dotted
 <Expression>   = UnaryExpr | shortvardecl                       (* | Expression binary_op UnaryExpr *)
 <UnaryExpr>    = PrimaryExpr                                                (* | unary_op UnaryExpr *)
@@ -59,16 +59,16 @@ unicode_letter = #'\\p{L}'
 unicode_digit  = #'\\p{Digit}'
 <_>            = <#'[ \\t\\x0B\\f\\r\\n]*'> | comment  (* optional whitespace *)
 __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
-<NL>           = [ nl | comment ]
+<NL>           = nl | comment
 <nl>           = <#'\\s*[\\n;]\\s*'>       (* whitespace with at least one newline or semicolon *)
-<comment>      = #'[ \\t\\x0B\\f\\r\\n]*//[^\\n]*\\n[ \\t\\x0B\\f\\r\\n]*'
+<comment>      = <#'[;\\s]*//[^\\n]*\\n\\s*'>
 "))
 
 
 (defn funcgo-parse [fgo]
   (let
       [parsed (funcgo-parser fgo)]
-    ;; (clojure.pprint/pprint parsed)
+    ;;(clojure.pprint/pprint parsed)
     (insta/transform
      {
       :sourcefile     (fn [header body] (str header body "\n"))
