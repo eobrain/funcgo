@@ -143,4 +143,9 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
 (defn -main
   "Convert funcgo to clojure."
   [& args]
-  (println (funcgo-parse (slurp (first args)))))
+  (doseq
+      [expr (read-string (str "["
+                              (funcgo-parse (slurp (first args)))
+                              "]"  ))]
+    (clojure.pprint/pprint expr)
+    (println)))
