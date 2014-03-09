@@ -2,7 +2,7 @@ package  funcgo
 import (
         insta instaparse.core
         string clojure.string
-        // pprint clojure.pprint
+        pprint clojure.pprint
 )
 
 funcgoParser := insta.parser(`
@@ -29,7 +29,7 @@ expressionlist = Expression { _ <','> _ Expression }
 <Operand>      = Literal | OperandName | label                  (*| MethodExpr | '(' Expression ')' *)
 <OperandName>  = symbol                                                           (*| QualifiedIdent*)
 <Literal>      = BasicLit | dictlit | functionlit
-<BasicLit>     = int_lit | string_lit                      (*| float_lit | imaginary_lit | rune_lit *)
+<BasicLit>     = int_lit | string_lit | regex              (*| float_lit | imaginary_lit | rune_lit *)
 shortvardecl   = identifier _ <':='> _ Expression
 functiondecl   = <'func'> _ identifier _ Function
 functionlit    = <'func'> _ Function
@@ -46,12 +46,13 @@ dictlit        = '{' _ ( dictelement _ { <','> _ dictelement } )? _ '}'
 dictelement    = Expression _ <':'> _ Expression
 <int_lit>      = decimal_lit    (*| octal_lit | hex_lit .*)
 decimal_lit    = #'[1-9][0-9]*'
+regex          = <'/'> #'[^/]*'<'/'>   (* TODO: handle / escape *)
 <string_lit>   = raw_string_lit   | interpreted_string_lit
 raw_string_lit = <#'\x60'> #'[^\x60]*' <#'\x60'>      (* \x60 is back quote character *)
 interpreted_string_lit = <#'\"'> #'[^\\"]*' <#'\"'>      (* TODO: handle string escape *)
 dotted         = identifier { <'.'> identifier }
 symbol         = ( identifier <'.'> )? identifier
-<identifier>   = #'[\p{L}_][\p{L}_\p{Digit}]*'              (* letter { letter | unicode_digit } *)
+identifier     = #'[\p{L}_][\p{L}_\p{Digit}]*'              (* letter { letter | unicode_digit } *)
 label          = #'[\p{Lu}]+'
 letter         = unicode_letter | '_'
 unicode_letter = #'\p{L}'
@@ -112,7 +113,7 @@ func FuncgoParse(fgo) {
                         CONST: func(identifier, expression) {str(identifier, " ", expression)},
                         SYMBOL: func(identifier){
                                 identifier
-                        } (pkg, identfier) {
+                        } (pkg, identifier) {
                                 str(pkg, "/", identifier)
                         },
                         FUNCTIONDECL:   func(identifier, function) {
@@ -148,6 +149,9 @@ func FuncgoParse(fgo) {
                         DICTLIT:        func(&dictElems) {apply(str, dictElems)},
                         DICTELEMENT:    func(key, value) {str(key, " ", value, " ")},
                         LABEL:          func(s) {str(":", string.lowerCase(s))},
+		        IDENTIFIER:     func(s) {
+				string.replace(s, /L/, func(s){str("-",string.lowerCase(s))))
+			}
                         DOTTED:         func(idf0, &idfRest){
                                 reduce(
                                         func(acc, idf) {str(acc, ".", idf)},
@@ -155,6 +159,7 @@ func FuncgoParse(fgo) {
                                         idfRest)
                         },
                         DECIMAL_LIT:    func(s){s},
+                        REGEX:          func(s){str(`#"`,s,`"`)},
                         INTERPRETED_STRING_LIT: func(s){str(`"`, s, `"`)},
                         RAW_STRING_LIT: func(s){str(`"`, string.escape(s, charEscapeString), `"`)}
                 },

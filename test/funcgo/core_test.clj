@@ -86,6 +86,9 @@ import(
 (fact "comment"               (parse "//blah blah\naaa")=> (parsed "aaa"))
 (fact "comment 1"             (parse " //blah blah \naaa")=> (parsed "aaa"))
 (fact "comment 2"             (parse "\n //blah blah\n \naaa")=> (parsed "aaa"))
+(fact "regex"                 (parse "/aaa/")          => (parsed "#\"aaa\""))
+(fact "regex 2"               (parse "/[0-9]+/")       => (parsed "#\"[0-9]+\""))
+;; (fact "regex 3"               (parse "/aaa\/bbb/"       => (parsed "#\"aaa/bbb"")) TODO implement
 
 
 (fact "full source file" (funcgo-parse "
