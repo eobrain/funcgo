@@ -1,0 +1,168 @@
+package  funcgo
+import (
+        insta instaparse.core
+        string clojure.string
+        // pprint clojure.pprint
+)
+
+funcgoParser := insta.parser(`
+sourcefile     = [ NL ] packageclause NL expressions NL
+packageclause  = <'package'> <__> dotted NL  _ importdecl _ NL
+expressions    = Expression { NL Expression }
+importdecl     = <'import'> _ <'('>  NL { _ importspec _ NL } <')'>
+importspec     = identifier _ dotted
+<Expression>   = UnaryExpr | shortvardecl                       (* | Expression binary_op UnaryExpr *)
+<UnaryExpr>    = PrimaryExpr                                                (* | unary_op UnaryExpr *)
+<PrimaryExpr>  = functioncall | Operand | functiondecl | withconst
+                                                                         (*Conversion |
+                                                                         BuiltinCall |
+                                                                         PrimaryExpr Selector |
+                                                                         PrimaryExpr Index |
+                                                                         PrimaryExpr Slice |
+                                                                         PrimaryExpr TypeAssertion |*)
+withconst      = <'const'> _ <'('> NL { const NL } <')'> NL expressions
+const          = identifier _ <'='> _ Expression 
+functioncall   = PrimaryExpr Call
+<Call>         = <'('> _ ( ArgumentList _ )? <')'>
+<ArgumentList> = expressionlist                                                      (* [ _ '...' ] *)
+expressionlist = Expression { _ <','> _ Expression }
+<Operand>      = Literal | OperandName | label                  (*| MethodExpr | '(' Expression ')' *)
+<OperandName>  = symbol                                                           (*| QualifiedIdent*)
+<Literal>      = BasicLit | dictlit | functionlit
+<BasicLit>     = int_lit | string_lit                      (*| float_lit | imaginary_lit | rune_lit *)
+shortvardecl   = identifier _ <':='> _ Expression
+functiondecl   = <'func'> _ identifier _ Function
+functionlit    = <'func'> _ Function
+<Function>     = FunctionPart | functionparts
+functionparts  = FunctionPart _ FunctionPart { _ FunctionPart }
+<FunctionPart> = functionpart0 | functionpartn | vfunctionpart0 | vfunctionpartn
+functionpart0  = <'('> _ <')'> _ <'{'> _ Expression _ <'}'>
+vfunctionpart0 = <'('> _ varadic _ <')'> _ <'{'> _ Expression _ <'}'>
+functionpartn  = <'('> _ parameters _ <')'> _ <'{'> _ Expression _ <'}'>
+vfunctionpartn = <'('> _ parameters _  <','> _ varadic _ <')'> _ <'{'> _ Expression _ <'}'>
+parameters     = identifier { <','> _ identifier }
+varadic        = <'&'> identifier
+dictlit        = '{' _ ( dictelement _ { <','> _ dictelement } )? _ '}'
+dictelement    = Expression _ <':'> _ Expression
+<int_lit>      = decimal_lit    (*| octal_lit | hex_lit .*)
+decimal_lit    = #'[1-9][0-9]*'
+<string_lit>   = raw_string_lit   | interpreted_string_lit
+raw_string_lit = <#'\x60'> #'[^\x60]*' <#'\x60'>      (* \x60 is back quote character *)
+interpreted_string_lit = <#'"'> #'[^\"]*' <#'"'>      (* TODO: handle string escape *)
+dotted         = identifier { <'.'> identifier }
+symbol         = ( identifier <'.'> )? identifier
+<identifier>   = #'[\p{L}_][\p{L}_\p{Digit}]*'              (* letter { letter | unicode_digit } *)
+label          = #'[\p{Lu}]+'
+letter         = unicode_letter | '_'
+unicode_letter = #'\p{L}'
+unicode_digit  = #'\p{Digit}'
+<_>            = <#'[ \t\x0B\f\r\n]*'> | comment  (* optional whitespace *)
+__             =  #'[ \t\x0B\f\r\n]+' | comment     (* whitespace *)
+<NL>           = [ nl | comment ]
+<nl>           = <#'\s*[\n;]\s*'>       (* whitespace with at least one newline or semicolon *)
+<comment>      = #'[ \t\x0B\f\r\n]*//[^\n]*\n[ \t\x0B\f\r\n]*'
+`)
+
+func FuncgoParse(fgo) {
+        const(
+                parsed = funcgoParser(fgo)
+        )
+        // pprint.pprint(parsed)
+        insta.transform(
+                {
+                        SOURCEFILE:     func(header, body) {str(header, body, "\n")},
+                        PACKAGECLAUSE:  func(dotted, importDecl) {
+                                str("(ns ", dotted, importDecl, ")\n\n")
+                        },
+                        IMPORTDECL:     func(&importSpecs) {apply(str, importSpecs)},
+                        IMPORTSPEC:     func(identifier, dotted) {
+                                str("\n  (:require [", dotted, " :as ", identifier, "])")
+                        },
+                        SHORTVARDECL:   func(identifier, expression) {
+                                str("(def ", identifier, " ", expression, ")")
+                        },
+                        FUNCTIONCALL:    func(function) {
+                                str("(", function, ")")
+                        } (function, call) {
+                                str("(", function, " ", call, ")")
+                        },
+                        EXPRESSIONLIST: func(expr0, &exprRest){
+                                reduce(
+                                        func(acc, expr) {str(acc, " ", expr)},
+                                        expr0,
+                                        exprRest)
+                        },
+                        EXPRESSIONS: func(expr0, &exprRest){
+                                reduce(
+                                        func(acc, expr) {str(acc, "\n\n", expr)},
+                                        expr0,
+                                        exprRest)
+                        },
+                        WITHCONST: func(&xs){
+                                const(
+                                        consts = dropLast(xs)
+                                        expressions = last(xs)
+                                )
+                                str("(let [",
+                                        reduce(func(acc,konst) {str(acc, " ", konst)}, xs),
+                                        "] ",
+                                        expressions,
+                                        ")")
+                        },
+                        CONST: func(identifier, expression) {str(identifier, " ", expression)},
+                        SYMBOL: func(identifier){
+                                identifier
+                        } (pkg, identfier) {
+                                str(pkg, "/", identifier)
+                        },
+                        FUNCTIONDECL:   func(identifier, function) {
+                                str("(defn ", identifier, " ", function, ")")
+                        },
+                        FUNCTIONLIT:    func(function) {str("(fn ", function, ")")},
+                        FUNCTIONPARTS:  func(&functionpart) {
+                                str(" (",
+                                        reduce(
+                                                func(acc, fp) {str(acc, ") (", fp)},
+                                                functionpart),
+                                        ")")
+                        },
+                        FUNCTIONPART0:  func(expression) {
+                                str("[] ", expression)
+                        },
+                        VFUNCTIONPART0:  func(varadic, expression) {
+                                str("[", varadic, "] ", expression)
+                        },
+                        FUNCTIONPARTN:  func(parameters, expression) {
+                                str("[", parameters, "] ", expression)
+                        },
+                        VFUNCTIONPARTN: func(parameters, varadic, expression) {
+                        str("[", parameters, " ", varadic, "] ", expression)
+                        },
+                        PARAMETERS:     func(arg0, &argsRest) {
+				reduce(
+					func(acc, arg) {str(acc, " ", arg)},
+					arg0,
+					args)
+                        },
+                        VARADIC:        func(parameter) {str("& ", parameter)},
+                        DICTLIT:        func(&dictElems) {apply(str, dictElems)},
+                        DICTELEMENT:    func(key, value) {str(key, " ", value, " ")},
+                        LABEL:          func(s) {str(":", string.lowerCase(s))},
+                        DOTTED:         func(idf0, &idfRest){
+                                reduce(
+                                        func(acc, idf) {str(acc, ".", idf)},
+                                        idf0,
+                                        idfRest)
+                        },
+                        DECIMAL_LIT:    func(s){s},
+                        INTERPRETED_STRING_LIT: func(s){str(`"`, s, `"`)},
+                        RAW_STRING_LIT: func(s){str(`"`, string.escape(s, charEscapeString), `"`)}
+                },
+                parsed
+        )
+}
+
+// Convert funcgo to clojure
+func _main(&args) {
+        println( funcgoParse( slurp( first(args))))
+}

@@ -61,7 +61,7 @@ unicode_digit  = #'\\p{Digit}'
 __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
 <NL>           = [ nl | comment ]
 <nl>           = <#'\\s*[\\n;]\\s*'>       (* whitespace with at least one newline or semicolon *)
-comment        = #'[ \\t\\x0B\\f\\r\\n]*//[^\\n]*\\n[ \\t\\x0B\\f\\r\\n]*'
+<comment>      = #'[ \\t\\x0B\\f\\r\\n]*//[^\\n]*\\n[ \\t\\x0B\\f\\r\\n]*'
 "))
 
 
@@ -121,11 +121,11 @@ comment        = #'[ \\t\\x0B\\f\\r\\n]*//[^\\n]*\\n[ \\t\\x0B\\f\\r\\n]*'
                         (str "[" parameters "] " expression))
       :vfunctionpartn (fn [parameters varadic expression]
                         (str "[" parameters " " varadic "] " expression))
-      :parameters     (fn [& args]
-                        (when (seq args)
+      :parameters     (fn [arg0 & args-rest]
                           (reduce
                            (fn [acc arg] (str acc " " arg))
-                           args)))
+                           arg0
+                           args-rest))
       :varadic        (fn [parameter] (str "& " parameter))
       :dictlit        (fn [& dict-elems] (apply str dict-elems))
       :dictelement    (fn [key value] (str key " " value " "))
