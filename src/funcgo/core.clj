@@ -21,7 +21,7 @@ importspec     = identifier _ dotted
                                                                          PrimaryExpr Index |
                                                                          PrimaryExpr Slice |
                                                                          PrimaryExpr TypeAssertion |*)
-withconst      = <'const'> _ <'('> NL { const NL } <')'> expressions
+withconst      = <'const'> _ <'('> NL { const NL } <')'> NL expressions
 const          = identifier _ <'='> _ Expression 
 functioncall   = PrimaryExpr Call
 <Call>         = <'('> _ ( ArgumentList _ )? <')'>
