@@ -57,11 +57,11 @@ label          = #'[\\p{Lu}]+'
 letter         = unicode_letter | '_'
 unicode_letter = #'\\p{L}'
 unicode_digit  = #'\\p{Digit}'
-<_>            = <#'[ \\t\\x0B\\f\\r\\n]*'>   (* optional whitespace *)
-__             =  #'[ \\t\\x0B\\f\\r\\n]+'    (* whitespace *)
+<_>            = <#'[ \\t\\x0B\\f\\r\\n]*'> | comment  (* optional whitespace *)
+__             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
 <NL>           = [ nl | comment ]
 <nl>           = <#'\\s*[\\n;]\\s*'>       (* whitespace with at least one newline or semicolon *)
-comment        = #'//[^\\n]*\\n'
+comment        = #'[ \\t\\x0B\\f\\r\\n]*//[^\\n]*\\n[ \\t\\x0B\\f\\r\\n]*'
 "))
 
 
