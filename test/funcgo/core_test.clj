@@ -79,6 +79,7 @@ import(
 ;; (fact "quotes in strings"     (parse "\"foo\"bar\"")   => (parsed "\"foo\"bar\""))  TODO implement
 (fact "multiple expr"         (parse "1;2;3")          => (parsed "1\n\n2\n\n3"))
 (fact "multiple expr 2"       (parse "1\n2\n3")        => (parsed "1\n\n2\n\n3"))
+(fact "const"                 (parse "const(\na=2\n)a")=> (parsed "(let [a 2] a)"))
 
 
 (fact "full source file" (funcgo-parse "
