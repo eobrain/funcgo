@@ -2,6 +2,7 @@
   (:gen-class)
   (:require [instaparse.core :as insta]
             [clojure.string :as string])
+  (:require [instaparse.failure :as failure])
   (:require clojure.pprint)
   )
 
@@ -69,87 +70,97 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
 (defn funcgo-parse [fgo]
   (let
       [parsed (funcgo-parser fgo)]
-    ;;(clojure.pprint/pprint parsed)
-    (insta/transform
-     {
-      :sourcefile     (fn [header body] (str header body "\n"))
-      :packageclause  (fn [dotted  import-decl]
-                        (str "(ns " dotted import-decl ")\n\n"))
-      :importdecl     (fn [ & import-specs] (apply str import-specs))
-      :importspec     (fn [identifier dotted]
-                        (str "\n  (:require [" dotted " :as " identifier "])"))
-      :shortvardecl   (fn [identifier expression]
-                        (str "(def " identifier " " expression ")"))
-      :functioncall   (fn
-                        ([function]           (str "(" function ")"))
-                        ([function call] (str "(" function " " call ")")))
-      :expressionlist (fn [expr0 & expr-rest]
-                        (reduce
-                         (fn [acc expr] (str acc " " expr))
-                         expr0
-                         expr-rest))
-      :expressions    (fn [expr0 & expr-rest]
-                        (reduce
-                         (fn [acc expr] (str acc "\n\n" expr))
-                         expr0
-                         expr-rest))
-      :withconst      (fn [& xs]
-                         (let [
-                             consts (butlast xs)
-                             expressions (last xs)]
-                           (str "(let ["
-                                (reduce (fn [acc konst] (str acc " " konst)) consts)
-                                "] "
-                                expressions
-                                ")")))
-      :const          (fn [identifier expression] (str identifier " " expression))
-      :symbol         (fn
-                        ([identifier]        identifier)
-                        ([package identifier] (str package "/" identifier)))
-      :functiondecl   (fn [identifier function] (str "(defn " identifier " " function ")"))
-      :functionlit    (fn [function] (str "(fn " function ")"))
-      :functionparts   (fn [& functionpart]
-                         (str "("
-                              (reduce
-                               (fn [acc fp] (str acc ") (" fp))
-                               functionpart)
-                              ")"))
-      :functionpart0  (fn [expression]
-                        (str "[] " expression))
-      :vfunctionpart0 (fn [varadic expression]
-                        (str "[" varadic "] " expression))
-      :functionpartn  (fn [parameters expression]
-                        (str "[" parameters "] " expression))
-      :vfunctionpartn (fn [parameters varadic expression]
-                        (str "[" parameters " " varadic "] " expression))
-      :parameters     (fn [arg0 & args-rest]
+    (if (insta/failure? parsed)
+      (do
+        (failure/pprint-failure parsed)
+        (throw (Exception. "\"SYNTAX ERROR\"")))
+      ;;(clojure.pprint/pprint parsed)
+      (insta/transform
+       {
+        :sourcefile     (fn [header body] (str header body "\n"))
+        :packageclause  (fn [dotted  import-decl]
+                          (str "(ns " dotted import-decl ")\n\n"))
+        :importdecl     (fn [ & import-specs] (apply str import-specs))
+        :importspec     (fn [identifier dotted]
+                          (str "\n  (:require [" dotted " :as " identifier "])"))
+        :shortvardecl   (fn [identifier expression]
+                          (str "(def " identifier " " expression ")"))
+        :functioncall   (fn
+                          ([function]           (str "(" function ")"))
+                          ([function call] (str "(" function " " call ")")))
+        :expressionlist (fn [expr0 & expr-rest]
+                          (reduce
+                           (fn [acc expr] (str acc " " expr))
+                           expr0
+                           expr-rest))
+        :expressions    (fn [expr0 & expr-rest]
+                          (reduce
+                           (fn [acc expr] (str acc "\n\n" expr))
+                           expr0
+                           expr-rest))
+        :withconst      (fn [& xs]
+                          (let [
+                                consts (butlast xs)
+                                expressions (last xs)]
+                            (str "(let ["
+                                 (reduce (fn [acc konst] (str acc " " konst)) consts)
+                                 "] "
+                                 expressions
+                                 ")")))
+        :const          (fn [identifier expression] (str identifier " " expression))
+        :symbol         (fn
+                          ([identifier]        identifier)
+                          ([package identifier] (str package "/" identifier)))
+        :functiondecl   (fn [identifier function] (str "(defn " identifier " " function ")"))
+        :functionlit    (fn [function] (str "(fn " function ")"))
+        :functionparts   (fn [& functionpart]
+                           (str "("
+                                (reduce
+                                 (fn [acc fp] (str acc ") (" fp))
+                                 functionpart)
+                                ")"))
+        :functionpart0  (fn [expression]
+                          (str "[] " expression))
+        :vfunctionpart0 (fn [varadic expression]
+                          (str "[" varadic "] " expression))
+        :functionpartn  (fn [parameters expression]
+                          (str "[" parameters "] " expression))
+        :vfunctionpartn (fn [parameters varadic expression]
+                          (str "[" parameters " " varadic "] " expression))
+        :parameters     (fn [arg0 & args-rest]
                           (reduce
                            (fn [acc arg] (str acc " " arg))
                            arg0
                            args-rest))
-      :varadic        (fn [parameter] (str "& " parameter))
-      :dictlit        (fn [& dict-elems] (apply str dict-elems))
-      :dictelement    (fn [key value] (str key " " value " "))
-      :label          (fn [s] (str ":" (string/lower-case s)))
-      :identifier     (fn [s] (clojure.string/replace s #"L"
-                               (fn [s] (str "-" (clojure.string/lower-case s)))))
-      :dotted         (fn [idf0 & idf-rest]
-                        (reduce
-                         (fn [acc idf] (str acc "." idf))
-                         idf0
-                         idf-rest))
-      :decimal_lit    (fn [s] s)
-      :regex          (fn [s] (str "#\"" s "\""))
-      :interpreted_string_lit (fn [s] (str "\"" s "\""))
-      :raw_string_lit (fn [s] (str "\"" (string/escape s char-escape-string) "\""))}
-     parsed)))
+        :varadic        (fn [parameter] (str "& " parameter))
+        :dictlit        (fn [& dict-elems] (apply str dict-elems))
+        :dictelement    (fn [key value] (str key " " value " "))
+        :label          (fn [s] (str ":" (string/lower-case s)))
+        :identifier     (fn [s]
+                          (clojure.string/replace
+                           s
+                           #"L"
+                           (fn [s] (str "-" (clojure.string/lower-case s)))))
+        :dotted         (fn [idf0 & idf-rest]
+                          (reduce
+                           (fn [acc idf] (str acc "." idf))
+                           idf0
+                           idf-rest))
+        :decimal_lit    (fn [s] s)
+        :regex          (fn [s] (str "#\"" s "\""))
+        :interpreted_string_lit (fn [s] (str "\"" s "\""))
+        :raw_string_lit (fn [s] (str "\"" (string/escape s char-escape-string) "\""))}
+       parsed))))
   
 (defn -main
   "Convert funcgo to clojure."
   [& args]
-  (doseq
-      [expr (read-string (str "["
-                              (funcgo-parse (slurp (first args)))
-                              "]"  ))]
-    (clojure.pprint/pprint expr)
-    (println)))
+  (try
+    (let
+        [clj (funcgo-parse (slurp (first args)))]
+      (doseq
+          [expr (read-string (str "[" clj "]"  ))]
+        (clojure.pprint/pprint expr)
+        (println)))
+    (catch Exception e
+      (println "\n" (.getMessage e)))))

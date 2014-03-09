@@ -69,7 +69,11 @@ func FuncgoParse(fgo) {
                 parsed = funcgoParser(fgo)
         )
         // pprint.pprint(parsed)
-        insta.transform(
+	if insta.isFailure(parsed) {
+		failure.pprintFailure(parsed)
+		throw(new Exception(`"SYNTAX ERROR"`))
+	} else {
+            insta.transform(
                 {
                         SOURCEFILE:     func(header, body) {str(header, body, "\n")},
                         PACKAGECLAUSE:  func(dotted, importDecl) {
@@ -150,8 +154,10 @@ func FuncgoParse(fgo) {
                         DICTELEMENT:    func(key, value) {str(key, " ", value, " ")},
                         LABEL:          func(s) {str(":", string.lowerCase(s))},
 		        IDENTIFIER:     func(s) {
-				string.replace(s, /L/, func(s){str("-",string.lowerCase(s))))
-			}
+				string.replace(s, /L/, func(s){
+					str("-",string.lowerCase(s))
+				})
+			},
                         DOTTED:         func(idf0, &idfRest){
                                 reduce(
                                         func(acc, idf) {str(acc, ".", idf)},
@@ -164,10 +170,21 @@ func FuncgoParse(fgo) {
                         RAW_STRING_LIT: func(s){str(`"`, string.escape(s, charEscapeString), `"`)}
                 },
                 parsed
-        )
+            )
+	}
 }
 
 // Convert funcgo to clojure
 func _main(&args) {
-        println( funcgoParse( slurp( first(args))))
+  try {
+	  const(
+		  clj = funcgoParse(slurp(first(args)))
+	  )
+	  for expr := force readString( str("[", clj, "]")) {
+		  pprint.pprint(expr)
+		  println()
+	  }
+  } catch Exception e {
+	  println("\n", e.getMessage e)
+  }
 }
