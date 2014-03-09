@@ -13,8 +13,12 @@ packageclause  = <'package'> <__> dotted NL importdecl
 expressions    = Expression { NL Expression }
 importdecl     = <'import'> _ <'('>  _ { importspec _ } <')'>
 importspec     = identifier _ dotted
-<Expression>   = UnaryExpr | shortvardecl | ifelseexpr           (* | Expression binary_op UnaryExpr *)
+<Expression>   = UnaryExpr | shortvardecl | ifelseexpr | tryexpr (* | Expression binary_op UnaryExpr *)
 ifelseexpr     = <'if'> _ Expression _ ( ( block _ <'else'> _ block ) | ( _ <'{'> _ expressions _ <'}'> )   )
+tryexpr        = <'try'> _ <'{'> _ expressions _ <'}'> _ catches _ finally?
+catches        = ( catch { _ catch } )?
+catch          = <'catch'> _ symbol _ symbol _ <'{'> _ expressions _ <'}'>
+finally        = <'finally'> _ <'{'> _ expressions _ <'}'>
 block          = <'{'> _ Expression { NL Expression } _ <'}'>
 <UnaryExpr>    = PrimaryExpr                                                (* | unary_op UnaryExpr *)
 <PrimaryExpr>  = functioncall | Operand | functiondecl | withconst
@@ -91,6 +95,18 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
         :ifelseexpr (fn
                       ([condition exprs] (str "(when " condition " " exprs ")"))
 		      ([condition block1 block2] (str "(if " condition " " block1 " " block2 ")")))
+        :tryexpr (fn
+                   ([expressions catches] (str "(try " expressions " " catches))
+		   ([expressions catches finally] (str "(try " expressions " " catches " " finally)))
+        :catches (fn [& catches]
+                   (reduce
+                    (fn [acc catch] (str acc " " catch))
+                    catches)
+                   )
+        :catch (fn [typ exception expressions] 
+                 (str "(catch " typ " " exception " " expressions ")")
+                 )
+        :finally (fn [expressions] (str "(finally " expressions ")"))
         :new        (fn [symbol] (str symbol "."))
         :shortvardecl   (fn [identifier expression]
                           (str "(def " identifier " " expression ")"))
@@ -104,7 +120,7 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
                            expr-rest))
         :expressions    (fn [expr0 & expr-rest]
                           (reduce
-                           (fn [acc expr] (str acc "\n" expr))
+                           (fn [acc expr] (str acc " " expr))
                            expr0
                            expr-rest))
         :consts         (fn [& consts]
@@ -116,7 +132,7 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
                           ([expr0 & expr-rest]
                              (str "(do "
                                   (reduce
-                                   (fn [acc expr] (str acc "\n" expr))
+                                   (fn [acc expr] (str acc " " expr))
                                    expr0
                                    expr-rest)
                                   ")")))

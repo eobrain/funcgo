@@ -94,8 +94,8 @@ import(
 ;; (fact "quotes in strings"
 ;; (parse "\"foo\"bar\"")   => (parsed "\"foo\"bar\""))  TODO implement
 (fact "multiple expr "
-      (parse "1;2;3")          => (parsed "1\n2\n3")
-      (parse "1\n2\n3")        => (parsed "1\n2\n3"))
+      (parse "1;2;3")          => (parsed "1 2 3")
+      (parse "1\n2\n3")        => (parsed "1 2 3"))
 (fact "const"
       (parse "const(a=2)a")=> (parsed "(let [a 2] a)")
       (parse " const(  a=2 ) a")=> (parsed "(let [a 2] a)")
@@ -111,15 +111,22 @@ import(
 ;;   (parse "/aaa\/bbb/"       => (parsed "#\"aaa/bbb"")) TODO implement
 (fact "if"
       (parse "if a {b}") => (parsed "(when a b)")
-      (parse "if a {b;c}") => (parsed "(when a b\nc)")
-      (parse "if a {b\nc}") => (parsed "(when a b\nc)")
+      (parse "if a {b;c}") => (parsed "(when a b c)")
+      (parse "if a {b\nc}") => (parsed "(when a b c)")
       (parse "if a {b}else{c}") => (parsed "(if a b c)")
       (parse "if a {  b  }else{ c  }") => (parsed "(if a b c)")
-      (parse "if a {b;c} else {d;e}") => (parsed "(if a (do b\nc) (do d\ne))"))
+      (parse "if a {b;c} else {d;e}") => (parsed "(if a (do b c) (do d e))"))
 (fact "new"
       (parse "new Foo()") => (parsed "(Foo.)")
       (parse "new Foo(a)") => (parsed "(Foo. a)")
       (parse "new Foo(a,b,c)") => (parsed "(Foo. a b c)"))
+(fact "try catch"
+      (parse "try{a}catch T e{b}") => (parsed "(try a (catch T e b)")
+      (parse "try{a}catch T1 e1{b} catch T2 e2{c}")
+      => (parsed "(try a (catch T1 e1 b) (catch T2 e2 c)")
+      (parse "try{a;b}catch T e{c;d}") => (parsed "(try a b (catch T e c d)")
+      (parse "try{a}catch T e{b}finally{c}") => (parsed "(try a (catch T e b) (finally c)")
+      (parse "try { a } catch T e{ b } ") => (parsed "(try a (catch T e b)"))
 
 
 (fact "full source file" (funcgo-parse "
@@ -145,6 +152,5 @@ func FooBar(iii, jjj) {
   (:require [bar.baz :as b])
   (:require [foo.faz.fedudle :as ff]))
 
-(def x (b/bbb \"blah blah\"))
-(defn FooBar [iii jjj] (ff/fumanchu {:ooo (fn [m n] (str m n)) :ppp (fn [m n] (str m n)) :qqq qq }))
+(def x (b/bbb \"blah blah\")) (defn FooBar [iii jjj] (ff/fumanchu {:ooo (fn [m n] (str m n)) :ppp (fn [m n] (str m n)) :qqq qq }))
 ")
