@@ -116,6 +116,10 @@ import(
       (parse "if a {b}else{c}") => (parsed "(if a b c)")
       (parse "if a {  b  }else{ c  }") => (parsed "(if a b c)")
       (parse "if a {b;c} else {d;e}") => (parsed "(if a (do b\nc) (do d\ne))"))
+(fact "new"
+      (parse "new Foo()") => (parsed "(Foo.)")
+      (parse "new Foo(a)") => (parsed "(Foo. a)")
+      (parse "new Foo(a,b,c)") => (parsed "(Foo. a b c)"))
 
 
 (fact "full source file" (funcgo-parse "

@@ -29,7 +29,8 @@ functioncall   = PrimaryExpr Call
 <Call>         = <'('> _ ( ArgumentList _ )? <')'>
 <ArgumentList> = expressionlist                                                      (* [ _ '...' ] *)
 expressionlist = Expression { _ <','> _ Expression }
-<Operand>      = Literal | OperandName | label                  (*| MethodExpr | '(' Expression ')' *)
+<Operand>      = Literal | OperandName | label | new            (*| MethodExpr | '(' Expression ')' *)
+new            = <'new'> <__> symbol
 <OperandName>  = symbol                                                           (*| QualifiedIdent*)
 <Literal>      = BasicLit | dictlit | functionlit
 <BasicLit>     = int_lit | string_lit | regex              (*| float_lit | imaginary_lit | rune_lit *)
@@ -91,6 +92,7 @@ func FuncgoParse(fgo) {
 			} (condition, block1, block2) {
 				str("(if ", condition, " ", block1, " ", block2, ")")
 			},
+			NEW: func(symbol){str(symbol, ".")},
                         SHORTVARDECL:   func(identifier, expression) {
                                 str("(def ", identifier, " ", expression, ")")
                         },

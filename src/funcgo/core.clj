@@ -31,7 +31,8 @@ functioncall   = PrimaryExpr Call
 <Call>         = <'('> _ ( ArgumentList _ )? <')'>
 <ArgumentList> = expressionlist                                                      (* [ _ '...' ] *)
 expressionlist = Expression { _ <','> _ Expression }
-<Operand>      = Literal | OperandName | label                  (*| MethodExpr | '(' Expression ')' *)
+<Operand>      = Literal | OperandName | label | new            (*| MethodExpr | '(' Expression ')' *)
+new            = <'new'> <__> symbol
 <OperandName>  = symbol                                                           (*| QualifiedIdent*)
 <Literal>      = BasicLit | dictlit | functionlit
 <BasicLit>     = int_lit | string_lit | regex              (*| float_lit | imaginary_lit | rune_lit *)
@@ -90,6 +91,7 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
         :ifelseexpr (fn
                       ([condition exprs] (str "(when " condition " " exprs ")"))
 		      ([condition block1 block2] (str "(if " condition " " block1 " " block2 ")")))
+        :new        (fn [symbol] (str symbol "."))
         :shortvardecl   (fn [identifier expression]
                           (str "(def " identifier " " expression ")"))
         :functioncall   (fn
