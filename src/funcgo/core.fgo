@@ -112,9 +112,9 @@ func FuncgoParse(fgo) {
                                 str("(dotimes [", identifier, " ", count, "] ", expressions, ")")
                         },
                         TRYEXPR: func(expressions, catches) {
-                                str("(try ", expressions, " ", catches)
+                                str("(try ", expressions, " ", catches, ")")
                         } (expressions, catches, finally) {
-                                str("(try ", expressions, " ", catches, " ", finally)
+                                str("(try ", expressions, " ", catches, " ", finally, ")" )
                         },
                         CATCHES: func(&catches){
                                 reduce(
@@ -245,6 +245,6 @@ func _main(&args) {
                   println()
           }
   } catch Exception e {
-          println("\n", e.getMessage e)
+          println("\n", e.getMessage, e)
   }
 }

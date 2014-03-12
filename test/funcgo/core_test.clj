@@ -121,12 +121,12 @@ import(
       (parse "new Foo(a)") => (parsed "(Foo. a)")
       (parse "new Foo(a,b,c)") => (parsed "(Foo. a b c)"))
 (fact "try catch"
-      (parse "try{a}catch T e{b}") => (parsed "(try a (catch T e b)")
+      (parse "try{a}catch T e{b}") => (parsed "(try a (catch T e b))")
       (parse "try{a}catch T1 e1{b} catch T2 e2{c}")
-      => (parsed "(try a (catch T1 e1 b) (catch T2 e2 c)")
-      (parse "try{a;b}catch T e{c;d}") => (parsed "(try a b (catch T e c d)")
-      (parse "try{a}catch T e{b}finally{c}") => (parsed "(try a (catch T e b) (finally c)")
-      (parse "try { a } catch T e{ b } ") => (parsed "(try a (catch T e b)"))
+      => (parsed "(try a (catch T1 e1 b) (catch T2 e2 c))")
+      (parse "try{a;b}catch T e{c;d}") => (parsed "(try a b (catch T e c d))")
+      (parse "try{a}catch T e{b}finally{c}") => (parsed "(try a (catch T e b) (finally c))")
+      (parse "try { a } catch T e{ b } ") => (parsed "(try a (catch T e b))"))
 (fact "for"
       (parse "for x:=range xs{f(x)}")    => (parsed "(doseq [x xs] (f x))")
       (parse "for x := range xs {f(x)}") => (parsed "(doseq [x xs] (f x))")

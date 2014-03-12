@@ -109,8 +109,8 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
         :fortimes   (fn [identifier count expressions] 
                                 (str "(dotimes ["  identifier " " count "] " expressions ")"))
         :tryexpr (fn
-                   ([expressions catches] (str "(try " expressions " " catches))
-		   ([expressions catches finally] (str "(try " expressions " " catches " " finally)))
+                   ([expressions catches] (str "(try " expressions " " catches ")"))
+		   ([expressions catches finally] (str "(try " expressions " " catches " " finally ")")))
         :catches (fn [& catches]
                    (reduce
                     (fn [acc catch] (str acc " " catch))
@@ -209,6 +209,7 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
   (try
     (let
         [clj (funcgo-parse (slurp (first args)))]
+      ;;(println clj)
       (doseq
           [expr (read-string (str "[" clj "]"  ))]
         (clojure.pprint/pprint expr)
