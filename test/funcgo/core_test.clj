@@ -127,6 +127,12 @@ import(
       (parse "try{a;b}catch T e{c;d}") => (parsed "(try a b (catch T e c d)")
       (parse "try{a}catch T e{b}finally{c}") => (parsed "(try a (catch T e b) (finally c)")
       (parse "try { a } catch T e{ b } ") => (parsed "(try a (catch T e b)"))
+(fact "for"
+      (parse "for x:=range xs{f(x)}")    => (parsed "(doseq [x xs] (f x))")
+      (parse "for x := range xs {f(x)}") => (parsed "(doseq [x xs] (f x))")
+      (parse "for x:= lazy xs{f(x)}") => (parsed "(for [x xs] (f x))")
+      (parse "for x:= lazy xs if a{f(x)}") => (parsed "(for [x xs] :when a (f x))")
+      (parse "for i:= times n {f(i)}") => (parsed "(dotimes [i n] (f i))"))
 
 
 (fact "full source file" (funcgo-parse "

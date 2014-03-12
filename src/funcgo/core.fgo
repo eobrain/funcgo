@@ -11,11 +11,14 @@ packageclause  = <'package'> <__> dotted NL importdecl
 expressions    = Expression { NL Expression }
 importdecl     = <'import'> _ <'('>  _ { importspec _ } <')'>
 importspec     = identifier _ dotted
-<Expression>   = UnaryExpr | shortvardecl | ifelseexpr | tryexpr (* | Expression binary_op UnaryExpr *)
+<Expression>   = UnaryExpr | shortvardecl | ifelseexpr | tryexpr | forrange | forlazy | fortimes (* | Expression binary_op UnaryExpr *)
 ifelseexpr     = <'if'> _ Expression _ ( ( block _ <'else'> _ block ) | ( _ <'{'> _ expressions _ <'}'> )   )
+forrange       = <'for'> <__> identifier _ <':='> _ <'range'> <_> Expression <'{'> _ expressions _ <'}'>
+forlazy        = <'for'> <__> identifier _ <':='> _ <'lazy'> <_> Expression [ <__> <'if'> <__> Expression ] <'{'> _ expressions _ <'}'>
+fortimes       = <'for'> <__> identifier _ <':='> _ <'times'> <_> Expression <'{'> _ expressions _ <'}'>
 tryexpr        = <'try'> _ <'{'> _ expressions _ <'}'> _ catches _ finally?
 catches        = ( catch { _ catch } )?
-catch          = <'catch'> _ symbol _ symbol _ <'{'> _ expressions _ <'}'>
+catch          = <'catch'> _ identifier _ identifier _ <'{'> _ expressions _ <'}'>
 finally        = <'finally'> _ <'{'> _ expressions _ <'}'>
 block          = <'{'> _ Expression { NL Expression } _ <'}'>
 <UnaryExpr>    = PrimaryExpr                                                (* | unary_op UnaryExpr *)
@@ -60,7 +63,8 @@ raw_string_lit = <#'\x60'> #'[^\x60]*' <#'\x60'>      (* \x60 is back quote char
 interpreted_string_lit = <#'\"'> #'[^\\"]*' <#'\"'>      (* TODO: handle string escape *)
 dotted         = identifier { <'.'> identifier }
 symbol         = ( identifier <'.'> )? identifier
-identifier     = #'[\p{L}_][\p{L}_\p{Digit}]*'              (* letter { letter | unicode_digit } *)
+keyword        = 'for'
+identifier     = !keyword #'[\p{L}_][\p{L}_\p{Digit}]*'       (* letter { letter | unicode_digit } *)
 label          = #'[\p{Lu}]+'
 letter         = unicode_letter | '_'
 unicode_letter = #'\p{L}'
@@ -95,6 +99,17 @@ func FuncgoParse(fgo) {
                                 str("(when ", condition, " ", exprs, ")")
                         } (condition, block1, block2) {
                                 str("(if ", condition, " ", block1, " ", block2, ")")
+                        },
+                        FORRANGE: func(identifier, seq, expressions) {
+                                str("(doseq [", identifier, " ", seq, "] ", expressions, ")")
+                        },
+                        FORLAZY: func(identifier, seq, expressions) {
+                                str("(for [", identifier, " ", seq, "] ", expressions, ")")
+                        } (identifier, seq, condition, expressions) {
+                                str("(for [", identifier, " ", seq, "] :when ", condition, " ", expressions, ")")
+                        },
+                        FORTIMES: func(identifier, seq, count) {
+                                str("(dotimes [", identifier, " ", count, "] ", expressions, ")")
                         },
                         TRYEXPR: func(expressions, catches) {
                                 str("(try ", expressions, " ", catches)
@@ -225,7 +240,7 @@ func _main(&args) {
           const(
                   clj = funcgoParse(slurp(first(args)))
           )
-          for expr := force readString( str("[", clj, "]")) {
+          for expr := range readString( str("[", clj, "]")) {
                   pprint.pprint(expr)
                   println()
           }

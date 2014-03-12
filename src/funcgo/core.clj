@@ -13,11 +13,14 @@ packageclause  = <'package'> <__> dotted NL importdecl
 expressions    = Expression { NL Expression }
 importdecl     = <'import'> _ <'('>  _ { importspec _ } <')'>
 importspec     = identifier _ dotted
-<Expression>   = UnaryExpr | shortvardecl | ifelseexpr | tryexpr (* | Expression binary_op UnaryExpr *)
+<Expression>   = UnaryExpr | shortvardecl | ifelseexpr | tryexpr | forrange | forlazy | fortimes (* | Expression binary_op UnaryExpr *)
 ifelseexpr     = <'if'> _ Expression _ ( ( block _ <'else'> _ block ) | ( _ <'{'> _ expressions _ <'}'> )   )
+forrange       = <'for'> <__> identifier _ <':='> _ <'range'> <_> Expression _ <'{'> _ expressions _ <'}'>
+forlazy        = <'for'> <__> identifier _ <':='> _ <'lazy'> <_> Expression [ <__> <'if'> <__> Expression ] _ <'{'> _ expressions _ <'}'>
+fortimes       = <'for'> <__> identifier _ <':='> _ <'times'> <_> Expression _ <'{'> _ expressions _ <'}'>
 tryexpr        = <'try'> _ <'{'> _ expressions _ <'}'> _ catches _ finally?
 catches        = ( catch { _ catch } )?
-catch          = <'catch'> _ symbol _ symbol _ <'{'> _ expressions _ <'}'>
+catch          = <'catch'> _ identifier _ identifier _ <'{'> _ expressions _ <'}'>
 finally        = <'finally'> _ <'{'> _ expressions _ <'}'>
 block          = <'{'> _ Expression { NL Expression } _ <'}'>
 <UnaryExpr>    = PrimaryExpr                                                (* | unary_op UnaryExpr *)
@@ -61,7 +64,8 @@ regex          = <'/'> #'[^/]*'<'/'>   (* TODO: handle / escape *)
 raw_string_lit = <#'\\x60'> #'[^\\x60]*' <#'\\x60'>      (* \\x60 is back quote character *)
 interpreted_string_lit = <#'\"'> #'[^\\\"]*' <#'\"'>      (* TODO: handle string escape *)
 dotted         = identifier { <'.'> identifier }
-symbol         = ( identifier <'.'> )? identifier
+symbol         = ( identifier <'.'> )? !Keyword identifier
+Keyword        = ( 'for' | 'range' )
 identifier     = #'[\\p{L}_][\\p{L}_\\p{Digit}]*'              (* letter { letter | unicode_digit } *)
 label          = #'[\\p{Lu}]+'
 letter         = unicode_letter | '_'
@@ -95,6 +99,15 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
         :ifelseexpr (fn
                       ([condition exprs] (str "(when " condition " " exprs ")"))
 		      ([condition block1 block2] (str "(if " condition " " block1 " " block2 ")")))
+        :forrange   (fn [identifier seq expressions] 
+                                (str "(doseq ["  identifier " " seq "] " expressions ")"))
+        :forlazy    (fn
+                      ([identifier seq expressions] 
+                                (str "(for ["  identifier " " seq "] " expressions ")"))
+                      ([identifier seq condition expressions] 
+                                (str "(for ["  identifier " " seq "] :when " condition " " expressions ")")))
+        :fortimes   (fn [identifier count expressions] 
+                                (str "(dotimes ["  identifier " " count "] " expressions ")"))
         :tryexpr (fn
                    ([expressions catches] (str "(try " expressions " " catches))
 		   ([expressions catches finally] (str "(try " expressions " " catches " " finally)))
