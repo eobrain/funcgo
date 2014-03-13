@@ -1,9 +1,9 @@
 (ns funcgo.core
   (:gen-class)
-  (:require [instaparse.core :as insta]
-            [clojure.string :as string])
+  (:require [instaparse.core :as insta])
   (:require [instaparse.failure :as failure])
-  (:require clojure.pprint)
+  (:require [clojure.string :as string])
+  (:require [clojure.pprint :as pprint])
   )
 
 (def funcgo-parser
@@ -12,15 +12,15 @@ sourcefile     = [ NL ] packageclause _ expressions _
 packageclause  = <'package'> <__> dotted NL importdecl
 expressions    = Expression { NL Expression }
 importdecl     = <'import'> _ <'('>  _ { importspec _ } <')'>
-importspec     = identifier _ dotted
+importspec     = Identifier _ dotted
 <Expression>   = UnaryExpr | shortvardecl | ifelseexpr | tryexpr | forrange | forlazy | fortimes (* | Expression binary_op UnaryExpr *)
 ifelseexpr     = <'if'> _ Expression _ ( ( block _ <'else'> _ block ) | ( _ <'{'> _ expressions _ <'}'> )   )
-forrange       = <'for'> <__> identifier _ <':='> _ <'range'> <_> Expression _ <'{'> _ expressions _ <'}'>
-forlazy        = <'for'> <__> identifier _ <':='> _ <'lazy'> <_> Expression [ <__> <'if'> <__> Expression ] _ <'{'> _ expressions _ <'}'>
-fortimes       = <'for'> <__> identifier _ <':='> _ <'times'> <_> Expression _ <'{'> _ expressions _ <'}'>
+forrange       = <'for'> <__> Identifier _ <':='> _ <'range'> <_> Expression _ <'{'> _ expressions _ <'}'>
+forlazy        = <'for'> <__> Identifier _ <':='> _ <'lazy'> <_> Expression [ <__> <'if'> <__> Expression ] _ <'{'> _ expressions _ <'}'>
+fortimes       = <'for'> <__> Identifier _ <':='> _ <'times'> <_> Expression _ <'{'> _ expressions _ <'}'>
 tryexpr        = <'try'> _ <'{'> _ expressions _ <'}'> _ catches _ finally?
 catches        = ( catch { _ catch } )?
-catch          = <'catch'> _ identifier _ identifier _ <'{'> _ expressions _ <'}'>
+catch          = <'catch'> _ Identifier _ Identifier _ <'{'> _ expressions _ <'}'>
 finally        = <'finally'> _ <'{'> _ expressions _ <'}'>
 block          = <'{'> _ Expression { NL Expression } _ <'}'>
 <UnaryExpr>    = PrimaryExpr                                                (* | unary_op UnaryExpr *)
@@ -33,7 +33,7 @@ block          = <'{'> _ Expression { NL Expression } _ <'}'>
                                                                          PrimaryExpr TypeAssertion |*)
 withconst      = <'const'> _ <'('> _ { consts } _ <')'> _ expressions
 consts         = [ const { NL const } ]
-const          = identifier _ <'='> _ Expression 
+const          = Identifier _ <'='> _ Expression 
 functioncall   = PrimaryExpr Call
 <Call>         = <'('> _ ( ArgumentList _ )? <')'>
 <ArgumentList> = expressionlist                                                      (* [ _ '...' ] *)
@@ -43,8 +43,8 @@ new            = <'new'> <__> symbol
 <OperandName>  = symbol                                                           (*| QualifiedIdent*)
 <Literal>      = BasicLit | dictlit | functionlit
 <BasicLit>     = int_lit | string_lit | regex              (*| float_lit | imaginary_lit | rune_lit *)
-shortvardecl   = identifier _ <':='> _ Expression
-functiondecl   = <'func'> _ identifier _ Function
+shortvardecl   = Identifier _ <':='> _ Expression
+functiondecl   = <'func'> _ Identifier _ Function
 functionlit    = <'func'> _ Function
 <Function>     = FunctionPart | functionparts
 functionparts  = FunctionPart _ FunctionPart { _ FunctionPart }
@@ -53,8 +53,8 @@ functionpart0  = <'('> _ <')'> _ <'{'> _ Expression _ <'}'>
 vfunctionpart0 = <'('> _ varadic _ <')'> _ <'{'> _ Expression _ <'}'>
 functionpartn  = <'('> _ parameters _ <')'> _ <'{'> _ Expression _ <'}'>
 vfunctionpartn = <'('> _ parameters _  <','> _ varadic _ <')'> _ <'{'> _ Expression _ <'}'>
-parameters     = identifier { <','> _ identifier }
-varadic        = <'&'> identifier
+parameters     = Identifier { <','> _ Identifier }
+varadic        = <'&'> Identifier
 dictlit        = '{' _ ( dictelement _ { <','> _ dictelement } )? _ '}'
 dictelement    = Expression _ <':'> _ Expression
 <int_lit>      = decimal_lit    (*| octal_lit | hex_lit .*)
@@ -63,10 +63,14 @@ regex          = <'/'> #'[^/]*'<'/'>   (* TODO: handle / escape *)
 <string_lit>   = raw_string_lit   | interpreted_string_lit
 raw_string_lit = <#'\\x60'> #'[^\\x60]*' <#'\\x60'>      (* \\x60 is back quote character *)
 interpreted_string_lit = <#'\"'> #'[^\\\"]*' <#'\"'>      (* TODO: handle string escape *)
-dotted         = identifier { <'.'> identifier }
-symbol         = ( identifier <'.'> )? !Keyword identifier
+dotted         = Identifier { <'.'> Identifier }
+symbol         = ( Identifier <'.'> )? !Keyword Identifier
 Keyword        = ( 'for' | 'range' )
+<Identifier>     = identifier | dashidentifier | isidentifier | mutidentifier
 identifier     = #'[\\p{L}_][\\p{L}_\\p{Digit}]*'              (* letter { letter | unicode_digit } *)
+dashidentifier = <'_'> identifier
+isidentifier   = <'is'> #'\\p{L}' identifier
+mutidentifier  = <'mutate'> #'\\p{L}' identifier
 label          = #'\\p{Lu}[\\p{Lu}_]*'
 letter         = unicode_letter | '_'
 unicode_letter = #'\\p{L}'
@@ -86,13 +90,11 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
       (do
         (failure/pprint-failure parsed)
         (throw (Exception. "\"SYNTAX ERROR\"")))
-      ;;(do
-      ;;(clojure.pprint/pprint parsed)
       (insta/transform
        {
         :sourcefile     (fn [header body] (str header body "\n"))
         :packageclause  (fn [dotted  import-decl]
-                          (str "(ns " dotted import-decl ")\n\n"))
+                          (str "(ns " dotted " (:gen-class)" import-decl ")\n\n"))
         :importdecl     (fn [ & import-specs] (apply str import-specs))
         :importspec     (fn [identifier dotted]
                           (str "\n  (:require [" dotted " :as " identifier "])"))
@@ -192,6 +194,11 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
                            s
                            #"\p{Ll}\p{Lu}"
                             (fn [s] (str (first s) "-" (clojure.string/lower-case (last s))))))
+        :dashidentifier (fn [s] (str "-" s))
+        :isidentifier   (fn [initial identifier]
+                          (str (clojure.string/lower-case initial) identifier "?"))
+        :mutidentifier  (fn [initial identifier]
+                          (str (clojure.string/lower-case initial) identifier "!"))
         :dotted         (fn [idf0 & idf-rest]
                           (reduce
                            (fn [acc idf] (str acc "." idf))
@@ -200,9 +207,12 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
         :decimal_lit    (fn [s] s)
         :regex          (fn [s] (str "#\"" s "\""))
         :interpreted_string_lit (fn [s] (str "\"" s "\""))
-        :raw_string_lit (fn [s] (str "\"" (string/escape s char-escape-string) "\""))}
+        :raw_string_lit (fn [s] (str
+                                 "\""
+                                 (string/escape s char-escape-string)
+                                 "\""))}
        parsed))))
-  
+
 (defn -main
   "Convert funcgo to clojure."
   [& args]
@@ -212,7 +222,7 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
       ;;(println clj)
       (doseq
           [expr (read-string (str "[" clj "]"  ))]
-        (clojure.pprint/pprint expr)
+        (pprint/pprint expr)
         (println)))
     (catch Exception e
       (println "\n" (.getMessage e)))))

@@ -3,7 +3,7 @@
   (:require [funcgo.core :refer :all]))
 
 (fact "smallest complete program has no import and a single expression"
-      (funcgo-parse "package foo;import ()12345")  => "(ns foo)
+      (funcgo-parse "package foo;import ()12345")  => "(ns foo (:gen-class))
 
 12345
 ")
@@ -13,13 +13,13 @@ package foo
 import (
 )
 12345
-")  =>  "(ns foo)
+")  =>  "(ns foo (:gen-class))
 
 12345
 ")
 
 (fact "package can be dotted"
-      (funcgo-parse "package foo.bar;import ()12345")  =>  "(ns foo.bar)
+      (funcgo-parse "package foo.bar;import ()12345")  =>  "(ns foo.bar (:gen-class))
 
 12345
 ")
@@ -30,7 +30,7 @@ import(
   b bar
 )
 12345
-")  => "(ns foo
+")  => "(ns foo (:gen-class)
   (:require [bar :as b]))
 
 12345
@@ -40,7 +40,7 @@ import(
   (funcgo-parse (str "package foo;import ()" expr)))
 
 (defn parsed [expr]
-  (str "(ns foo)\n\n" expr "\n"))
+  (str "(ns foo (:gen-class))\n\n" expr "\n"))
 
 (fact "can refer to symbols"
       (parse "a")              => (parsed "a"))
@@ -89,6 +89,8 @@ import(
       (parse "\"one two\"")    => (parsed "\"one two\""))
 (fact "characters in raw"
       (parse "`\n'\"\b`")      => (parsed "\"\\n'\\\"\\b\""))
+(fact "backslash in raw"
+      (parse "`foo\\bar`")      => (parsed "\"foo\\\\bar\""))
 (fact "characters in strings"
       (parse "\"\n'\b\"")      => (parsed "\"\n'\b\""))
 ;; (fact "quotes in strings"
@@ -143,6 +145,12 @@ import(
       (parse "FOO") => (parsed ":foo")
       (parse "FOO_BAR") => (parsed ":foo_bar")
       (parse "A") => (parsed ":a"))
+(fact "leading underscore to dash"
+      (parse "_main") => (parsed "-main"))
+(fact "is to questionmark"
+      (parse "isFoo") => (parsed "foo?"))
+(fact "mutate to exclamation mark"
+      (parse "mutateFoo") => (parsed "foo!"))
 
 
 (fact "full source file" (funcgo-parse "
@@ -164,7 +172,7 @@ func FooBar(iii, jjj) {
     }
   )
 }
-")  => "(ns foo
+")  => "(ns foo (:gen-class)
   (:require [bar.baz :as b])
   (:require [foo.faz.fedudle :as ff]))
 
