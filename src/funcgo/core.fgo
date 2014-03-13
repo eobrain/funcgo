@@ -13,9 +13,9 @@ importdecl     = <'import'> _ <'('>  _ { importspec _ } <')'>
 importspec     = identifier _ dotted
 <Expression>   = UnaryExpr | shortvardecl | ifelseexpr | tryexpr | forrange | forlazy | fortimes (* | Expression binary_op UnaryExpr *)
 ifelseexpr     = <'if'> _ Expression _ ( ( block _ <'else'> _ block ) | ( _ <'{'> _ expressions _ <'}'> )   )
-forrange       = <'for'> <__> identifier _ <':='> _ <'range'> <_> Expression <'{'> _ expressions _ <'}'>
-forlazy        = <'for'> <__> identifier _ <':='> _ <'lazy'> <_> Expression [ <__> <'if'> <__> Expression ] <'{'> _ expressions _ <'}'>
-fortimes       = <'for'> <__> identifier _ <':='> _ <'times'> <_> Expression <'{'> _ expressions _ <'}'>
+forrange       = <'for'> <__> identifier _ <':='> _ <'range'> <_> Expression _ <'{'> _ expressions _ <'}'>
+forlazy        = <'for'> <__> identifier _ <':='> _ <'lazy'> <_> Expression [ <__> <'if'> <__> Expression ] _ <'{'> _ expressions _ <'}'>
+fortimes       = <'for'> <__> identifier _ <':='> _ <'times'> <_> Expression _ <'{'> _ expressions _ <'}'>
 tryexpr        = <'try'> _ <'{'> _ expressions _ <'}'> _ catches _ finally?
 catches        = ( catch { _ catch } )?
 catch          = <'catch'> _ identifier _ identifier _ <'{'> _ expressions _ <'}'>
@@ -65,7 +65,7 @@ dotted         = identifier { <'.'> identifier }
 symbol         = ( identifier <'.'> )? identifier
 keyword        = 'for'
 identifier     = !keyword #'[\p{L}_][\p{L}_\p{Digit}]*'       (* letter { letter | unicode_digit } *)
-label          = #'[\p{Lu}]+'
+label          = #'\p{Lu}[\p{Lu}_]*'
 letter         = unicode_letter | '_'
 unicode_letter = #'\p{L}'
 unicode_digit  = #'\p{Digit}'
@@ -214,8 +214,8 @@ func FuncgoParse(fgo) {
                         DICTELEMENT:    func(key, value) {str(key, " ", value, " ")},
                         LABEL:          func(s) {str(":", string.lowerCase(s))},
                         IDENTIFIER:     func(s) {
-                                string.replace(s, /L/, func(s){
-                                        str("-",string.lowerCase(s))
+                                string.replace(s, /\p{Ll}\p{Lu}/, func(s){
+                                        str(first(s), "-", string.lowerCase(last(s)))
                                 })
                         },
                         DOTTED:         func(idf0, &idfRest){

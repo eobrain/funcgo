@@ -133,6 +133,16 @@ import(
       (parse "for x:= lazy xs{f(x)}") => (parsed "(for [x xs] (f x))")
       (parse "for x:= lazy xs if a{f(x)}") => (parsed "(for [x xs] :when a (f x))")
       (parse "for i:= times n {f(i)}") => (parsed "(dotimes [i n] (f i))"))
+(fact "Camelcase is converted to dash-separated"
+      (parse "foo") => (parsed "foo")
+      (parse "fooBar") => (parsed "foo-bar")
+      (parse "fooBarBaz") => (parsed "foo-bar-baz")
+      (parse "foo_bar") => (parsed "foo_bar")
+      (parse "Foo") => (parsed "Foo")
+      (parse "FooBar") => (parsed "Foo-bar")
+      (parse "FOO") => (parsed ":foo")
+      (parse "FOO_BAR") => (parsed ":foo_bar")
+      (parse "A") => (parsed ":a"))
 
 
 (fact "full source file" (funcgo-parse "
@@ -158,5 +168,5 @@ func FooBar(iii, jjj) {
   (:require [bar.baz :as b])
   (:require [foo.faz.fedudle :as ff]))
 
-(def x (b/bbb \"blah blah\")) (defn FooBar [iii jjj] (ff/fumanchu {:ooo (fn [m n] (str m n)) :ppp (fn [m n] (str m n)) :qqq qq }))
+(def x (b/bbb \"blah blah\")) (defn Foo-bar [iii jjj] (ff/fumanchu {:ooo (fn [m n] (str m n)) :ppp (fn [m n] (str m n)) :qqq qq }))
 ")

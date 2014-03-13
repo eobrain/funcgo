@@ -67,7 +67,7 @@ dotted         = identifier { <'.'> identifier }
 symbol         = ( identifier <'.'> )? !Keyword identifier
 Keyword        = ( 'for' | 'range' )
 identifier     = #'[\\p{L}_][\\p{L}_\\p{Digit}]*'              (* letter { letter | unicode_digit } *)
-label          = #'[\\p{Lu}]+'
+label          = #'\\p{Lu}[\\p{Lu}_]*'
 letter         = unicode_letter | '_'
 unicode_letter = #'\\p{L}'
 unicode_digit  = #'\\p{Digit}'
@@ -190,8 +190,8 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
         :identifier     (fn [s]
                           (clojure.string/replace
                            s
-                           #"L"
-                           (fn [s] (str "-" (clojure.string/lower-case s)))))
+                           #"\p{Ll}\p{Lu}"
+                            (fn [s] (str (first s) "-" (clojure.string/lower-case (last s))))))
         :dotted         (fn [idf0 & idf-rest]
                           (reduce
                            (fn [acc idf] (str acc "." idf))
