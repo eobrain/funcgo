@@ -224,7 +224,6 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
   (try
     (let
         [clj (funcgo-parse (slurp (first args)))]
-      ;;(println clj)
       (doseq
           [expr (read-string (str "[" clj "]"  ))]
         (pprint/pprint expr)
