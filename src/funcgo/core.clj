@@ -3,8 +3,7 @@
   (:require [instaparse.core :as insta])
   (:require [instaparse.failure :as failure])
   (:require [clojure.string :as string])
-  (:require [clojure.pprint :as pprint])
-  )
+  (:require [clojure.pprint :as pprint]))
 
 (def funcgo-parser
      (insta/parser "
@@ -57,12 +56,12 @@ parameters     = Identifier { <','> _ Identifier }
 varadic        = <'&'> Identifier
 dictlit        = '{' _ ( dictelement _ { <','> _ dictelement } )? _ '}'
 dictelement    = Expression _ <':'> _ Expression
-<int_lit>      = decimal_lit    (*| octal_lit | hex_lit .*)
-decimal_lit    = #'[1-9][0-9]*'
+<int_lit>      = decimallit    (*| octal_lit | hex_lit .*)
+decimallit    = #'[1-9][0-9]*'
 regex          = <'/'> #'[^/]*'<'/'>   (* TODO: handle / escape *)
-<string_lit>   = raw_string_lit   | interpreted_string_lit
-raw_string_lit = <#'\\x60'> #'[^\\x60]*' <#'\\x60'>      (* \\x60 is back quote character *)
-interpreted_string_lit = <#'\"'> #'[^\\\"]*' <#'\"'>      (* TODO: handle string escape *)
+<string_lit>   = rawstringlit   | interpretedstringlit
+rawstringlit = <#'\\x60'> #'[^\\x60]*' <#'\\x60'>      (* \\x60 is back quote character *)
+interpretedstringlit = <#'\"'> #'[^\\\"]*' <#'\"'>      (* TODO: handle string escape *)
 dotted         = Identifier { <'.'> Identifier }
 symbol         = ( Identifier <'.'> )? !Keyword Identifier
 Keyword        = ( 'for' | 'range' )
@@ -71,7 +70,7 @@ identifier     = #'[\\p{L}_][\\p{L}_\\p{Digit}]*'              (* letter { lette
 dashidentifier = <'_'> identifier
 isidentifier   = <'is'> #'\\p{L}' identifier
 mutidentifier  = <'mutate'> #'\\p{L}' identifier
-label          = #'\\p{Lu}[\\p{Lu}_]*'
+label          = #'\\p{Lu}[\\p{Lu}_0-9]*'
 letter         = unicode_letter | '_'
 unicode_letter = #'\\p{L}'
 unicode_digit  = #'\\p{Digit}'
@@ -116,7 +115,7 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
                             (fn [s] (str (first s) "-" (string/lower-case (last s))))))
         :forrange   (fn [identifier seq expressions] 
                                 (str "(doseq ["  identifier " " seq "] " expressions ")"))
-        :decimal_lit    (fn [s] s)
+        :interpretedstringlit (fn [s] (str "\"" s "\""))
         :withconst      (fn [& xs]
                           (let [
                                 consts (butlast xs)
@@ -127,6 +126,8 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
                                  expressions
                                  ")")))
         :regex          (fn [s] (str "#\"" s "\""))
+        :functionpart0  (fn [expression]
+                          (str "[] " expression))
         :functioncall   (fn
                           ([function]           (str "(" function ")"))
                           ([function call] (str "(" function " " call ")")))
@@ -144,81 +145,81 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
                                    expr0
                                    expr-rest)
                                   ")")))
-        :raw_string_lit (fn [s] (str
-                                 "\""
-                                 (string/escape s char-escape-string)
-                                 "\""))
         :importspec     (fn [identifier dotted]
                           (str "\n  (:require [" dotted " :as " identifier "])"))
         :const          (fn [identifier expression] (str identifier " " expression))
-        :packageclause  (fn [dotted  import-decl]
-                          (str "(ns " dotted " (:gen-class)" import-decl ")\n\n"))
-        :importdecl     (fn [ & import-specs] (apply str import-specs))
-        :ifelseexpr (fn
-                      ([condition exprs] (str "(when " condition " " exprs ")"))
-		      ([condition block1 block2] (str "(if " condition " " block1 " " block2 ")")))
-        :forlazy    (fn
-                      ([identifier seq expressions] 
-                                (str "(for ["  identifier " " seq "] " expressions ")"))
-                      ([identifier seq condition expressions] 
-                                (str "(for ["  identifier " " seq "] :when " condition " " expressions ")")))
-        :fortimes   (fn [identifier count expressions] 
-                                (str "(dotimes ["  identifier " " count "] " expressions ")"))
-        :tryexpr (fn
-                   ([expressions catches] (str "(try " expressions " " catches ")"))
-		   ([expressions catches finally] (str "(try " expressions " " catches " " finally ")")))
-        :catch (fn [typ exception expressions] 
-                 (str "(catch " typ " " exception " " expressions ")")
-                 )
-        :finally (fn [expressions] (str "(finally " expressions ")"))
-        :new        (fn [symbol] (str symbol "."))
-        :shortvardecl   (fn [identifier expression]
-                          (str "(def " identifier " " expression ")"))
-        :expressions    (fn [expr0 & expr-rest]
-                          (reduce
-                           (fn [acc expr] (str acc " " expr))
-                           expr0
-                           expr-rest))
-        :consts         (fn [& consts]
-                          (reduce
-                           (fn [acc const] (str acc "\n" const))
-                           consts))
-        :functiondecl   (fn [identifier function] (str "(defn " identifier " " function ")"))
-        :functionlit    (fn [function] (str "(fn " function ")"))
         :functionparts   (fn [& functionpart]
                            (str "("
                                 (reduce
                                  (fn [acc fp] (str acc ") (" fp))
                                  functionpart)
                                 ")"))
-        :functionpart0  (fn [expression]
-                          (str "[] " expression))
+        :packageclause  (fn [dotted  import-decl]
+                          (str "(ns " dotted " (:gen-class)" import-decl ")\n\n"))
         :vfunctionpart0 (fn [varadic expression]
                           (str "[" varadic "] " expression))
-        :functionpartn  (fn [parameters expression]
-                          (str "[" parameters "] " expression))
-        :vfunctionpartn (fn [parameters varadic expression]
-                          (str "[" parameters " " varadic "] " expression))
+        :expressions    (fn [expr0 & expr-rest]
+                          (reduce
+                           (fn [acc expr] (str acc " " expr))
+                           expr0
+                           expr-rest))
+        :forlazy    (fn
+                      ([identifier seq expressions] 
+                                (str "(for ["  identifier " " seq "] " expressions ")"))
+                      ([identifier seq condition expressions] 
+                                (str "(for ["  identifier " " seq "] :when " condition " " expressions ")")))
+        :tryexpr (fn
+                   ([expressions catches] (str "(try " expressions " " catches ")"))
+		   ([expressions catches finally] (str "(try " expressions " " catches " " finally ")")))
+        :rawstringlit (fn [s] (str
+                                 "\""
+                                 (string/escape s char-escape-string)
+                                 "\""))
+        :functionlit    (fn [function] (str "(fn " function ")"))
         :parameters     (fn [arg0 & args-rest]
                           (reduce
                            (fn [acc arg] (str acc " " arg))
                            arg0
                            args-rest))
-        :varadic        (fn [parameter] (str "& " parameter))
-        :dictlit        (fn [& dict-elems] (apply str dict-elems))
-        :dictelement    (fn [key value] (str key " " value " "))
-        :label          (fn [s] (str ":" (string/lower-case s)))
+        :functionpartn  (fn [parameters expression]
+                          (str "[" parameters "] " expression))
+        :finally (fn [expressions] (str "(finally " expressions ")"))
+        :shortvardecl   (fn [identifier expression]
+                          (str "(def " identifier " " expression ")"))
+        :functiondecl   (fn [identifier function] (str "(defn " identifier " " function ")"))
         :dashidentifier (fn [s] (str "-" s))
+        :catch (fn [typ exception expressions] 
+                 (str "(catch " typ " " exception " " expressions ")")
+                 )
+        :dictelement    (fn [key value] (str key " " value " "))
+        :fortimes   (fn [identifier count expressions] 
+                                (str "(dotimes ["  identifier " " count "] " expressions ")"))
         :isidentifier   (fn [initial identifier]
                           (str (string/lower-case initial) identifier "?"))
+        :ifelseexpr (fn
+                      ([condition exprs] (str "(when " condition " " exprs ")"))
+		      ([condition block1 block2] (str "(if " condition " " block1 " " block2 ")")))
+        :dictlit        (fn [& dict-elems] (apply str dict-elems))
+        :vfunctionpartn (fn [parameters varadic expression]
+                          (str "[" parameters " " varadic "] " expression))
+        :new        (fn [symbol] (str symbol "."))
+        :label          (fn [s] (str ":" (string/replace
+                                          (string/lower-case s)
+                                          #"_"
+                                          "-")))
+        :importdecl     (fn [ & import-specs] (apply str import-specs))
         :mutidentifier  (fn [initial identifier]
                           (str (string/lower-case initial) identifier "!"))
-        :interpreted_string_lit (fn [s] (str "\"" s "\""))
+        :decimallit    (fn [s] s)
+        :consts         (fn [& consts]
+                          (reduce
+                           (fn [acc konst] (str acc "\n" konst))
+                           consts))
+        :varadic        (fn [parameter] (str "& " parameter))
         }
        parsed))))
 
 (defn -main
-  "Convert funcgo to clojure."
   [& args]
   (try
     (let

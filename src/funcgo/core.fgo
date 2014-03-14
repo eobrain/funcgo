@@ -56,12 +56,12 @@ parameters     = identifier { <','> _ identifier }
 varadic        = <'&'> identifier
 dictlit        = '{' _ ( dictelement _ { <','> _ dictelement } )? _ '}'
 dictelement    = Expression _ <':'> _ Expression
-<int_lit>      = decimal_lit    (*| octal_lit | hex_lit .*)
-decimal_lit    = #'[1-9][0-9]*'
+<int_lit>      = decimallit    (*| octal_lit | hex_lit .*)
+decimallit    = #'[1-9][0-9]*'
 regex          = <'/'> #'[^/]*'<'/'>   (* TODO: handle / escape *)
-<string_lit>   = raw_string_lit   | interpreted_string_lit
-raw_string_lit = <#'\x60'> #'[^\x60]*' <#'\x60'>      (* \x60 is back quote character *)
-interpreted_string_lit = <#'\"'> #'[^\\"]*' <#'\"'>      (* TODO: handle string escape *)
+<string_lit>   = rawstringlit   | interpretedstringlit
+rawstringlit = <#'\x60'> #'[^\x60]*' <#'\x60'>      (* \x60 is back quote character *)
+interpretedstringlit = <#'\"'> #'[^\\"]*' <#'\"'>      (* TODO: handle string escape *)
 dotted         = identifier { <'.'> identifier }
 symbol         = ( identifier <'.'> )? identifier
 keyword        = 'for'
@@ -90,7 +90,7 @@ func funcgoParse(fgo) {
                 {
                         SOURCEFILE:     func(header, body) {str(header, body, "\n")},
                         PACKAGECLAUSE:  func(dotted, importDecl) {
-                                str("(ns ", dotted, importDecl, ")\n\n")
+                                str("(ns ", dotted, " (:gen-class)", importDecl, ")\n\n")
                         },
                         IMPORTDECL:     func(&importSpecs) {apply(str, importSpecs)},
                         IMPORTSPEC:     func(identifier, dotted) {
@@ -109,7 +109,7 @@ func funcgoParse(fgo) {
                         } (identifier, seq, condition, expressions) {
                                 str("(for [", identifier, " ", seq, "] :when ", condition, " ", expressions, ")")
                         },
-                        FORTIMES: func(identifier, seq, count) {
+                        FORTIMES: func(identifier, count, expressions) {
                                 str("(dotimes [", identifier, " ", count, "] ", expressions, ")")
                         },
                         TRYEXPR: func(expressions, catches) {
@@ -208,12 +208,14 @@ func funcgoParse(fgo) {
                                 reduce(
                                         func(acc, arg) {str(acc, " ", arg)},
                                         arg0,
-                                        args)
+                                        argsRest)
                         },
                         VARADIC:        func(parameter) {str("& ", parameter)},
                         DICTLIT:        func(&dictElems) {apply(str, dictElems)},
                         DICTELEMENT:    func(key, value) {str(key, " ", value, " ")},
-                        LABEL:          func(s) {str(":", string.lowerCase(s))},
+                        LABEL:          func(s) {
+				str(":", string.replace(string.lowerCase(s), /_/, "-"))
+			},
                         IDENTIFIER:     func(s) {
                                 string.replace(s, /\p{Ll}\p{Lu}/, func(s){
                                         str(first(s), "-", string.lowerCase(last(s)))
@@ -225,10 +227,17 @@ func funcgoParse(fgo) {
                                         idf0,
                                         idfRest)
                         },
-                        DECIMAL_LIT:    func(s){s},
+                        DECIMALLIT:    func(s){s},
                         REGEX:          func(s){str(`#"`,s,`"`)},
-                        INTERPRETED_STRING_LIT: func(s){str(`"`, s, `"`)},
-                        RAW_STRING_LIT: func(s){str(`"`, string.escape(s, charEscapeString), `"`)}
+                        INTERPRETEDSTRINGLIT: func(s){str(`"`, s, `"`)},
+                        RAWSTRINGLIT: func(s){str(`"`, string.escape(s, charEscapeString), `"`)},
+			DASHIDENTIFIER: func(s){ str("-", s) },
+			ISIDENTIFIER:   func(initial, identifier) {
+				str( string.lowerCase(initial), identifier, "?")
+			},
+			MUTIDENTIFIER:  func(initial, identifier) {
+				str( string.lowerCase(initial), identifier, "!")
+			}
                 },
                 parsed
             )

@@ -54,8 +54,10 @@ import(
       (parse "f(x,y,z)")       => (parsed "(f x y z)"))
 (fact "can outside functions"
       (parse "o.f(x)")         => (parsed "(o/f x)"))
-(fact "labels are all-caps"
-      (parse "FOO")            => (parsed ":foo"))
+(fact "labels have no lower case"
+      (parse "FOO")            => (parsed ":foo")
+      (parse "FOO_BAR")        => (parsed ":foo-bar")
+      (parse "OVER18")         => (parsed ":over18"))
 (fact "dictionary literals"
       (parse "{}")             => (parsed "{}")
       (parse "{A:1}")          => (parsed "{:a 1 }")
@@ -144,7 +146,7 @@ import(
       (parse "Foo") => (parsed "Foo")
       (parse "FooBar") => (parsed "Foo-bar")
       (parse "FOO") => (parsed ":foo")
-      (parse "FOO_BAR") => (parsed ":foo_bar")
+      (parse "FOO_BAR") => (parsed ":foo-bar")
       (parse "A") => (parsed ":a"))
 (fact "leading underscore to dash"
       (parse "_main") => (parsed "-main"))
