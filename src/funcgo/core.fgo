@@ -166,11 +166,11 @@ func funcgoParse(fgo) {
                         },
                         WITHCONST: func(&xs){
                                 const(
-                                        consts = dropLast(xs)
+                                        consts = butlast(xs)
                                         expressions = last(xs)
                                 )
                                 str("(let [",
-                                        reduce(func(acc,konst) {str(acc, " ", konst)}, xs),
+                                        reduce(func(acc,konst) {str(acc, " ", konst)}, consts),
                                         "] ",
                                         expressions,
                                         ")")

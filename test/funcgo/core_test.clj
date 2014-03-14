@@ -102,7 +102,8 @@ import(
       (parse "const(a=2)a")=> (parsed "(let [a 2] a)")
       (parse " const(  a=2 ) a")=> (parsed "(let [a 2] a)")
       (parse "const(\na=2\n)\na")=> (parsed "(let [a 2] a)")
-      (parse " const(\n  a=2\n )\n a")=> (parsed "(let [a 2] a)"))
+      (parse " const(\n  a=2\n )\n a")=> (parsed "(let [a 2] a)")
+      (parse "const(a=2)f(a,b)")=> (parsed "(let [a 2] (f a b))"))
 (fact "comment"
       (parse "//blah blah\naaa")=> (parsed "aaa")
       (parse " //blah blah \naaa")=> (parsed "aaa")

@@ -13,7 +13,7 @@ packageclause  = <'package'> <__> dotted NL importdecl
 expressions    = Expression { NL Expression }
 importdecl     = <'import'> _ <'('>  _ { importspec _ } <')'>
 importspec     = Identifier _ dotted
-<Expression>   = UnaryExpr | shortvardecl | ifelseexpr | tryexpr | forrange | forlazy | fortimes (* | Expression binary_op UnaryExpr *)
+<Expression>   = UnaryExpr | withconst | shortvardecl | ifelseexpr | tryexpr | forrange | forlazy | fortimes (* | Expression binary_op UnaryExpr *)
 ifelseexpr     = <'if'> _ Expression _ ( ( block _ <'else'> _ block ) | ( _ <'{'> _ expressions _ <'}'> )   )
 forrange       = <'for'> <__> Identifier _ <':='> _ <'range'> <_> Expression _ <'{'> _ expressions _ <'}'>
 forlazy        = <'for'> <__> Identifier _ <':='> _ <'lazy'> <_> Expression [ <__> <'if'> <__> Expression ] _ <'{'> _ expressions _ <'}'>
@@ -23,8 +23,8 @@ catches        = ( catch { _ catch } )?
 catch          = <'catch'> _ Identifier _ Identifier _ <'{'> _ expressions _ <'}'>
 finally        = <'finally'> _ <'{'> _ expressions _ <'}'>
 block          = <'{'> _ Expression { NL Expression } _ <'}'>
-<UnaryExpr>    = PrimaryExpr                                                (* | unary_op UnaryExpr *)
-<PrimaryExpr>  = functioncall | Operand | functiondecl | withconst
+<UnaryExpr>    = PrimaryExpr                                              (* | unary_op UnaryExpr *)
+<PrimaryExpr>  = functioncall | Operand | functiondecl
                                                                          (*Conversion |
                                                                          BuiltinCall |
                                                                          PrimaryExpr Selector |
@@ -92,17 +92,71 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
         (throw (Exception. "\"SYNTAX ERROR\"")))
       (insta/transform
        {
+        :symbol         (fn
+                          ([identifier]        identifier)
+                          ([pkg identifier] (str pkg "/" identifier)))
+        :dotted         (fn [idf0 & idf-rest]
+                          (reduce
+                           (fn [acc idf] (str acc "." idf))
+                           idf0
+                           idf-rest))
+
+
+        
         :sourcefile     (fn [header body] (str header body "\n"))
+        :catches (fn [& catches]
+                   (reduce
+                    (fn [acc catch] (str acc " " catch))
+                    catches)
+                   )
+        :identifier     (fn [s]
+                          (string/replace
+                           s
+                           #"\p{Ll}\p{Lu}"
+                            (fn [s] (str (first s) "-" (string/lower-case (last s))))))
+        :forrange   (fn [identifier seq expressions] 
+                                (str "(doseq ["  identifier " " seq "] " expressions ")"))
+        :decimal_lit    (fn [s] s)
+        :withconst      (fn [& xs]
+                          (let [
+                                consts (butlast xs)
+                                expressions (last xs)]
+                            (str "(let ["
+                                 (reduce (fn [acc konst] (str acc " " konst)) consts)
+                                 "] "
+                                 expressions
+                                 ")")))
+        :regex          (fn [s] (str "#\"" s "\""))
+        :functioncall   (fn
+                          ([function]           (str "(" function ")"))
+                          ([function call] (str "(" function " " call ")")))
+        :expressionlist (fn [expr0 & expr-rest]
+                          (reduce
+                           (fn [acc expr] (str acc " " expr))
+                           expr0
+                           expr-rest))
+        :block          (fn
+                          ([expr] expr)
+                          ([expr0 & expr-rest]
+                             (str "(do "
+                                  (reduce
+                                   (fn [acc expr] (str acc " " expr))
+                                   expr0
+                                   expr-rest)
+                                  ")")))
+        :raw_string_lit (fn [s] (str
+                                 "\""
+                                 (string/escape s char-escape-string)
+                                 "\""))
+        :importspec     (fn [identifier dotted]
+                          (str "\n  (:require [" dotted " :as " identifier "])"))
+        :const          (fn [identifier expression] (str identifier " " expression))
         :packageclause  (fn [dotted  import-decl]
                           (str "(ns " dotted " (:gen-class)" import-decl ")\n\n"))
         :importdecl     (fn [ & import-specs] (apply str import-specs))
-        :importspec     (fn [identifier dotted]
-                          (str "\n  (:require [" dotted " :as " identifier "])"))
         :ifelseexpr (fn
                       ([condition exprs] (str "(when " condition " " exprs ")"))
 		      ([condition block1 block2] (str "(if " condition " " block1 " " block2 ")")))
-        :forrange   (fn [identifier seq expressions] 
-                                (str "(doseq ["  identifier " " seq "] " expressions ")"))
         :forlazy    (fn
                       ([identifier seq expressions] 
                                 (str "(for ["  identifier " " seq "] " expressions ")"))
@@ -113,11 +167,6 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
         :tryexpr (fn
                    ([expressions catches] (str "(try " expressions " " catches ")"))
 		   ([expressions catches finally] (str "(try " expressions " " catches " " finally ")")))
-        :catches (fn [& catches]
-                   (reduce
-                    (fn [acc catch] (str acc " " catch))
-                    catches)
-                   )
         :catch (fn [typ exception expressions] 
                  (str "(catch " typ " " exception " " expressions ")")
                  )
@@ -125,14 +174,6 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
         :new        (fn [symbol] (str symbol "."))
         :shortvardecl   (fn [identifier expression]
                           (str "(def " identifier " " expression ")"))
-        :functioncall   (fn
-                          ([function]           (str "(" function ")"))
-                          ([function call] (str "(" function " " call ")")))
-        :expressionlist (fn [expr0 & expr-rest]
-                          (reduce
-                           (fn [acc expr] (str acc " " expr))
-                           expr0
-                           expr-rest))
         :expressions    (fn [expr0 & expr-rest]
                           (reduce
                            (fn [acc expr] (str acc " " expr))
@@ -142,28 +183,6 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
                           (reduce
                            (fn [acc const] (str acc "\n" const))
                            consts))
-        :block          (fn
-                          ([expr] expr)
-                          ([expr0 & expr-rest]
-                             (str "(do "
-                                  (reduce
-                                   (fn [acc expr] (str acc " " expr))
-                                   expr0
-                                   expr-rest)
-                                  ")")))
-        :withconst      (fn [& xs]
-                          (let [
-                                consts (butlast xs)
-                                expressions (last xs)]
-                            (str "(let ["
-                                 (reduce (fn [acc konst] (str acc " " konst)) consts)
-                                 "] "
-                                 expressions
-                                 ")")))
-        :const          (fn [identifier expression] (str identifier " " expression))
-        :symbol         (fn
-                          ([identifier]        identifier)
-                          ([package identifier] (str package "/" identifier)))
         :functiondecl   (fn [identifier function] (str "(defn " identifier " " function ")"))
         :functionlit    (fn [function] (str "(fn " function ")"))
         :functionparts   (fn [& functionpart]
@@ -189,28 +208,13 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
         :dictlit        (fn [& dict-elems] (apply str dict-elems))
         :dictelement    (fn [key value] (str key " " value " "))
         :label          (fn [s] (str ":" (string/lower-case s)))
-        :identifier     (fn [s]
-                          (clojure.string/replace
-                           s
-                           #"\p{Ll}\p{Lu}"
-                            (fn [s] (str (first s) "-" (clojure.string/lower-case (last s))))))
         :dashidentifier (fn [s] (str "-" s))
         :isidentifier   (fn [initial identifier]
-                          (str (clojure.string/lower-case initial) identifier "?"))
+                          (str (string/lower-case initial) identifier "?"))
         :mutidentifier  (fn [initial identifier]
-                          (str (clojure.string/lower-case initial) identifier "!"))
-        :dotted         (fn [idf0 & idf-rest]
-                          (reduce
-                           (fn [acc idf] (str acc "." idf))
-                           idf0
-                           idf-rest))
-        :decimal_lit    (fn [s] s)
-        :regex          (fn [s] (str "#\"" s "\""))
+                          (str (string/lower-case initial) identifier "!"))
         :interpreted_string_lit (fn [s] (str "\"" s "\""))
-        :raw_string_lit (fn [s] (str
-                                 "\""
-                                 (string/escape s char-escape-string)
-                                 "\""))}
+        }
        parsed))))
 
 (defn -main
