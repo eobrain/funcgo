@@ -4,7 +4,7 @@
 
 (defn fgoc [project & args]
   (let
-      [result (sh/sh "java" "-jar" "bin/funcgo-0.1.0-SNAPSHOT-standalone.jar" "src/funcgo/core.fgo")
+      [result (sh/sh "java" "-jar" "bin/funcgo-0.1.0-standalone.jar" "src/funcgo/core.fgo")
        clj  (:out result)]
     (println (:err result))
     (if (= (:exit result) 0)
