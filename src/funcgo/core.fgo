@@ -193,7 +193,7 @@ func funcgoParse(fgo) {
                         },
                         FUNCTIONLIT:    func(function) {str("(fn ", function, ")")},
                         FUNCTIONPARTS:  func(&functionpart) {
-                                str(" (",
+                                str("(",
                                         reduce(
                                                 func(acc, fp) {str(acc, ") (", fp)},
                                                 functionpart),
