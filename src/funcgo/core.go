@@ -75,7 +75,7 @@ decimallit    = #'[1-9][0-9]*'
 regex          = <'/'> #'[^/]+'<'/'>   (* TODO: handle / escape *)
 <string_lit>   = rawstringlit   | interpretedstringlit
 rawstringlit = <#'\x60'> #'[^\x60]*' <#'\x60'>      (* \x60 is back quote character *)
-interpretedstringlit = <#'\"'> #'[^\\"]*' <#'\"'>      (* TODO: handle string escape *)
+interpretedstringlit = <#'\"'> #'[^\"]*' <#'\"'>      (* TODO: handle string escape *)
 dotted         = Identifier { <'.'> Identifier }
 symbol         = ( Identifier <'.'> )? !Keyword Identifier
 javafield      = Expression _ <'->'> _ JavaIdentifier
@@ -274,13 +274,17 @@ func funcgoParse(fgo) {
 // Convert funcgo to clojure
 func _main(&args) {
   try {
-          const(
-                  clj = funcgoParse(slurp(first(args)))
-          )
-          for expr := range readString( str("[", clj, "]")) {
-                  pprint.pprint(expr)
-                  println()
-          }
+	  if not(seq(args)) {
+		  println("Compiling all go files")
+	  }else{
+		  const(
+			  clj = funcgoParse(slurp(first(args)))
+		  )
+		  for expr := range readString( str("[", clj, "]")) {
+			  pprint.pprint(expr)
+			  println()
+		  }
+	  }
   } catch Exception e {
           println("\n", e->getMessage())
   }

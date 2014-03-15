@@ -96,7 +96,10 @@ import(
 (fact "backslash in raw"
       (parse "`foo\\bar`")      => (parsed "\"foo\\\\bar\""))
 (fact "characters in strings"
-      (parse "\"\n'\b\"")      => (parsed "\"\n'\b\""))
+      (parse  "\"\\n\"")    =>
+      (parsed "\"\\n\"")
+      (parse  "\"\n'\b\"")  =>
+      (parsed "\"\n'\b\""))
 ;; (fact "quotes in strings"
 ;; (parse "\"foo\"bar\"")   => (parsed "\"foo\"bar\""))  TODO implement
 (fact "multiple expr "
