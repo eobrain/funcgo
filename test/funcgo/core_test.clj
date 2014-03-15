@@ -51,6 +51,8 @@ import(
 (fact "can call function"
       (parse "f()")            => (parsed "(f)")
       (parse "f(x)")           => (parsed "(f x)")
+      ;;(parse "x->f()")         => (parsed "(f x)")
+      ;;(parse "x->f(y,z)")      => (parsed "(f x y z)")
       (parse "f(x,y,z)")       => (parsed "(f x y z)"))
 (fact "can outside functions"
       (parse "o.f(x)")         => (parsed "(o/f x)"))
@@ -154,6 +156,16 @@ import(
       (parse "isFoo") => (parsed "foo?"))
 (fact "mutate to exclamation mark"
       (parse "mutateFoo") => (parsed "foo!"))
+(fact "java method calls"
+      (parse "foo->bar")                     => (parsed "(. foo bar)")
+      (parse "foo->bar(a,b)")                => (parsed  "(. foo (bar a b))")
+      (parse "foo->bar()")                   => (parsed  "(. foo (bar))")
+      (parse "\"fred\"->toUpperCase()")      => (parsed "(. \"fred\" (toUpperCase))")
+      (parse "println(a, e->getMessage())") => (parsed "(println a (. e (getMessage)))")
+      ;;(parse "System::getProperty(\"foo\")")  => (parsed "(System/getProperty \"foo\")")
+      ;;(parse "Math::PI")                      => (parsed "Math/PI")
+      )
+
 
 
 (fact "full source file" (funcgo-parse "

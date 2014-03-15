@@ -11,19 +11,19 @@ sourcefile     = [ NL ] packageclause _ expressions _
 packageclause  = <'package'> <__> dotted NL importdecl
 expressions    = Expression { NL Expression }
 importdecl     = <'import'> _ <'('>  _ { importspec _ } <')'>
-importspec     = identifier _ dotted
-<Expression>   = UnaryExpr | shortvardecl | ifelseexpr | tryexpr | forrange | forlazy | fortimes (* | Expression binary_op UnaryExpr *)
+importspec     = Identifier _ dotted
+<Expression>   = UnaryExpr | withconst | shortvardecl | ifelseexpr | tryexpr | forrange | forlazy | fortimes (* | Expression binary_op UnaryExpr *)
 ifelseexpr     = <'if'> _ Expression _ ( ( block _ <'else'> _ block ) | ( _ <'{'> _ expressions _ <'}'> )   )
-forrange       = <'for'> <__> identifier _ <':='> _ <'range'> <_> Expression _ <'{'> _ expressions _ <'}'>
-forlazy        = <'for'> <__> identifier _ <':='> _ <'lazy'> <_> Expression [ <__> <'if'> <__> Expression ] _ <'{'> _ expressions _ <'}'>
-fortimes       = <'for'> <__> identifier _ <':='> _ <'times'> <_> Expression _ <'{'> _ expressions _ <'}'>
+forrange       = <'for'> <__> Identifier _ <':='> _ <'range'> <_> Expression _ <'{'> _ expressions _ <'}'>
+forlazy        = <'for'> <__> Identifier _ <':='> _ <'lazy'> <_> Expression [ <__> <'if'> <__> Expression ] _ <'{'> _ expressions _ <'}'>
+fortimes       = <'for'> <__> Identifier _ <':='> _ <'times'> <_> Expression _ <'{'> _ expressions _ <'}'>
 tryexpr        = <'try'> _ <'{'> _ expressions _ <'}'> _ catches _ finally?
 catches        = ( catch { _ catch } )?
-catch          = <'catch'> _ identifier _ identifier _ <'{'> _ expressions _ <'}'>
+catch          = <'catch'> _ Identifier _ Identifier _ <'{'> _ expressions _ <'}'>
 finally        = <'finally'> _ <'{'> _ expressions _ <'}'>
 block          = <'{'> _ Expression { NL Expression } _ <'}'>
-<UnaryExpr>    = PrimaryExpr                                                (* | unary_op UnaryExpr *)
-<PrimaryExpr>  = functioncall | Operand | functiondecl | withconst
+<UnaryExpr>    = PrimaryExpr | javafield  (* | unary_op UnaryExpr *)
+<PrimaryExpr>  = functioncall | javamethodcall | Operand | functiondecl
                                                                          (*Conversion |
                                                                          BuiltinCall |
                                                                          PrimaryExpr Selector |
@@ -32,18 +32,19 @@ block          = <'{'> _ Expression { NL Expression } _ <'}'>
                                                                          PrimaryExpr TypeAssertion |*)
 withconst      = <'const'> _ <'('> _ { consts } _ <')'> _ expressions
 consts         = [ const { NL const } ]
-const          = identifier _ <'='> _ Expression 
+const          = Identifier _ <'='> _ Expression 
 functioncall   = PrimaryExpr Call
+javamethodcall = Expression _ <'->'> _ JavaIdentifier _ Call
 <Call>         = <'('> _ ( ArgumentList _ )? <')'>
 <ArgumentList> = expressionlist                                                      (* [ _ '...' ] *)
 expressionlist = Expression { _ <','> _ Expression }
 <Operand>      = Literal | OperandName | label | new            (*| MethodExpr | '(' Expression ')' *)
 new            = <'new'> <__> symbol
-<OperandName>  = symbol                                                           (*| QualifiedIdent*)
+<OperandName>  = symbol                                             (*| QualifiedIdent*)
 <Literal>      = BasicLit | dictlit | functionlit
 <BasicLit>     = int_lit | string_lit | regex              (*| float_lit | imaginary_lit | rune_lit *)
-shortvardecl   = identifier _ <':='> _ Expression
-functiondecl   = <'func'> _ identifier _ Function
+shortvardecl   = Identifier _ <':='> _ Expression
+functiondecl   = <'func'> _ Identifier _ Function
 functionlit    = <'func'> _ Function
 <Function>     = FunctionPart | functionparts
 functionparts  = FunctionPart _ FunctionPart { _ FunctionPart }
@@ -52,8 +53,8 @@ functionpart0  = <'('> _ <')'> _ <'{'> _ Expression _ <'}'>
 vfunctionpart0 = <'('> _ varadic _ <')'> _ <'{'> _ Expression _ <'}'>
 functionpartn  = <'('> _ parameters _ <')'> _ <'{'> _ Expression _ <'}'>
 vfunctionpartn = <'('> _ parameters _  <','> _ varadic _ <')'> _ <'{'> _ Expression _ <'}'>
-parameters     = identifier { <','> _ identifier }
-varadic        = <'&'> identifier
+parameters     = Identifier { <','> _ Identifier }
+varadic        = <'&'> Identifier
 dictlit        = '{' _ ( dictelement _ { <','> _ dictelement } )? _ '}'
 dictelement    = Expression _ <':'> _ Expression
 <int_lit>      = decimallit    (*| octal_lit | hex_lit .*)
@@ -62,11 +63,17 @@ regex          = <'/'> #'[^/]*'<'/'>   (* TODO: handle / escape *)
 <string_lit>   = rawstringlit   | interpretedstringlit
 rawstringlit = <#'\x60'> #'[^\x60]*' <#'\x60'>      (* \x60 is back quote character *)
 interpretedstringlit = <#'\"'> #'[^\\"]*' <#'\"'>      (* TODO: handle string escape *)
-dotted         = identifier { <'.'> identifier }
-symbol         = ( identifier <'.'> )? identifier
-keyword        = 'for'
-identifier     = !keyword #'[\p{L}_][\p{L}_\p{Digit}]*'       (* letter { letter | unicode_digit } *)
-label          = #'\p{Lu}[\p{Lu}_]*'
+dotted         = Identifier { <'.'> Identifier }
+symbol         = ( Identifier <'.'> )? !Keyword Identifier
+javafield      = Expression _ <'->'> _ JavaIdentifier
+Keyword        = ( 'for' | 'range' )
+<Identifier>     = identifier | dashidentifier | isidentifier | mutidentifier
+identifier     = #'[\p{L}_][\p{L}_\p{Digit}]*'
+<JavaIdentifier> = #'[\p{L}_][\p{L}_\p{Digit}]*'
+dashidentifier = <'_'> identifier
+isidentifier   = <'is'> #'\p{L}' identifier
+mutidentifier  = <'mutate'> #'\p{L}' identifier
+label          = #'\p{Lu}[\p{Lu}_0-9]*'
 letter         = unicode_letter | '_'
 unicode_letter = #'\p{L}'
 unicode_digit  = #'\p{Digit}'
@@ -237,6 +244,14 @@ func funcgoParse(fgo) {
 			},
 			MUTIDENTIFIER:  func(initial, identifier) {
 				str( string.lowerCase(initial), identifier, "!")
+			},
+			JAVAFIELD:      func(expression, identifier) {
+				str("(. ", expression, " ", identifier, ")")
+			},
+			JAVAMETHODCALL: func(expression, identifier) {
+				str("(. ", expression, " (", identifier, "))")
+			} (expression, identifier, call) {
+				str("(. ", expression, " (", identifier, " ", call, "))")
 			}
                 },
                 parsed
@@ -255,6 +270,6 @@ func _main(&args) {
                   println()
           }
   } catch Exception e {
-          println("\n", e.getMessage, e)
+          println("\n", e->getMessage())
   }
 }

@@ -22,8 +22,8 @@ catches        = ( catch { _ catch } )?
 catch          = <'catch'> _ Identifier _ Identifier _ <'{'> _ expressions _ <'}'>
 finally        = <'finally'> _ <'{'> _ expressions _ <'}'>
 block          = <'{'> _ Expression { NL Expression } _ <'}'>
-<UnaryExpr>    = PrimaryExpr                                              (* | unary_op UnaryExpr *)
-<PrimaryExpr>  = functioncall | Operand | functiondecl
+<UnaryExpr>    = PrimaryExpr | javafield  (* | unary_op UnaryExpr *)
+<PrimaryExpr>  = functioncall | javamethodcall | Operand | functiondecl
                                                                          (*Conversion |
                                                                          BuiltinCall |
                                                                          PrimaryExpr Selector |
@@ -34,12 +34,13 @@ withconst      = <'const'> _ <'('> _ { consts } _ <')'> _ expressions
 consts         = [ const { NL const } ]
 const          = Identifier _ <'='> _ Expression 
 functioncall   = PrimaryExpr Call
+javamethodcall = Expression _ <'->'> _ JavaIdentifier _ Call
 <Call>         = <'('> _ ( ArgumentList _ )? <')'>
 <ArgumentList> = expressionlist                                                      (* [ _ '...' ] *)
 expressionlist = Expression { _ <','> _ Expression }
 <Operand>      = Literal | OperandName | label | new            (*| MethodExpr | '(' Expression ')' *)
 new            = <'new'> <__> symbol
-<OperandName>  = symbol                                                           (*| QualifiedIdent*)
+<OperandName>  = symbol                                             (*| QualifiedIdent*)
 <Literal>      = BasicLit | dictlit | functionlit
 <BasicLit>     = int_lit | string_lit | regex              (*| float_lit | imaginary_lit | rune_lit *)
 shortvardecl   = Identifier _ <':='> _ Expression
@@ -64,9 +65,11 @@ rawstringlit = <#'\\x60'> #'[^\\x60]*' <#'\\x60'>      (* \\x60 is back quote ch
 interpretedstringlit = <#'\"'> #'[^\\\"]*' <#'\"'>      (* TODO: handle string escape *)
 dotted         = Identifier { <'.'> Identifier }
 symbol         = ( Identifier <'.'> )? !Keyword Identifier
+javafield      = Expression _ <'->'> _ JavaIdentifier
 Keyword        = ( 'for' | 'range' )
 <Identifier>     = identifier | dashidentifier | isidentifier | mutidentifier
-identifier     = #'[\\p{L}_][\\p{L}_\\p{Digit}]*'              (* letter { letter | unicode_digit } *)
+identifier     = #'[\\p{L}_][\\p{L}_\\p{Digit}]*'
+<JavaIdentifier> = #'[\\p{L}_][\\p{L}_\\p{Digit}]*'
 dashidentifier = <'_'> identifier
 isidentifier   = <'is'> #'\\p{L}' identifier
 mutidentifier  = <'mutate'> #'\\p{L}' identifier
@@ -91,6 +94,8 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
         (throw (Exception. "\"SYNTAX ERROR\"")))
       (insta/transform
        {
+        :javafield      (fn [expression identifier]
+                          (str "(. " expression " " identifier ")"))
         :symbol         (fn
                           ([identifier]        identifier)
                           ([pkg identifier] (str pkg "/" identifier)))
@@ -128,6 +133,11 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
         :regex          (fn [s] (str "#\"" s "\""))
         :functionpart0  (fn [expression]
                           (str "[] " expression))
+        :javamethodcall (fn 
+                          ([expression identifier]
+                               (str "(. " expression " (" identifier "))"))
+                          ([expression identifier call]
+                               (str "(. " expression " (" identifier " " call "))")))
         :functioncall   (fn
                           ([function]           (str "(" function ")"))
                           ([function call] (str "(" function " " call ")")))
@@ -229,4 +239,4 @@ __             =  #'[ \\t\\x0B\\f\\r\\n]+' | comment     (* whitespace *)
         (pprint/pprint expr)
         (println)))
     (catch Exception e
-      (println "\n" (.getMessage e)))))
+      (println "\n" (. e (getMessage))))))
