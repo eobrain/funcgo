@@ -8,3 +8,4 @@ pom.xml.asc
 /.nrepl-port
 *~
 /src/funcgo/*.clj
+/test/funcgo/clojure_cookbook_test.clj
