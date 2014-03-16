@@ -118,9 +118,9 @@ import(
       (parse " //3 blah blah\naaa3")         => (parsed "aaa3")
       (parse "\n //4 blah blah\n \naaa4")    => (parsed "aaa4")
       (parse "// comment\n     aaa5")        => (parsed "aaa5")
-      ;;(parse "// comment\n// another\naaa6") => (parsed "aaa6")
-      ;;(parse "// comment\n// another\naaa7") => (parsed "aaa7")
-      ;;(parse "\n\n//////\n// This file is part of the Funcgo compiler.\naaa8")  => (parsed "aaa8")
+      (parse "// comment\n// another\naaa6") => (parsed "aaa6")
+      (parse "// comment\n// another\naaa7") => (parsed "aaa7")
+      (parse "\n\n//////\n// This file is part of the Funcgo compiler.\naaa8")  => (parsed "aaa8")
       (parse "///////\naaa9")                => (parsed "aaa9"))
 (fact "regex"
       (parse "/aaa/")          => (parsed "#\"aaa\"")

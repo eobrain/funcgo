@@ -1,12 +1,4 @@
-package  funcgo.core
-import (
-        insta instaparse.core
-	failure instaparse.failure
-        string clojure.string
-        pprint clojure.pprint
-)
-
-`//////
+//////
 // This file is part of the Funcgo compiler.
 //
 // Copyright (c) 2012,2013 Eamonn O'Brien-Strain All rights
@@ -17,7 +9,15 @@ import (
 //
 // Contributors:
 // Eamonn O'Brien-Strain e@obrain.com - initial author
-//////`
+//////
+
+package  funcgo.core
+import (
+        insta instaparse.core
+	failure instaparse.failure
+        string clojure.string
+        pprint clojure.pprint
+)
 
 funcgoParser := insta.parser(`
 sourcefile     = [ NL ] packageclause _ expressions _
@@ -90,9 +90,9 @@ label          = #'\p{Lu}[\p{Lu}_0-9]*'
 letter         = unicode_letter | '_'
 unicode_letter = #'\p{L}'
 unicode_digit  = #'\p{Digit}'
-<_>            = <#'[ \t\x0B\f\r\n]*'> | comment  (* optional whitespace *)
-__             =  #'[ \t\x0B\f\r\n]+' | comment     (* whitespace *)
-<NL>           = nl | comment
+<_>            = <#'[ \t\x0B\f\r\n]*'> | comment+  (* optional whitespace *)
+__             =  #'[ \t\x0B\f\r\n]+' | comment+     (* whitespace *)
+<NL>           = nl | comment+
 <nl>           = <#'\s*[\n;]\s*'>       (* whitespace with at least one newline or semicolon *)
 <comment>      = <#'[;\s]*//[^\n]*\n\s*'>
 `)
