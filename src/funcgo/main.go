@@ -33,11 +33,11 @@ func compileFile(inFile) {
 	}
 	writer->close()
 	println("Compiled ",
-		inPath, "(", inFile->length(), ") to",
-		outFile->getPath(), "(", outFile->length(), ") to")
+		inPath, "to", outFile->getPath(),
+		"(", double(/(outFile->length(), inFile->length())), ")")
 }
 
-// Convert funcgo to clojure
+ // Convert funcgo to clojure
 func _main(&args) {
   try {
 	  if not(seq(args)) {
