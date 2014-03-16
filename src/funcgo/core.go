@@ -217,7 +217,7 @@ func funcgoParse(fgo) {
                                         ")")
                         },
                         FUNCTIONPART0:  func(expression) {
-                                str("[] ", expression)
+                                "[] " str expression
                         },
                         VFUNCTIONPART0:  func(varadic, expression) {
                                 str("[", varadic, "] ", expression)
@@ -252,10 +252,10 @@ func funcgoParse(fgo) {
                                         idfRest)
                         },
                         DECIMALLIT:    func(s){s},
-                        REGEX:          func(s){str(`#"`,s,`"`)},
+                        REGEX:          func(s){str(`#"`, s, `"`)},
                         INTERPRETEDSTRINGLIT: func(s){str(`"`, s, `"`)},
                         RAWSTRINGLIT: func(s){str(`"`, string.escape(s, charEscapeString), `"`)},
-			DASHIDENTIFIER: func(s){ str("-", s) },
+			DASHIDENTIFIER: func(s){ "-" str s },
 			ISIDENTIFIER:   func(initial, identifier) {
 				str( string.lowerCase(initial), identifier, "?")
 			},
