@@ -27,14 +27,16 @@ func compileFile(inFile) {
 		// TODO(eob) open using with-open
 		writer = io.writer(outFile)
 	)
-	for expr := range readString( str("[", clj, "]")) {
-		pprint.pprint(expr, writer)
-		writer->newLine()
-	}
-	writer->close()
-	println("Compiled ",
-		inPath, "to", outFile->getPath(),
-		"(", double(/(outFile->length(), inFile->length())), ")")
+	//if outFile->lastModified() < inFile->lastModified() {
+		for expr := range readString( str("[", clj, "]")) {
+			pprint.pprint(expr, writer)
+			writer->newLine()
+		}
+		writer->close()
+		println("Compiled ",
+			inPath, "to", outFile->getPath(),
+			"(", double(/(outFile->length(), inFile->length())), ")")
+	//}
 }
 
  // Convert funcgo to clojure

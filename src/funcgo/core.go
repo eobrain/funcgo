@@ -79,15 +79,16 @@ regex          = <'/'> #'[^/]+'<'/'>   (* TODO: handle / escape *)
 rawstringlit = <#'\x60'> #'[^\x60]*' <#'\x60'>      (* \x60 is back quote character *)
 interpretedstringlit = <#'\"'> #'[^\"]*' <#'\"'>      (* TODO: handle string escape *)
 dotted         = Identifier { <'.'> Identifier }
-symbol         = (( Identifier <'.'> )? !Keyword Identifier ) | (!comment '/') | '+' | '=>'
+symbol         = (( Identifier <'.'> )? !Keyword Identifier ) | (!comment '/') | '+' | '-' | '*' | '<' | '=>'
 javafield      = Expression _ <'->'> _ JavaIdentifier
 Keyword        = ( 'for' | 'range' )
-<Identifier>     = identifier | dashidentifier | isidentifier | mutidentifier
+<Identifier>     = identifier | dashidentifier | isidentifier | mutidentifier | escapedidentifier
 identifier     = #'[\p{L}_][\p{L}_\p{Digit}]*'
 <JavaIdentifier> = #'[\p{L}_][\p{L}_\p{Digit}]*'
 dashidentifier = <'_'> identifier
 isidentifier   = <'is'> #'\p{L}' identifier
 mutidentifier  = <'mutate'> #'\p{L}' identifier
+escapedidentifier   = <'\\'> #'[\p{L}_][\p{L}_\p{Digit}]*'
 label          = #'\p{Lu}[\p{Lu}_0-9]*'
 letter         = unicode_letter | '_'
 unicode_letter = #'\p{L}'
@@ -272,6 +273,7 @@ func funcgoParse(fgo) {
 			MUTIDENTIFIER:  func(initial, identifier) {
 				str( string.lowerCase(initial), identifier, "!")
 			},
+			ESCAPEDIDENTIFIER:  func(identifier) { identifier },
 			JAVAFIELD:      func(expression, identifier) {
 				str("(. ", expression, " ", identifier, ")")
 			},

@@ -71,3 +71,9 @@ test.fact("vector",
 	parse(" [ a , b , c  ]"), =>, parsed("[a b c]"),
 	parse(" [   a  , b,     c ]  "), =>, parsed("[a b c]")
 )
+
+test.fact("escaped identifier",
+	parse(`\range`), =>, parsed("range"),
+	parse(`\for`), =>, parsed("for")
+)
+
