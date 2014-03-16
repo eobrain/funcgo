@@ -79,7 +79,8 @@ regex          = <'/'> #'[^/]+'<'/'>   (* TODO: handle / escape *)
 rawstringlit = <#'\x60'> #'[^\x60]*' <#'\x60'>      (* \x60 is back quote character *)
 interpretedstringlit = <#'\"'> #'[^\"]*' <#'\"'>      (* TODO: handle string escape *)
 dotted         = Identifier { <'.'> Identifier }
-symbol         = (( Identifier <'.'> )? !Keyword Identifier ) | (!comment '/') | '+' | '-' | '*' | '<' | '=>'
+symbol         = (( Identifier <'.'> )? !Keyword Identifier ) | (!comment '/') | '+' | '-' | '*' | '<' | '=>' | '==' | '>' | '<=' | '>=' | noteq
+noteq          = <'!='>
 javafield      = Expression _ <'->'> _ JavaIdentifier
 Keyword        = ( 'for' | 'range' )
 <Identifier>     = identifier | dashidentifier | isidentifier | mutidentifier | escapedidentifier
@@ -274,6 +275,7 @@ func funcgoParse(fgo) {
 				str( string.lowerCase(initial), identifier, "!")
 			},
 			ESCAPEDIDENTIFIER:  func(identifier) { identifier },
+			NOTEQ:   func() { "not=" },
 			JAVAFIELD:      func(expression, identifier) {
 				str("(. ", expression, " ", identifier, ")")
 			},
