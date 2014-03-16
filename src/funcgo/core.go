@@ -55,7 +55,7 @@ expressionlist = Expression { _ <','> _ Expression }
 <Operand>      = Literal | OperandName | label | new            (*| MethodExpr | '(' Expression ')' *)
 new            = <'new'> <__> symbol
 <OperandName>  = symbol                                             (*| QualifiedIdent*)
-<Literal>      = BasicLit | dictlit | functionlit
+<Literal>      = BasicLit | veclit | dictlit | functionlit
 <BasicLit>     = int_lit | string_lit | regex              (*| float_lit | imaginary_lit | rune_lit *)
 shortvardecl   = Identifier _ <':='> _ Expression
 functiondecl   = <'func'> _ Identifier _ Function
@@ -69,6 +69,7 @@ functionpartn  = <'('> _ parameters _ <')'> _ <'{'> _ Expression _ <'}'>
 vfunctionpartn = <'('> _ parameters _  <','> _ varadic _ <')'> _ <'{'> _ Expression _ <'}'>
 parameters     = Identifier { <','> _ Identifier }
 varadic        = <'&'> Identifier
+veclit         = <'['> _ (( Expression { _ <','> _ Expression _ } )? )? <']'>
 dictlit        = '{' _ ( dictelement _ { <','> _ dictelement } )? _ '}'
 dictelement    = Expression _ <':'> _ Expression
 <int_lit>      = decimallit    (*| octal_lit | hex_lit .*)
@@ -235,6 +236,15 @@ func funcgoParse(fgo) {
                                         argsRest)
                         },
                         VARADIC:        func(parameter) {str("& ", parameter)},
+                        VECLIT:         func() {
+				"[]"
+			} (&expressions) {
+				str(
+					"[",
+					func(acc, e) {str(acc, " ", e)} reduce expressions,
+					"]"
+				)
+			},
                         DICTLIT:        func(&dictElems) {apply(str, dictElems)},
                         DICTELEMENT:    func(key, value) {str(key, " ", value, " ")},
                         LABEL:          func(s) {

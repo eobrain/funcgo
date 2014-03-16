@@ -9,3 +9,4 @@ pom.xml.asc
 *~
 /src/funcgo/*.clj
 /test/funcgo/clojure_cookbook_test.clj
+/test/funcgo/compiler_test.clj
