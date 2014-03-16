@@ -6,4 +6,6 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [instaparse "1.2.16"]
                  [midje "1.5.1" :scope "test"]]
+  :profiles {:dev {:plugins [[lein-midje "3.1.1"]]}}
+
   :main funcgo.core)

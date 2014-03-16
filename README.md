@@ -4,7 +4,14 @@ Funcgo is a compiler that converts Functional Go into Clojure.
 
 The compiler itself is written in Functional Go. (Turtles all the way down!)
 
-## Usage
+## Building and Development
+
+You need Leiningen (the Clojure build tool) to build the compiler.
+(Note that if you are on Ubuntu, as of March 2014 the version in the
+standard Ubuntu package manager is too old to work with this project.
+Instead download the `lein` script from the
+[Leiningen web site](http://leiningen.org/#install) and put in your
+PATH.
 
 To create a new compiler JAR execute ...
 
@@ -14,7 +21,13 @@ lein uberjar
 ```
 
 ... which will compile the compiler and generate a JAR file
-`target/funcgo-<i>x</i>.<i>y</i>.<i>z</i>-standalone.jar`
+<code>target/funcgo-<i>x</i>.<i>y</i>.<i>z</i>-standalone.jar</code>
+
+You can run the unit tests by doint
+
+```sh
+lein midje
+```
 
 ## License
 
