@@ -16,8 +16,6 @@ import (
         insta instaparse.core
 	failure instaparse.failure
         string clojure.string
-	io clojure.java.io
-        pprint clojure.pprint
 )
 
 funcgoParser := insta.parser(`
@@ -82,7 +80,7 @@ symbol         = ( Identifier <'.'> )? !Keyword Identifier
 javafield      = Expression _ <'->'> _ JavaIdentifier
 Keyword        = ( 'for' | 'range' )
 <Identifier>     = identifier | dashidentifier | isidentifier | mutidentifier
-identifier     = #'[\p{L}_][\p{L}_\p{Digit}]*'
+identifier     = #'[\p{L}_=>][\p{L}_\p{Digit}=>]*'
 <JavaIdentifier> = #'[\p{L}_][\p{L}_\p{Digit}]*'
 dashidentifier = <'_'> identifier
 isidentifier   = <'is'> #'\p{L}' identifier
@@ -272,37 +270,3 @@ func funcgoParse(fgo) {
         }
 }
 
-func compileFile(file) {
-	const(
-		inPath = file->getPath()
-		clj = funcgoParse(slurp(file))
-		outFile = io.file(string.replace(inPath, /\.go$/, ".clj"))
-		// TODO(eob) open using with-open
-		writer = io.writer(outFile)
-	)
-	println("Compiling ", inPath, " to ", outFile->getPath())
-	for expr := range readString( str("[", clj, "]")) {
-		pprint.pprint(expr, writer)
-		writer->newLine()
-	}
-}
-
-// Convert funcgo to clojure
-func _main(&args) {
-  try {
-	  if not(seq(args)) {
-		  println("Compiling all go files")
-		  for f := range fileSeq(io.file(".")) {
-			  if f->getName()->endsWith(".go") { 
-				  compileFile(f)
-			  }
-		  }
-	  }else{
-		  for arg := range args {
-			  compileFile(io.file(arg))
-		  }
-	  }
-  } catch Exception e {
-          println("\n", e->getMessage())
-  }
-}

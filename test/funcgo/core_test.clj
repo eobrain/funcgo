@@ -106,11 +106,11 @@ import(
       (parse "1;2;3")          => (parsed "1 2 3")
       (parse "1\n2\n3")        => (parsed "1 2 3"))
 (test/fact "const"
-      (parse "const(a=2)a")=> (parsed "(let [a 2] a)")
-      (parse " const(  a=2 ) a")=> (parsed "(let [a 2] a)")
-      (parse "const(\na=2\n)\na")=> (parsed "(let [a 2] a)")
-      (parse " const(\n  a=2\n )\n a")=> (parsed "(let [a 2] a)")
-      (parse "const(a=2)f(a,b)")=> (parsed "(let [a 2] (f a b))"))
+      (parse "const(a = 2)a")=> (parsed "(let [a 2] a)")
+      (parse " const(  a = 2 ) a")=> (parsed "(let [a 2] a)")
+      (parse "const(\na = 2\n)\na")=> (parsed "(let [a 2] a)")
+      (parse " const(\n  a = 2\n )\n a")=> (parsed "(let [a 2] a)")
+      (parse "const(a = 2)f(a,b)")=> (parsed "(let [a 2] (f a b))"))
 (test/fact "comment"
       (parse "//0 blah blah\naaa0")          => (parsed "aaa0")
       (parse " //1 blah blah \naaa1")        => (parsed "aaa1")
@@ -175,6 +175,10 @@ import(
       ;;(parse "System::getProperty(\"foo\")")  => (parsed "(System/getProperty \"foo\")")
       ;;(parse "Math::PI")                      => (parsed "Math/PI")
       )
+(test/fact "symbols can contain non-alphanumerics"
+           (parse "foo(a,=>,b)") => (parsed "(foo a => b)")
+           ;;(parse "test.fact(\"interesting\", parse(\"a\"), =>, parsed(\"a\")")  => (parsed "(test/fact \"interesting\" (parse \"a\") => (parsed \"a\")")
+           )
 
 
 

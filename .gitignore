@@ -7,4 +7,4 @@ pom.xml.asc
 /.lein-*
 /.nrepl-port
 *~
-/src/funcgo/core.clj
+/src/funcgo/*.clj

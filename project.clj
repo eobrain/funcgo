@@ -8,4 +8,4 @@
                  [midje "1.5.1" :scope "test"]]
   :profiles {:dev {:plugins [[lein-midje "3.1.1"]]}}
 
-  :main funcgo.core)
+  :main funcgo.main)
