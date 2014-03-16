@@ -1,4 +1,4 @@
-(defproject funcgo "0.1.2"
+(defproject funcgo "0.1.3"
   :description "Compiler from Functional Go into Clojure"
   :url "http://funcgo.com"
   :license {:name "Eclipse Public License"

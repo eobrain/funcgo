@@ -16,6 +16,7 @@ import (
         insta instaparse.core
 	failure instaparse.failure
         string clojure.string
+	io clojure.java.io
         pprint clojure.pprint
 )
 
@@ -271,18 +272,34 @@ func funcgoParse(fgo) {
         }
 }
 
+func compileFile(file) {
+	const(
+		inPath = file->getPath()
+		clj = funcgoParse(slurp(file))
+		outFile = io.file(string.replace(inPath, /\.go$/, ".clj"))
+		// TODO(eob) open using with-open
+		writer = io.writer(outFile)
+	)
+	println("Compiling ", inPath, " to ", outFile->getPath())
+	for expr := range readString( str("[", clj, "]")) {
+		pprint.pprint(expr, writer)
+		writer->newLine()
+	}
+}
+
 // Convert funcgo to clojure
 func _main(&args) {
   try {
 	  if not(seq(args)) {
 		  println("Compiling all go files")
+		  for f := range fileSeq(io.file(".")) {
+			  if f->getName()->endsWith(".go") { 
+				  compileFile(f)
+			  }
+		  }
 	  }else{
-		  const(
-			  clj = funcgoParse(slurp(first(args)))
-		  )
-		  for expr := range readString( str("[", clj, "]")) {
-			  pprint.pprint(expr)
-			  println()
+		  for arg := range args {
+			  compileFile(io.file(arg))
 		  }
 	  }
   } catch Exception e {

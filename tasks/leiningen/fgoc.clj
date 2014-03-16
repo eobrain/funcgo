@@ -4,12 +4,9 @@
 
 (defn fgoc [project & args]
   (let
-      [result (sh/sh "java" "-jar" "bin/funcgo-0.1.0-standalone.jar" "src/funcgo/core.go")
-       clj  (:out result)]
+      [result (sh/sh "java" "-jar" "bin/funcgo-0.1.3-standalone.jar")]
     (println (:err result))
+    (println (:out result))
     (if (= (:exit result) 0)
-      (if (.startsWith clj "Parse error at line")
-        (println clj)
-        (io/copy clj (io/file "src/funcgo/core.clj")))
+      (println "Compile finished")
       (println "ERROR"))))
-    
