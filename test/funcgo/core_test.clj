@@ -179,6 +179,7 @@ import(
            (parse "foo(a,=>,b)") => (parsed "(foo a => b)")
            (parse "test.fact(\"interesting\", parse(\"a\"), =>, parsed(\"a\"))")
            => (parsed "(test/fact \"interesting\" (parse \"a\") => (parsed \"a\"))")
+           (parse "/(a,b)") => (parsed "(/ a b)")
            )
 
 
