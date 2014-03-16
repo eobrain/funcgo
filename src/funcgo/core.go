@@ -14,6 +14,7 @@
 package  funcgo.core
 import (
         insta instaparse.core
+        pprint clojure.pprint
 	failure instaparse.failure
         string clojure.string
 )
@@ -24,7 +25,8 @@ packageclause  = <'package'> <__> dotted NL importdecl
 expressions    = Expression { NL Expression }
 importdecl     = <'import'> _ <'('>  _ { importspec _ } <')'>
 importspec     = Identifier _ dotted
-<Expression>   = UnaryExpr | withconst | shortvardecl | ifelseexpr | tryexpr | forrange | forlazy | fortimes (* | Expression binary_op UnaryExpr *)
+<Expression>   = UnaryExpr | infix | withconst | shortvardecl | ifelseexpr | tryexpr | forrange | forlazy | fortimes
+infix          = Expression _ symbol _ UnaryExpr
 ifelseexpr     = <'if'> _ Expression _ ( ( block _ <'else'> _ block ) | ( _ <'{'> _ expressions _ <'}'> )   )
 forrange       = <'for'> <__> Identifier _ <':='> _ <'range'> <_> Expression _ <'{'> _ expressions _ <'}'>
 forlazy        = <'for'> <__> Identifier _ <':='> _ <'lazy'> <_> Expression [ <__> <'if'> <__> Expression ] _ <'{'> _ expressions _ <'}'>
@@ -76,11 +78,11 @@ regex          = <'/'> #'[^/]+'<'/'>   (* TODO: handle / escape *)
 rawstringlit = <#'\x60'> #'[^\x60]*' <#'\x60'>      (* \x60 is back quote character *)
 interpretedstringlit = <#'\"'> #'[^\"]*' <#'\"'>      (* TODO: handle string escape *)
 dotted         = Identifier { <'.'> Identifier }
-symbol         = (( Identifier <'.'> )? !Keyword Identifier ) | (!comment '/') | '+'
+symbol         = (( Identifier <'.'> )? !Keyword Identifier ) | (!comment '/') | '+' | '=>'
 javafield      = Expression _ <'->'> _ JavaIdentifier
 Keyword        = ( 'for' | 'range' )
 <Identifier>     = identifier | dashidentifier | isidentifier | mutidentifier
-identifier     = #'[\p{L}_=>][\p{L}_\p{Digit}=>]*'
+identifier     = #'[\p{L}_][\p{L}_\p{Digit}]*'
 <JavaIdentifier> = #'[\p{L}_][\p{L}_\p{Digit}]*'
 dashidentifier = <'_'> identifier
 isidentifier   = <'is'> #'\p{L}' identifier
@@ -104,6 +106,7 @@ func funcgoParse(fgo) {
                 failure.pprintFailure(parsed)
                 throw(new Exception(`"SYNTAX ERROR"`))
         } else {
+            // pprint.pprint(parsed)
             insta.transform(
                 {
                         SOURCEFILE:     func(header, body) {str(header, body, "\n")},
@@ -114,6 +117,9 @@ func funcgoParse(fgo) {
                         IMPORTSPEC:     func(identifier, dotted) {
                                 str("\n  (:require [", dotted, " :as ", identifier, "])")
                         },
+			INFIX: func(left, operator, right) {
+				str("(", operator, " ", left, " ", right, ")")
+			},
                         IFELSEEXPR: func(condition, exprs) {
                                 str("(when ", condition, " ", exprs, ")")
                         } (condition, block1, block2) {

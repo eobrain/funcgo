@@ -181,7 +181,9 @@ import(
            => (parsed "(test/fact \"interesting\" (parse \"a\") => (parsed \"a\"))")
            (parse "/(a,b)") => (parsed "(/ a b)")
            )
-
+(test/fact "infix"
+           (parse "a b c") => (parsed "(b a c)")
+           (parse "22 / 7") => (parsed "(/ 22 7)"))
 
 
 (test/fact "full source file" (fgo/funcgo-parse "
