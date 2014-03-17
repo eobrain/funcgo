@@ -162,9 +162,7 @@ func funcgoParse(fgo) {
                                 str("(try ", expressions, " ", catches, " ", finally, ")" )
                         },
                         CATCHES: func(&catches){
-                                reduce(
-                                        func(acc,catch) {str(acc, " ", catch)},
-                                        catches)
+				string.join(" ", catches)
                         },
                         CATCH: func(typ, exception, expressions) {
                                 str("(catch ", typ, " ", exception, " ", expressions,")")
@@ -182,30 +180,19 @@ func funcgoParse(fgo) {
                                 str("(", function, " ", call, ")")
                         },
                         EXPRESSIONLIST: func(expr0, &exprRest){
-                                reduce(
-                                        func(acc, expr) {str(acc, " ", expr)},
-                                        expr0,
-                                        exprRest)
+				string.join(" ", expr0 cons exprRest)
                         },
                         EXPRESSIONS: func(expr0, &exprRest){
-                                reduce(
-                                        func(acc, expr) {str(acc, " ", expr)},
-                                        expr0,
-                                        exprRest)
+				string.join(" ", expr0 cons exprRest)
                         },
                         CONSTS:  func(&consts) {
-                          reduce(
-                                  func(acc,konst) {str(acc, "\n", konst)},
-                                  consts)
+				"\n" string.join consts
                         },
                         BLOCK: func (expr){
                                 expr
                         } (expr0, &exprRest) {
                                 str("(do ",
-                                  reduce(
-                                          func(acc, expr) {str(acc, " ", expr)},
-                                          expr0,
-                                          exprRest),
+					string.join(" ", expr0 cons exprRest),
                                         ")")
                         },
                         INDEXED: func(xs, i){ str("(", xs, " ", i, ")") },
@@ -215,7 +202,7 @@ func funcgoParse(fgo) {
                                         expressions = last(xs)
                                 )
                                 str("(let [",
-                                        reduce(func(acc,konst) {str(acc, " ", konst)}, consts),
+					" " string.join consts,
                                         "] ",
                                         expressions,
                                         ")")
@@ -232,9 +219,7 @@ func funcgoParse(fgo) {
                         FUNCTIONLIT:    func(function) {str("(fn ", function, ")")},
                         FUNCTIONPARTS:  func(&functionpart) {
                                 str("(",
-                                        reduce(
-                                                func(acc, fp) {str(acc, ") (", fp)},
-                                                functionpart),
+					") (" string.join functionpart,
                                         ")")
                         },
                         FUNCTIONPART0:  func(expression) {
@@ -250,10 +235,7 @@ func funcgoParse(fgo) {
                         str("[", parameters, " ", varadic, "] ", expression)
                         },
                         PARAMETERS:     func(arg0, &argsRest) {
-                                reduce(
-                                        func(acc, arg) {str(acc, " ", arg)},
-                                        arg0,
-                                        argsRest)
+				string.join(" ", arg0 cons argsRest)
                         },
                         VARADIC:        func(parameter) {str("& ", parameter)},
                         VECLIT:         func() {
@@ -261,7 +243,7 @@ func funcgoParse(fgo) {
                         } (&expressions) {
                                 str(
                                         "[",
-                                        func(acc, e) {str(acc, " ", e)} reduce expressions,
+					" " string.join expressions,
                                         "]"
                                 )
                         },
@@ -276,10 +258,7 @@ func funcgoParse(fgo) {
                                 })
                         },
                         DOTTED:         func(idf0, &idfRest){
-                                reduce(
-                                        func(acc, idf) {str(acc, ".", idf)},
-                                        idf0,
-                                        idfRest)
+				string.join(".", idf0 cons idfRest)
                         },
                         DECIMALLIT:    identity,
                         REGEX:          func(s){str(`#"`, s, `"`)},
