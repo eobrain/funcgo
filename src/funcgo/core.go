@@ -56,7 +56,7 @@ expressionlist = Expression { _ <','> _ Expression }
 new            = <'new'> <__> symbol
 <OperandName>  = symbol                                             (*| QualifiedIdent*)
 <Literal>      = BasicLit | veclit | dictlit | functionlit
-<BasicLit>     = int_lit | string_lit | regex              (*| float_lit | imaginary_lit | rune_lit *)
+<BasicLit>     = int_lit | string_lit | regex  | rune_lit          (*| float_lit | imaginary_lit *)
 shortvardecl   = Identifier _ <':='> _ Expression
 functiondecl   = <'func'> _ Identifier _ Function
 functionlit    = <'func'> _ Function
@@ -76,6 +76,23 @@ dictelement    = Expression _ <':'> _ Expression
 decimallit    = #'[1-9][0-9]*'
 regex          = <'/'> #'[^/]+'<'/'>   (* TODO: handle / escape *)
 <string_lit>   = rawstringlit   | interpretedstringlit
+<rune_lit>       = <'\''> ( unicode_value | byte_value ) <'\''> 
+<unicode_value>  = unicodechar | littleuvalue | escaped_char
+<byte_value>     = octalbytevalue (* | hex_byte_value *)
+octalbytevalue = <'\\'> octaldigit octaldigit octaldigit
+littleuvalue   = <'\\u'> hexdigit hexdigit hexdigit hexdigit
+unicodechar      = #'[^\n ]'
+hexdigit        = #'[0-9a-fA-F]'
+octaldigit      = #'[0-7]'
+<escaped_char>     = newlinechar | spacechar | backspacechar | returnchar | tabchar | backslashchar | squotechar| dquotechar
+newlinechar      = <'\\n'>
+spacechar        = <' '>
+backspacechar    = <'\\b'>
+returnchar       = <'\\r'>
+tabchar          = <'\\t'>
+backslashchar    = <'\\\\'>
+squotechar       = <'\\\''>
+dquotechar       = <'\\"'>
 rawstringlit = <#'\x60'> #'[^\x60]*' <#'\x60'>      (* \x60 is back quote character *)
 interpretedstringlit = <#'\"'> #'[^\"]*' <#'\"'>      (* TODO: handle string escape *)
 dotted         = Identifier { <'.'> Identifier }
@@ -263,9 +280,22 @@ func funcgoParse(fgo) {
                                         idf0,
                                         idfRest)
                         },
-                        DECIMALLIT:    func(s){s},
+                        DECIMALLIT:    identity,
                         REGEX:          func(s){str(`#"`, s, `"`)},
                         INTERPRETEDSTRINGLIT: func(s){str(`"`, s, `"`)},
+			LITTLEUVALUE:  func(d1,d2,d3,d4){str(`\u`,d1,d2,d3,d4)},
+			OCTALBYTEVALUE:  func(d1,d2,d3){str(`\o`,d1,d2,d3)},
+			UNICODECHAR:   func(s){`\` str s},
+			NEWLINECHAR:   func(){`\newline`},
+			SPACECHAR:     func(){`\space`},
+			BACKSPACECHAR: func(){`\backspace`},
+			RETURNCHAR:    func(){`\return`},
+			TABCHAR:       func(){`\tab`},
+			BACKSLASHCHAR: func(){`\\`},
+			SQUOTWCHAR:    func(){`\'`},
+			DQUOTECHAR:    func(){`\"`},
+                        HEXDIGIT:      identity,
+                        OCTALDIGIT:    identity,
                         RAWSTRINGLIT: func(s){str(`"`, string.escape(s, charEscapeString), `"`)},
 			DASHIDENTIFIER: func(s){ "-" str s },
 			ISIDENTIFIER:   func(initial, identifier) {

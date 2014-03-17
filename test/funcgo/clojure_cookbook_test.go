@@ -100,12 +100,7 @@ test.fact("Can concatenate vars.",
         =>, "Doe, John - age: 42"
 )
 
-//test.fact("Can concatenate vars. (2)",
-//        do(
-//                firstName := "John"
-//                lastName := "Doe"
-//                age := 42
-//                str(lastName, ", ", firstName, " - age: ", age)
-//        ),
-//        =>, "Doe, John - age: 42"
-//)
+test.fact("turn characters into a string",
+	apply(str, "ROT13: ", ['W', 'h', 'y', 'v', 'h', 'f', ' ', 'P', 'n', 'r', 'f', 'n', 'e']),
+	=>, "ROT13: Whyvhf Pnrfne"
+)

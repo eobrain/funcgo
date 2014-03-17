@@ -185,6 +185,19 @@ import(
            (parse "a b c") => (parsed "(b a c)")
            (parse "22 / 7") => (parsed "(/ 22 7)"))
 
+(test/fact "character literals",
+           (parse "'a'") => (parsed "\\a")
+           (parse "['a', 'b', 'c']") => (parsed "[\\a \\b \\c]")
+           (parse "'\\n'") => (parsed "\\newline")
+           (parse "' '") => (parsed "\\space")
+           (parse "'\\t'") => (parsed "\\tab")
+           (parse "'\\b'") => (parsed "\\backspace")
+           (parse "'\\r'") => (parsed "\\return")
+           (parse "'\\uDEAD'") => (parsed "\\uDEAD")
+           (parse "'\\ubeef'") => (parsed "\\ubeef")
+           (parse "'\\u1234'") => (parsed "\\u1234")
+           (parse "'\\234'") => (parsed "\\o234")       )
+
 
 (test/fact "full source file" (fgo/funcgo-parse "
 package foo
