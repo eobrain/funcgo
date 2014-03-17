@@ -44,6 +44,10 @@ import(
 
 (test/fact "can refer to symbols"
       (parse "a")              => (parsed "a"))
+(test/fact "can refer to numbers"
+           (parse "99")             => (parsed "99")
+           (parse "9")              => (parsed "9")
+           (parse "0")              => (parsed "0"))
 (test/fact "outside symbols"       (parse "other.foo")
       => (parsed "other/foo"))
 (test/fact "can define things"     (parse "a := 12345")
