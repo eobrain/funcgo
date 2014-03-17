@@ -196,8 +196,12 @@ import(
            (parse "'\\uDEAD'") => (parsed "\\uDEAD")
            (parse "'\\ubeef'") => (parsed "\\ubeef")
            (parse "'\\u1234'") => (parsed "\\u1234")
-           (parse "'\\234'") => (parsed "\\o234")       )
+           (parse "'\\234'") => (parsed "\\o234"))
 
+(test/fact "indexing"
+           (parse "aaa[BBB]") => (parsed "(aaa :bbb)")
+           (parse "aaa[bbb]") => (parsed "(aaa bbb)")
+           (parse "aaa[6]") => (parsed "(aaa 6)"))
 
 (test/fact "full source file" (fgo/funcgo-parse "
 package foo

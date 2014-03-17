@@ -15,7 +15,7 @@ package  funcgo.core
 import (
         insta instaparse.core
         pprint clojure.pprint
-	failure instaparse.failure
+        failure instaparse.failure
         string clojure.string
 )
 
@@ -37,13 +37,13 @@ catch          = <'catch'> _ Identifier _ Identifier _ <'{'> _ expressions _ <'}
 finally        = <'finally'> _ <'{'> _ expressions _ <'}'>
 block          = <'{'> _ Expression { NL Expression } _ <'}'>
 <UnaryExpr>    = PrimaryExpr | javafield  (* | unary_op UnaryExpr *)
-<PrimaryExpr>  = functioncall | javamethodcall | Operand | functiondecl
+<PrimaryExpr>  = functioncall | javamethodcall | Operand | functiondecl |  indexed
                                                                          (*Conversion |
                                                                          BuiltinCall |
                                                                          PrimaryExpr Selector |
-                                                                         PrimaryExpr Index |
                                                                          PrimaryExpr Slice |
                                                                          PrimaryExpr TypeAssertion |*)
+indexed        = PrimaryExpr _ <'['> _ Expression _ <']'>
 withconst      = <'const'> _ <'('> _ { consts } _ <')'> _ expressions
 consts         = [ const { NL const } ]
 const          = Identifier _ <'='> _ Expression 
@@ -137,9 +137,9 @@ func funcgoParse(fgo) {
                         IMPORTSPEC:     func(identifier, dotted) {
                                 str("\n  (:require [", dotted, " :as ", identifier, "])")
                         },
-			INFIX: func(left, operator, right) {
-				str("(", operator, " ", left, " ", right, ")")
-			},
+                        INFIX: func(left, operator, right) {
+                                str("(", operator, " ", left, " ", right, ")")
+                        },
                         IFELSEEXPR: func(condition, exprs) {
                                 str("(when ", condition, " ", exprs, ")")
                         } (condition, block1, block2) {
@@ -208,6 +208,7 @@ func funcgoParse(fgo) {
                                           exprRest),
                                         ")")
                         },
+                        INDEXED: func(xs, i){ str("(", xs, " ", i, ")") },
                         WITHCONST: func(&xs){
                                 const(
                                         consts = butlast(xs)
@@ -256,19 +257,19 @@ func funcgoParse(fgo) {
                         },
                         VARADIC:        func(parameter) {str("& ", parameter)},
                         VECLIT:         func() {
-				"[]"
-			} (&expressions) {
-				str(
-					"[",
-					func(acc, e) {str(acc, " ", e)} reduce expressions,
-					"]"
-				)
-			},
+                                "[]"
+                        } (&expressions) {
+                                str(
+                                        "[",
+                                        func(acc, e) {str(acc, " ", e)} reduce expressions,
+                                        "]"
+                                )
+                        },
                         DICTLIT:        func(&dictElems) {apply(str, dictElems)},
                         DICTELEMENT:    func(key, value) {str(key, " ", value, " ")},
                         LABEL:          func(s) {
-				str(":", string.replace(string.lowerCase(s), /_/, "-"))
-			},
+                                str(":", string.replace(string.lowerCase(s), /_/, "-"))
+                        },
                         IDENTIFIER:     func(s) {
                                 string.replace(s, /\p{Ll}\p{Lu}/, func(s){
                                         str(first(s), "-", string.lowerCase(last(s)))
@@ -283,37 +284,37 @@ func funcgoParse(fgo) {
                         DECIMALLIT:    identity,
                         REGEX:          func(s){str(`#"`, s, `"`)},
                         INTERPRETEDSTRINGLIT: func(s){str(`"`, s, `"`)},
-			LITTLEUVALUE:  func(d1,d2,d3,d4){str(`\u`,d1,d2,d3,d4)},
-			OCTALBYTEVALUE:  func(d1,d2,d3){str(`\o`,d1,d2,d3)},
-			UNICODECHAR:   func(s){`\` str s},
-			NEWLINECHAR:   func(){`\newline`},
-			SPACECHAR:     func(){`\space`},
-			BACKSPACECHAR: func(){`\backspace`},
-			RETURNCHAR:    func(){`\return`},
-			TABCHAR:       func(){`\tab`},
-			BACKSLASHCHAR: func(){`\\`},
-			SQUOTWCHAR:    func(){`\'`},
-			DQUOTECHAR:    func(){`\"`},
+                        LITTLEUVALUE:  func(d1,d2,d3,d4){str(`\u`,d1,d2,d3,d4)},
+                        OCTALBYTEVALUE:  func(d1,d2,d3){str(`\o`,d1,d2,d3)},
+                        UNICODECHAR:   func(s){`\` str s},
+                        NEWLINECHAR:   func(){`\newline`},
+                        SPACECHAR:     func(){`\space`},
+                        BACKSPACECHAR: func(){`\backspace`},
+                        RETURNCHAR:    func(){`\return`},
+                        TABCHAR:       func(){`\tab`},
+                        BACKSLASHCHAR: func(){`\\`},
+                        SQUOTWCHAR:    func(){`\'`},
+                        DQUOTECHAR:    func(){`\"`},
                         HEXDIGIT:      identity,
                         OCTALDIGIT:    identity,
                         RAWSTRINGLIT: func(s){str(`"`, string.escape(s, charEscapeString), `"`)},
-			DASHIDENTIFIER: func(s){ "-" str s },
-			ISIDENTIFIER:   func(initial, identifier) {
-				str( string.lowerCase(initial), identifier, "?")
-			},
-			MUTIDENTIFIER:  func(initial, identifier) {
-				str( string.lowerCase(initial), identifier, "!")
-			},
-			ESCAPEDIDENTIFIER:  func(identifier) { identifier },
-			NOTEQ:   func() { "not=" },
-			JAVAFIELD:      func(expression, identifier) {
-				str("(. ", expression, " ", identifier, ")")
-			},
-			JAVAMETHODCALL: func(expression, identifier) {
-				str("(. ", expression, " (", identifier, "))")
-			} (expression, identifier, call) {
-				str("(. ", expression, " (", identifier, " ", call, "))")
-			}
+                        DASHIDENTIFIER: func(s){ "-" str s },
+                        ISIDENTIFIER:   func(initial, identifier) {
+                                str( string.lowerCase(initial), identifier, "?")
+                        },
+                        MUTIDENTIFIER:  func(initial, identifier) {
+                                str( string.lowerCase(initial), identifier, "!")
+                        },
+                        ESCAPEDIDENTIFIER:  func(identifier) { identifier },
+                        NOTEQ:   func() { "not=" },
+                        JAVAFIELD:      func(expression, identifier) {
+                                str("(. ", expression, " ", identifier, ")")
+                        },
+                        JAVAMETHODCALL: func(expression, identifier) {
+                                str("(. ", expression, " (", identifier, "))")
+                        } (expression, identifier, call) {
+                                str("(. ", expression, " (", identifier, " ", call, "))")
+                        }
                 },
                 parsed
             )
