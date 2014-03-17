@@ -79,7 +79,7 @@ regex          = <'/'> #'[^/]+'<'/'>   (* TODO: handle / escape *)
 rawstringlit = <#'\x60'> #'[^\x60]*' <#'\x60'>      (* \x60 is back quote character *)
 interpretedstringlit = <#'\"'> #'[^\"]*' <#'\"'>      (* TODO: handle string escape *)
 dotted         = Identifier { <'.'> Identifier }
-symbol         = (( Identifier <'.'> )? !Keyword Identifier ) | (!comment '/') | '+' | '-' | '*' | '<' | '=>' | '==' | '>' | '<=' | '>=' | noteq
+symbol         = (( Identifier <'.'> )? !Keyword Identifier ) | (!comment '/') | '+' | '-' | '*' | '<' | '=>' | '==' | '<=' | '>=' | noteq (* TODO(eob)  | '>' *)
 noteq          = <'!='>
 javafield      = Expression _ <'->'> _ JavaIdentifier
 Keyword        = ( 'for' | 'range' )

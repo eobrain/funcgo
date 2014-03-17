@@ -22,12 +22,14 @@ import (
 func compileFile(inFile) {
 	const(
 		inPath = inFile->getPath()
-		clj = core.funcgoParse(slurp(inFile))
 		outFile = io.file(string.replace(inPath, /\.go$/, ".clj"))
-		// TODO(eob) open using with-open
-		writer = io.writer(outFile)
 	)
-	//if outFile->lastModified() < inFile->lastModified() {
+	if outFile->lastModified() < inFile->lastModified() {
+		const(
+			clj = core.funcgoParse(slurp(inFile))
+			// TODO(eob) open using with-open
+			writer = io.writer(outFile)
+		)
 		for expr := range readString( str("[", clj, "]")) {
 			pprint.pprint(expr, writer)
 			writer->newLine()
@@ -36,14 +38,14 @@ func compileFile(inFile) {
 		println("Compiled ",
 			inPath, "to", outFile->getPath(),
 			"(", double(/(outFile->length(), inFile->length())), ")")
-	//}
+	}
 }
 
  // Convert funcgo to clojure
 func _main(&args) {
   try {
 	  if not(seq(args)) {
-		  println("Compiling all go files")
+		  println("Compiling out-of-date go files")
 		  for f := range fileSeq(io.file(".")) {
 			  if f->getName()->endsWith(".go") { 
 				  compileFile(f)
