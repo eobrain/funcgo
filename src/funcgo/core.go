@@ -96,7 +96,7 @@ dquotechar       = <'\\"'>
 rawstringlit = <#'\x60'> #'[^\x60]*' <#'\x60'>      (* \x60 is back quote character *)
 interpretedstringlit = <#'\"'> #'[^\"]*' <#'\"'>      (* TODO: handle string escape *)
 dotted         = Identifier { <'.'> Identifier }
-symbol         = (( Identifier <'.'> )? !Keyword Identifier ) | (!comment '/') | '+' | '-' | '*' | '<' | '=>' | '==' | '<=' | '>=' | noteq (* TODO(eob)  | '>' *)
+symbol         = (( Identifier <'.'> )? !Keyword Identifier ) | (!comment '/') | '+' | '-' | '*' | '<' | '=>' | '==' | '<=' | '>=' | noteq | equals (* TODO(eob)  | '>' *)
 noteq          = <'!='>
 javafield      = Expression _ <'->'> _ JavaIdentifier
 Keyword        = ( 'for' | 'range' )
@@ -105,6 +105,7 @@ identifier     = #'[\p{L}_][\p{L}_\p{Digit}]*'
 <JavaIdentifier> = #'[\p{L}_][\p{L}_\p{Digit}]*'
 dashidentifier = <'_'> identifier
 isidentifier   = <'is'> #'\p{L}' identifier
+equals         = <'=='>
 mutidentifier  = <'mutate'> #'\p{L}' identifier
 escapedidentifier   = <'\\'> #'[\p{L}_][\p{L}_\p{Digit}]*'
 label          = #'\p{Lu}[\p{Lu}_0-9]*'
@@ -126,7 +127,6 @@ func funcgoParse(fgo) {
                 failure.pprintFailure(parsed)
                 throw(new Exception(`"SYNTAX ERROR"`))
         } else {
-            // pprint.pprint(parsed)
             insta.transform(
                 {
                         SOURCEFILE:     func(header, body) {str(header, body, "\n")},
@@ -302,6 +302,7 @@ func funcgoParse(fgo) {
                         ISIDENTIFIER:   func(initial, identifier) {
                                 str( string.lowerCase(initial), identifier, "?")
                         },
+			EQUALS: func() { "=" },
                         MUTIDENTIFIER:  func(initial, identifier) {
                                 str( string.lowerCase(initial), identifier, "!")
                         },

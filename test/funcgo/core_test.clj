@@ -183,7 +183,12 @@ import(
            )
 (test/fact "infix"
            (parse "a b c") => (parsed "(b a c)")
-           (parse "22 / 7") => (parsed "(/ 22 7)"))
+           (parse "22 / 7") => (parsed "(/ 22 7)")
+           )
+
+(test/fact "equality"
+           (parse "a == b") => (parsed "(= a b)")
+           (parse "a isIdentical b") => (parsed "(identical? a b)"))
 
 (test/fact "character literals",
            (parse "'a'") => (parsed "\\a")
