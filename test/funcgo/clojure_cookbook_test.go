@@ -2,7 +2,7 @@ package funcgo.clojure_cookbook_test
 import(
         test midje.sweet
         fgo funcgo.core
-	string clojure.string
+        string clojure.string
 )
 
 func add(x,y) {
@@ -24,47 +24,88 @@ test.fact("Any function of two arguments can be written infix",
 )
 
 test.fact("Infix is most convenient for math operators.",
-	1 + 2,
-	=>, 3
+        1 + 2,
+        =>, 3
 )
 
 test.fact("Dotted identifers are from other packages.",
-	// import section includes
-	//    string clojure.string
-	string.isBlank(""),
-	=>, true
+        // import section includes
+        //    string clojure.string
+        string.isBlank(""),
+        =>, true
 )
 
 test.fact("Capitalize first character in a string.",
-	string.capitalize("this is a proper sentence."),
-	=>,  "This is a proper sentence."
+        string.capitalize("this is a proper sentence."),
+        =>,  "This is a proper sentence."
 )
 
 test.fact("Capitalize or lower-case all characters.",
-	string.upperCase("loud noises!"),
-	=>, "LOUD NOISES!",
+        string.upperCase("loud noises!"),
+        =>, "LOUD NOISES!",
 
-	string.lowerCase("COLUMN_HEADER_ONE"),
-	=>, "column_header_one",
+        string.lowerCase("COLUMN_HEADER_ONE"),
+        =>, "column_header_one",
 
-	string.lowerCase("!&$#@#%^[]"),
-	=>, "!&$#@#%^[]",
+        string.lowerCase("!&$#@#%^[]"),
+        =>, "!&$#@#%^[]",
 
-	string.upperCase("Dépêchez-vous, l'ordinateur!"),
-	=>, "DÉPÊCHEZ-VOUS, L'ORDINATEUR!"
+        string.upperCase("Dépêchez-vous, l'ordinateur!"),
+        =>, "DÉPÊCHEZ-VOUS, L'ORDINATEUR!"
 )
 
 test.fact("Remove whitespace at beginning and end.",
-	string.trim(" \tBacon ipsum dolor sit.\n"),
-	=>, "Bacon ipsum dolor sit."
+        string.trim(" \tBacon ipsum dolor sit.\n"),
+        =>, "Bacon ipsum dolor sit."
 )
 
 test.fact("Collapse whitespace into single whitespace",
-	string.replace("Who\t\nput  all this\fwhitespace here?", /\s+/, " "),
-	=>, "Who put all this whitespace here?"
+        string.replace("Who\t\nput  all this\fwhitespace here?", /\s+/, " "),
+        =>, "Who put all this whitespace here?"
 )
 
 test.fact("Windows to Unix line-endings",
-	string.replace("Line 1\r\nLine 2", "\r\n", "\n"),
-	=>, "Line 1\nLine 2"
+        string.replace("Line 1\r\nLine 2", "\r\n", "\n"),
+        =>, "Line 1\nLine 2"
 )
+
+test.fact("Trim only from one end",
+        string.triml(" Column Header\t"),
+        =>, "Column Header\t",
+
+        string.trimr("\t\t* Second-level bullet.\n"),
+        =>, "\t\t* Second-level bullet."
+)
+
+test.fact("Concatenate strings",
+        str("John", " ", "Doe"),
+        =>, "John Doe"
+)
+
+test.fact("Can concatenate consts.",
+        const(
+                firstName = "John"
+                lastName = "Doe"
+                age = 42
+        )
+        str(lastName, ", ", firstName, " - age: ", age),
+        =>, "Doe, John - age: 42"
+)
+
+firstName := "John"
+lastName := "Doe"
+age := 42
+test.fact("Can concatenate vars.",
+	str(lastName, ", ", firstName, " - age: ", age),
+        =>, "Doe, John - age: 42"
+)
+
+//test.fact("Can concatenate vars. (2)",
+//        do(
+//                firstName := "John"
+//                lastName := "Doe"
+//                age := 42
+//                str(lastName, ", ", firstName, " - age: ", age)
+//        ),
+//        =>, "Doe, John - age: 42"
+//)
