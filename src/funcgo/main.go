@@ -30,7 +30,7 @@ func compileFile(inFile) {
 			// TODO(eob) open using with-open
 			writer = io.writer(outFile)
 		)
-		writer->write(str(";; Compiled from ", inFile))
+		writer->write(str(";; Compiled from ", inFile, "\n"))
 		for expr := range readString( str("[", clj, "]")) {
 			pprint.pprint(expr, writer)
 			writer->newLine()

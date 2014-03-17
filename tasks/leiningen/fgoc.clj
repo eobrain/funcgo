@@ -1,3 +1,4 @@
+;; Compiled from ./tasks/leiningen/fgoc.go
 (ns
  leiningen.fgoc
  (:gen-class)
@@ -8,7 +9,7 @@
  fgoc
  [project & args]
  (let
-  [result (sh/sh "java" "-jar" "bin/funcgo-0.1.9-standalone.jar")]
+  [result (sh/sh "java" "-jar" "bin/funcgo-0.1.10-standalone.jar")]
   (println (result :err))
   (println (result :out))
   (if

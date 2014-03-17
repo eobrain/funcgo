@@ -104,3 +104,25 @@ test.fact("turn characters into a string",
 	apply(str, "ROT13: ", ['W', 'h', 'y', 'v', 'h', 'f', ' ', 'P', 'n', 'r', 'f', 'n', 'e']),
 	=>, "ROT13: Whyvhf Pnrfne"
 )
+
+lines := [
+	"#! /bin/bash\n",
+	"du -a ./ | sort -n -r\n"
+]
+test.fact("make file from lines (with newlines)",
+	str apply lines,
+	=>,  "#! /bin/bash\ndu -a ./ | sort -n -r\n"
+)
+
+header := "first_name,last_name,employee_number\n"
+rows := [
+	"luke,vanderhart,1",
+	"ryan,neufeld,2"
+]
+test.fact("Making CSV from header vector of rows",
+	apply(str, header, interpose("\n", rows)),
+	=>, `first_name,last_name,employee_number
+luke,vanderhart,1
+ryan,neufeld,2`
+)
+
