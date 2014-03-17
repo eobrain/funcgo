@@ -41,6 +41,7 @@ test.fact("Capitalize first character in a string.",
 )
 
 test.fact("Capitalize or lower-case all characters.",
+
         string.upperCase("loud noises!"),
         =>, "LOUD NOISES!",
 
@@ -124,5 +125,19 @@ test.fact("Making CSV from header vector of rows",
 	=>, `first_name,last_name,employee_number
 luke,vanderhart,1
 ryan,neufeld,2`
+)
+
+
+foodItems := ["milk", "butter", "flour", "eggs"]
+test.fact("Join can be easier",
+
+	string.join(", ", foodItems),
+	=>, "milk, butter, flour, eggs",
+
+	", " string.join foodItems,
+	=>, "milk, butter, flour, eggs",
+
+	string.join( [1, 2, 3, 4] ),
+	=>, "1234"
 )
 
