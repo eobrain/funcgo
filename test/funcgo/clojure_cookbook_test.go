@@ -141,3 +141,28 @@ test.fact("Join can be easier",
 	=>, "1234"
 )
 
+test.fact("seq() exposes the characters in a string",
+	seq("Hello, world!"),
+	=>, ['H', 'e', 'l', 'l', 'o', ',', ' ', 'w', 'o', 'r', 'l', 'd', '!']
+)
+
+func isYelling(s) {
+  isEvery(
+	  func(ch) {  not(Character::isLetter(ch)) or Character::isUpperCase(ch)  },
+	  s
+  )
+}
+
+test.fact("Function taking a sequence will cooerce a string into a set of chars",
+
+	// count of chars in string
+	frequencies(string.lowerCase("An adult all about A's")),
+	=>, {' ':4, 'a':5, 'b':1, 'd':1, '\'':1, 'l':3, 'n':1, 'o':1, 's':1, 't':2, 'u':2},
+
+	//  every letter capitalized?
+	isYelling("LOUD NOISES!"),
+	=>, true,
+
+	isYelling("Take a DEEP breath."),
+	=>, false
+)

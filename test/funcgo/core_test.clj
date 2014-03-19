@@ -176,8 +176,8 @@ import(
       (parse "foo->bar()")                   => (parsed  "(. foo (bar))")
       (parse "\"fred\"->toUpperCase()")      => (parsed "(. \"fred\" (toUpperCase))")
       (parse "println(a, e->getMessage())") => (parsed "(println a (. e (getMessage)))")
-      ;;(parse "System::getProperty(\"foo\")")  => (parsed "(System/getProperty \"foo\")")
-      ;;(parse "Math::PI")                      => (parsed "Math/PI")
+      (parse "System::getProperty(\"foo\")")  => (parsed "(System/getProperty \"foo\")")
+      (parse "Math::PI")                      => (parsed "Math/PI")
       )
 (test/fact "symbols can contain non-alphanumerics"
            (parse "foo(a,=>,b)") => (parsed "(foo a => b)")

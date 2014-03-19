@@ -96,9 +96,10 @@ dquotechar       = <'\\"'>
 rawstringlit = <#'\x60'> #'[^\x60]*' <#'\x60'>      (* \x60 is back quote character *)
 interpretedstringlit = <#'\"'> #'[^\"]*' <#'\"'>      (* TODO: handle string escape *)
 dotted         = Identifier { <'.'> Identifier }
-symbol         = (( Identifier <'.'> )? !Keyword Identifier ) | (!comment '/') | '+' | '-' | '*' | '<' | '=>' | '==' | '<=' | '>=' | noteq | equals (* TODO(eob)  | '>' *)
+symbol         = (( Identifier <'.'> )? !Keyword Identifier ) | (!comment '/') | javastatic | '+' | '-' | '*' | '<' | '=>' | '==' | '<=' | '>=' | noteq | equals (* TODO(eob)  | '>' *)
 noteq          = <'!='>
 javafield      = Expression _ <'->'> _ JavaIdentifier
+javastatic     = JavaIdentifier _ <'::'> _ JavaIdentifier
 Keyword        = ( 'for' | 'range' )
 <Identifier>     = identifier | dashidentifier | isidentifier | mutidentifier | escapedidentifier
 identifier     = #'[\p{L}_][\p{L}_\p{Digit}]*'
@@ -121,7 +122,7 @@ __             =  #'[ \t\x0B\f\r\n]+' | comment+     (* whitespace *)
 
 func funcgoParse(fgo) {
         const(
-                parsed = funcgoParser(fgo)
+                parsed = funcgoParser(string.replace(fgo, /\t/, "        "))
         )
         if insta.isFailure(parsed) {
                 failure.pprintFailure(parsed)
@@ -272,7 +273,7 @@ func funcgoParse(fgo) {
                         RETURNCHAR:    func(){`\return`},
                         TABCHAR:       func(){`\tab`},
                         BACKSLASHCHAR: func(){`\\`},
-                        SQUOTWCHAR:    func(){`\'`},
+                        SQUOTECHAR:    func(){`\'`},
                         DQUOTECHAR:    func(){`\"`},
                         HEXDIGIT:      identity,
                         OCTALDIGIT:    identity,
@@ -289,6 +290,9 @@ func funcgoParse(fgo) {
                         NOTEQ:   func() { "not=" },
                         JAVAFIELD:      func(expression, identifier) {
                                 str("(. ", expression, " ", identifier, ")")
+                        },
+                        JAVASTATIC:      func(clazz, identifier) {
+                                str(clazz, "/", identifier)
                         },
                         JAVAMETHODCALL: func(expression, identifier) {
                                 str("(. ", expression, " (", identifier, "))")
