@@ -212,6 +212,15 @@ import(
            (parse "aaa[bbb]") => (parsed "(aaa bbb)")
            (parse "aaa[6]") => (parsed "(aaa 6)"))
 
+(test/fact "precedent"
+           (parse "a or b < c")   => (parsed "(or a (< b c))")
+           (parse "a or b and c") => (parsed "(or a (and b c))")
+           (parse "a * b - c")    => (parsed "(- (* a b) c)"))
+
+(test/fact "parentheses"
+           (parse "(a or b) and c") => (parsed "(and (or a b) c)")
+           (parse "a * b - c") => (parsed "(- (* a b) c)"))
+
 (test/fact "full source file" (fgo/funcgo-parse "
 package foo
 import(
