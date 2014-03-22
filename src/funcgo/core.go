@@ -34,7 +34,7 @@ sourcefile = [ NL ] packageclause _ expressions _
    <Expression>  = precedence0 | withconst | shortvardecl | ifelseexpr | tryexpr | forrange |
                    forlazy | fortimes
      precedence0 = precedence1 | ( precedence0 _ symbol _ precedence1 )
-       symbol = (( Identifier <'.'> )? !Keyword Identifier ) | javastatic | '=>'
+       symbol = (( Identifier <'.'> )? !Keyword Identifier ) | javastatic | '=>' | '->>' | '->'
          Keyword = ( 'for' | 'range' )
        precedence1 = precedence2 | ( precedence1 _ or _ precedence2 )
 	 or = <'||'>
@@ -106,7 +106,12 @@ sourcefile = [ NL ] packageclause _ expressions _
            label = #'\p{Lu}[\p{Lu}_0-9]*\b'
            <Literal> = BasicLit | veclit | dictlit | functionlit
              functionlit = <'func'> _ Function
-             <BasicLit> = int_lit | string_lit | regex  | rune_lit    (*| float_lit | imaginary_lit *)
+             <BasicLit> = int_lit | string_lit | regex  | rune_lit | floatlit (*| imaginary_lit *)
+               floatlit = decimals '.' [ decimals ] [ exponent ]
+                        | decimals exponent
+                        | '.' decimals [ exponent ]
+                 decimals  = #'[0-9]+'
+                 exponent  = ( 'e' | 'E' ) [ '+' | '-' ] decimals
                <int_lit> = decimallit    (*| octal_lit | hex_lit .*)
 		 decimallit = #'[1-9][0-9]*' | #'[0-9]'
 	       regex = <'/'> #'[^/]+'<'/'>                                 (* TODO: handle / escape *)
@@ -301,6 +306,9 @@ func funcgoParse(fgo) {
                                 string.join(".", idf0 cons idfRest)
                         },
                         DECIMALLIT:    identity,
+			FLOATLIT:      str,
+			DECIMALS:      identity,
+			EXPONENT:      str,
                         REGEX:          func(s){str(`#"`, s, `"`)},
                         INTERPRETEDSTRINGLIT: func(s){str(`"`, s, `"`)},
                         LITTLEUVALUE:  func(d1,d2,d3,d4){str(`\u`,d1,d2,d3,d4)},

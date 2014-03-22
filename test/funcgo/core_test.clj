@@ -238,6 +238,18 @@ import(
            (parse "^a")  => (parsed "(bit-not a)")
            (parse "<-a") => (parsed "@a"))
 
+(test/fact "float litersls"
+           (parse "2.000") => (parsed "2.000")
+           (parse "0.") => (parsed "0.")
+           (parse "72.40") => (parsed "72.40")
+           (parse "072.40") => (parsed "072.40")
+           (parse "2.71828") => (parsed "2.71828")
+           (parse "1.e+0") => (parsed "1.e+0")
+           (parse "6.67428e-11") => (parsed "6.67428e-11")
+           (parse "1E6") => (parsed "1E6")
+           (parse ".25") => (parsed ".25")
+           (parse ".12345E+5") => (parsed ".12345E+5"))
+
 (test/fact "full source file" (fgo/funcgo-parse "
 package foo
 import(
