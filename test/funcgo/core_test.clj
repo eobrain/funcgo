@@ -236,7 +236,7 @@ import(
            (parse "-a")  => (parsed "(- a)")
            (parse "!a")  => (parsed "(not a)")
            (parse "^a")  => (parsed "(bit-not a)")
-           (parse "<-a") => (parsed "@a"))
+           (parse "*a") => (parsed "@a"))
 
 (test/fact "float litersls"
            (parse "2.000") => (parsed "2.000")

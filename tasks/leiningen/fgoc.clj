@@ -9,7 +9,7 @@
  fgoc
  [project & args]
  (let
-  [result (sh/sh "java" "-jar" "bin/funcgo-0.1.14-standalone.jar")]
+  [result (sh/sh "java" "-jar" "bin/funcgo-0.1.15-standalone.jar")]
   (println (result :err))
   (println (result :out))
   (if
