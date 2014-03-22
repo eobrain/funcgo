@@ -121,7 +121,7 @@ rows := [
         "ryan,neufeld,2"
 ]
 test.fact("Making CSV from header vector of rows",
-        apply(str, header, interpose("\n", rows)),
+        apply(str, header, ("\n" interpose rows)),
         =>, `first_name,last_name,employee_number
 luke,vanderhart,1
 ryan,neufeld,2`
@@ -223,19 +223,19 @@ test.fact("str is the easiest way of formatting values into a string",
 
 
 // Produce a filename with a zero-padded sortable index
-//func filename(name, i) {
-//        format("%03d-%s", i, name)
-//}
+func filename(name, i) {
+        format("%03d-%s", i, name)
+}
 
-//test.fact("format is another way of constructing strings",
-//        filename("my-awesome-file.txt", 42),
-//        =>, "042-my-awesome-file.txt"
-//)
+test.fact("format is another way of constructing strings",
+        filename("my-awesome-file.txt", 42),
+        =>, "042-my-awesome-file.txt"
+)
 
 // Create a table using justification
-//func tableify(row) {
-//        apply(format, "%-20s | %-20s | %-20s", row)
-//}
+func tableify(row) {
+        apply(format, "%-20s | %-20s | %-20s", row)
+}
 
 header := ["First Name", "Last Name", "Employee ID"]
 employees := [
@@ -243,16 +243,23 @@ employees := [
         ["Luke", "Vanderhart", 1]
 ]
 
-//mapv(println,
-//        map(tableify,
-//                concat([header], employees)))
+mapv(
+	println,
+        map(
+		tableify,
+                concat([header], employees)
+	)
+)
+// *out*
+// First Name           | Last Name            | Employee ID
+// Ryan                 | Neufeld              | 2
+// Luke                 | Vanderhart           | 1
 
-//->>(
-//        concat([header], employees),
-//        map(tableify),
-//        mapv(println)
-//)
-
+->>(
+        concat([header], employees),
+        map(tableify),
+        mapv(println)
+)
 // *out*
 // First Name           | Last Name            | Employee ID
 // Ryan                 | Neufeld              | 2

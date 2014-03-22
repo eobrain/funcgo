@@ -250,6 +250,10 @@ import(
            (parse ".25") => (parsed ".25")
            (parse ".12345E+5") => (parsed ".12345E+5"))
 
+(test/fact "symbols can start with keywords",
+           (parse "format") => (parsed "format")
+           (parse "ranged") => (parsed "ranged"))
+
 (test/fact "full source file" (fgo/funcgo-parse "
 package foo
 import(

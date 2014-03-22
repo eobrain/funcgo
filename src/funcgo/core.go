@@ -35,7 +35,7 @@ sourcefile = [ NL ] packageclause _ expressions _
                    forlazy | fortimes
      precedence0 = precedence1 | ( precedence0 _ symbol _ precedence1 )
        symbol = (( Identifier <'.'> )? !Keyword Identifier ) | javastatic | '=>' | '->>' | '->'
-         Keyword = ( 'for' | 'range' )
+         Keyword = ( '\bfor\b' | '\brange\b' )
        precedence1 = precedence2 | ( precedence1 _ or _ precedence2 )
 	 or = <'||'>
 	 precedence2 = precedence3 | precedence2 _ and _ precedence3
@@ -50,14 +50,14 @@ sourcefile = [ NL ] packageclause _ expressions _
 	       precedence5 = UnaryExpr | ( precedence5 _ mulop _ UnaryExpr )
 	         mulop = '*' | (!comment '/') | '%' | '<<' | '>>' | '&' | '&^'
 	   javastatic = JavaIdentifier _ <'::'> _ JavaIdentifier
-	     <JavaIdentifier> = #'[\p{L}_][\p{L}_\p{Digit}]*'
+	     <JavaIdentifier> = #'\b[\p{L}_][\p{L}_\p{Digit}]*\b'
 	   <Identifier> = identifier | dashidentifier | isidentifier | mutidentifier |
 			  escapedidentifier
-	     identifier = #'[\p{L}_][\p{L}_\p{Digit}]*'
+	     identifier = #'\b[\p{L}_][\p{L}_\p{Digit}]*\b'
 	     dashidentifier = <'_'> identifier
 	     isidentifier = <'is'> #'\p{L}' identifier
 	     mutidentifier = <'mutate'> #'\p{L}' identifier
-	     escapedidentifier = <'\\'> #'[\p{L}_][\p{L}_\p{Digit}]*'
+	     escapedidentifier = <'\\'> #'\b[\p{L}_][\p{L}_\p{Digit}]*\b'
      shortvardecl   = Identifier _ <':='> _ Expression
      ifelseexpr = <'if'> _ Expression _ ( ( block _ <'else'> _ block ) |
                   ( _ <'{'> _ expressions _ <'}'> )   )
@@ -103,7 +103,7 @@ sourcefile = [ NL ] packageclause _ expressions _
                    parameters = Identifier { <','> _ Identifier }
                    varadic = <'&'> Identifier
          <Operand> = Literal | OperandName | label | new  | ( <'('> Expression <')'> ) (*|MethodExpr*)
-           label = #'\p{Lu}[\p{Lu}_0-9]*\b'
+           label = #'\b\p{Lu}[\p{Lu}_0-9]*\b'
            <Literal> = BasicLit | veclit | dictlit | functionlit
              functionlit = <'func'> _ Function
              <BasicLit> = int_lit | string_lit | regex  | rune_lit | floatlit (*| imaginary_lit *)
