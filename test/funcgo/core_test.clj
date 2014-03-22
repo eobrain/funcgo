@@ -179,11 +179,11 @@ import(
       (parse "System::getProperty(\"foo\")")  => (parsed "(System/getProperty \"foo\")")
       (parse "Math::PI")                      => (parsed "Math/PI")
       )
-(test/fact "symbols can contain non-alphanumerics"
+(test/fact "there are some non-alphanumeric symbols"
            (parse "foo(a,=>,b)") => (parsed "(foo a => b)")
            (parse "test.fact(\"interesting\", parse(\"a\"), =>, parsed(\"a\"))")
            => (parsed "(test/fact \"interesting\" (parse \"a\") => (parsed \"a\"))")
-           (parse "/(a,b)") => (parsed "(/ a b)")
+           (parse "=>(a,b)") => (parsed "(=> a b)")
            )
 (test/fact "infix"
            (parse "a b c") => (parsed "(b a c)")
@@ -213,9 +213,13 @@ import(
            (parse "aaa[6]") => (parsed "(aaa 6)"))
 
 (test/fact "precedent"
-           (parse "a or b < c")   => (parsed "(or a (< b c))")
-           (parse "a or b and c") => (parsed "(or a (and b c))")
-           (parse "a * b - c")    => (parsed "(- (* a b) c)"))
+           (parse "a || b < c")   => (parsed "(or a (< b c))")
+           (parse "a || b && c") => (parsed "(or a (and b c))")
+           (parse "a && b || c") => (parsed "(or (and a b) c)")
+           (parse "a * b - c")    => (parsed "(- (* a b) c)")
+           (parse "c + a * b")    => (parsed "(+ c (* a b))")
+           (parse "a / b + c")    => (parsed "(+ (/ a b) c)")
+           )
 
 (test/fact "parentheses"
            (parse "(a or b) and c") => (parsed "(and (or a b) c)")

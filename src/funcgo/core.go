@@ -20,105 +20,127 @@ import (
 )
 
 funcgoParser := insta.parser(`
-sourcefile     = [ NL ] packageclause _ expressions _
-packageclause  = <'package'> <__> dotted NL importdecl
-expressions    = Expression { NL Expression }
-importdecl     = <'import'> _ <'('>  _ { importspec _ } <')'>
-importspec     = Identifier _ dotted
-<Expression>   = UnaryExpr | infix | withconst | shortvardecl | ifelseexpr | tryexpr | forrange | forlazy | fortimes
-infix          = Expression _ symbol _ UnaryExpr
-ifelseexpr     = <'if'> _ Expression _ ( ( block _ <'else'> _ block ) | ( _ <'{'> _ expressions _ <'}'> )   )
-forrange       = <'for'> <__> Identifier _ <':='> _ <'range'> <_> Expression _ <'{'> _ expressions _ <'}'>
-forlazy        = <'for'> <__> Identifier _ <':='> _ <'lazy'> <_> Expression [ <__> <'if'> <__> Expression ] _ <'{'> _ expressions _ <'}'>
-fortimes       = <'for'> <__> Identifier _ <':='> _ <'times'> <_> Expression _ <'{'> _ expressions _ <'}'>
-tryexpr        = <'try'> _ <'{'> _ expressions _ <'}'> _ catches _ finally?
-catches        = ( catch { _ catch } )?
-catch          = <'catch'> _ Identifier _ Identifier _ <'{'> _ expressions _ <'}'>
-finally        = <'finally'> _ <'{'> _ expressions _ <'}'>
-block          = <'{'> _ Expression { NL Expression } _ <'}'>
-<UnaryExpr>    = PrimaryExpr | javafield  (* | unary_op UnaryExpr *)
-<PrimaryExpr>  = functioncall | javamethodcall | Operand | functiondecl |  indexed
-                                                                         (*Conversion |
-                                                                         BuiltinCall |
-                                                                         PrimaryExpr Selector |
-                                                                         PrimaryExpr Slice |
-                                                                         PrimaryExpr TypeAssertion |*)
-indexed        = PrimaryExpr _ <'['> _ Expression _ <']'>
-withconst      = <'const'> _ <'('> _ { consts } _ <')'> _ expressions
-consts         = [ const { NL const } ]
-const          = Identifier _ <'='> _ Expression 
-functioncall   = PrimaryExpr Call
-javamethodcall = Expression _ <'->'> _ JavaIdentifier _ Call
-<Call>         = <'('> _ ( ArgumentList _ )? <')'>
-<ArgumentList> = expressionlist                                                      (* [ _ '...' ] *)
-expressionlist = Expression { _ <','> _ Expression }
-<Operand>      = Literal | OperandName | label | new  | ( <'('> Expression <')'> )   (*| MethodExpr *)
-new            = <'new'> <__> symbol
-<OperandName>  = symbol                                             (*| QualifiedIdent*)
-<Literal>      = BasicLit | veclit | dictlit | functionlit
-<BasicLit>     = int_lit | string_lit | regex  | rune_lit          (*| float_lit | imaginary_lit *)
-shortvardecl   = Identifier _ <':='> _ Expression
-functiondecl   = <'func'> _ Identifier _ Function
-functionlit    = <'func'> _ Function
-<Function>     = FunctionPart | functionparts
-functionparts  = FunctionPart _ FunctionPart { _ FunctionPart }
-<FunctionPart> = functionpart0 | functionpartn | vfunctionpart0 | vfunctionpartn
-functionpart0  = <'('> _ <')'> _ <'{'> _ Expression _ <'}'>
-vfunctionpart0 = <'('> _ varadic _ <')'> _ <'{'> _ Expression _ <'}'>
-functionpartn  = <'('> _ parameters _ <')'> _ <'{'> _ Expression _ <'}'>
-vfunctionpartn = <'('> _ parameters _  <','> _ varadic _ <')'> _ <'{'> _ Expression _ <'}'>
-parameters     = Identifier { <','> _ Identifier }
-varadic        = <'&'> Identifier
-veclit         = <'['> _ (( Expression { _ <','> _ Expression _ } )? )? <']'>
-dictlit        = '{' _ ( dictelement _ { <','> _ dictelement } )? _ '}'
-dictelement    = Expression _ <':'> _ Expression
-<int_lit>      = decimallit    (*| octal_lit | hex_lit .*)
-decimallit    = #'[1-9][0-9]*' | #'[0-9]'
-regex          = <'/'> #'[^/]+'<'/'>   (* TODO: handle / escape *)
-<string_lit>   = rawstringlit   | interpretedstringlit
-<rune_lit>       = <'\''> ( unicode_value | byte_value ) <'\''> 
-<unicode_value>  = unicodechar | littleuvalue | escaped_char
-<byte_value>     = octalbytevalue (* | hex_byte_value *)
-octalbytevalue = <'\\'> octaldigit octaldigit octaldigit
-littleuvalue   = <'\\u'> hexdigit hexdigit hexdigit hexdigit
-unicodechar      = #'[^\n ]'
-hexdigit        = #'[0-9a-fA-F]'
-octaldigit      = #'[0-7]'
-<escaped_char>     = newlinechar | spacechar | backspacechar | returnchar | tabchar | backslashchar | squotechar| dquotechar
-newlinechar      = <'\\n'>
-spacechar        = <' '>
-backspacechar    = <'\\b'>
-returnchar       = <'\\r'>
-tabchar          = <'\\t'>
-backslashchar    = <'\\\\'>
-squotechar       = <'\\\''>
-dquotechar       = <'\\"'>
-rawstringlit = <#'\x60'> #'[^\x60]*' <#'\x60'>      (* \x60 is back quote character *)
-interpretedstringlit = <#'\"'> #'[^\"]*' <#'\"'>      (* TODO: handle string escape *)
-dotted         = Identifier { <'.'> Identifier }
-symbol         = (( Identifier <'.'> )? !Keyword Identifier ) | (!comment '/') | javastatic | '+' | '-' | '*' | '<' | '=>' | '==' | '<=' | '>=' | noteq | equals (* TODO(eob)  | '>' *)
-noteq          = <'!='>
-javafield      = Expression _ <'->'> _ JavaIdentifier
-javastatic     = JavaIdentifier _ <'::'> _ JavaIdentifier
-Keyword        = ( 'for' | 'range' )
-<Identifier>     = identifier | dashidentifier | isidentifier | mutidentifier | escapedidentifier
-identifier     = #'[\p{L}_][\p{L}_\p{Digit}]*'
-<JavaIdentifier> = #'[\p{L}_][\p{L}_\p{Digit}]*'
-dashidentifier = <'_'> identifier
-isidentifier   = <'is'> #'\p{L}' identifier
-equals         = <'=='>
-mutidentifier  = <'mutate'> #'\p{L}' identifier
-escapedidentifier   = <'\\'> #'[\p{L}_][\p{L}_\p{Digit}]*'
-label          = #'\p{Lu}[\p{Lu}_0-9]*'
-letter         = unicode_letter | '_'
-unicode_letter = #'\p{L}'
-unicode_digit  = #'\p{Digit}'
-<_>            = <#'[ \t\x0B\f\r\n]*'> | comment+  (* optional whitespace *)
-__             =  #'[ \t\x0B\f\r\n]+' | comment+     (* whitespace *)
-<NL>           = nl | comment+
-<nl>           = <#'\s*[\n;]\s*'>       (* whitespace with at least one newline or semicolon *)
-<comment>      = <#'[;\s]*//[^\n]*\n\s*'>
+sourcefile = [ NL ] packageclause _ expressions _
+ <_> = <#'[ \t\x0B\f\r\n]*'> | comment+  (* optional whitespace *)
+ <NL> = nl | comment+
+   <nl> = <#'\s*[\n;]\s*'>                     (* whitespace with at least one newline or semicolon *)
+   <comment> = <#'[;\s]*//[^\n]*\n\s*'>
+ packageclause = <'package'> <__> dotted NL importdecl
+   __ =  #'[ \t\x0B\f\r\n]+' | comment+     (* whitespace *)
+   importdecl = <'import'> _ <'('>  _ { importspec _ } <')'>
+     importspec = Identifier _ dotted
+       dotted = Identifier { <'.'> Identifier }
+ expressions = Expression { NL Expression }
+   <Expression>  = precedence0 | withconst | shortvardecl | ifelseexpr | tryexpr | forrange |
+                   forlazy | fortimes
+     precedence0 = precedence1 | ( precedence0 _ symbol _ precedence1 )
+       symbol = (( Identifier <'.'> )? !Keyword Identifier ) | javastatic | '=>'
+         Keyword = ( 'for' | 'range' )
+       precedence1 = precedence2 | ( precedence1 _ or _ precedence2 )
+	 or = <'||'>
+	 precedence2 = precedence3 | precedence2 _ and _ precedence3
+	   and = <'&&'>
+	   precedence3 = precedence4 | precedence3 _ relop  _ precedence4
+             relop = equals | noteq | '<' | '<=' | '>='  (* TODO(eob)  | '>' *)
+	       equals = <'=='>
+               noteq  = <'!='>
+	     precedence4 = precedence5 | precedence4 _ addop _ precedence5
+	       addop = '+' | '-' | '|' | '^'
+	       precedence5 = UnaryExpr | ( precedence5 _ mulop _ UnaryExpr )
+	         mulop = '*' | (!comment '/') | '%' | '<<' | '>>' | '&' | '&^'
+	   javastatic = JavaIdentifier _ <'::'> _ JavaIdentifier
+	     <JavaIdentifier> = #'[\p{L}_][\p{L}_\p{Digit}]*'
+	   <Identifier> = identifier | dashidentifier | isidentifier | mutidentifier |
+			  escapedidentifier
+	     identifier = #'[\p{L}_][\p{L}_\p{Digit}]*'
+	     dashidentifier = <'_'> identifier
+	     isidentifier = <'is'> #'\p{L}' identifier
+	     mutidentifier = <'mutate'> #'\p{L}' identifier
+	     escapedidentifier = <'\\'> #'[\p{L}_][\p{L}_\p{Digit}]*'
+     shortvardecl   = Identifier _ <':='> _ Expression
+     ifelseexpr = <'if'> _ Expression _ ( ( block _ <'else'> _ block ) |
+                  ( _ <'{'> _ expressions _ <'}'> )   )
+       block = <'{'> _ Expression { NL Expression } _ <'}'>
+     forrange = <'for'> <__> Identifier _ <':='> _ <'range'> <_> Expression _
+                <'{'> _ expressions _ <'}'>
+     forlazy = <'for'> <__> Identifier _ <':='> _ <'lazy'> <_> Expression
+               [ <__> <'if'> <__> Expression ] _ <'{'> _ expressions _ <'}'>
+     fortimes = <'for'> <__> Identifier _ <':='> _ <'times'> <_> Expression _
+                <'{'> _ expressions _ <'}'>
+     tryexpr = <'try'> _ <'{'> _ expressions _ <'}'> _ catches _ finally?
+       catches = ( catch { _ catch } )?
+         catch = <'catch'> _ Identifier _ Identifier _ <'{'> _ expressions _ <'}'>
+       finally = <'finally'> _ <'{'> _ expressions _ <'}'>
+     <UnaryExpr> = PrimaryExpr | javafield | ( unary_op _ UnaryExpr )
+       javafield  = Expression _ <'->'> _ JavaIdentifier
+       <PrimaryExpr> = functioncall | javamethodcall | Operand | functiondecl |  indexed
+                                                                (*Conversion |
+                                                                BuiltinCall |
+                                                                PrimaryExpr Selector |
+                                                                PrimaryExpr Slice |
+                                                                PrimaryExpr TypeAssertion |*)
+         indexed = PrimaryExpr _ <'['> _ Expression _ <']'>
+         functioncall = PrimaryExpr Call
+         javamethodcall = Expression _ <'->'> _ JavaIdentifier _ Call
+           <Call> = <'('> _ ( ArgumentList _ )? <')'>
+             <ArgumentList> = expressionlist                                         (* [ _ '...' ] *)
+               expressionlist = Expression { _ <','> _ Expression }
+         functiondecl = <'func'> _ Identifier _ Function
+           <Function> = FunctionPart | functionparts
+             functionparts = FunctionPart _ FunctionPart { _ FunctionPart }
+               <FunctionPart> = functionpart0 | functionpartn | vfunctionpart0 | vfunctionpartn
+                 functionpart0 = <'('> _ <')'> _ <'{'> _ Expression _ <'}'>
+		 vfunctionpart0 = <'('> _ varadic _ <')'> _ <'{'> _ Expression _ <'}'>
+		 functionpartn  = <'('> _ parameters _ <')'> _ <'{'> _ Expression _ <'}'>
+		 vfunctionpartn = <'('> _ parameters _  <','> _ varadic _ <')'> _
+                                  <'{'> _ Expression _ <'}'>
+                   parameters = Identifier { <','> _ Identifier }
+                   varadic = <'&'> Identifier
+         <Operand> = Literal | OperandName | label | new  | ( <'('> Expression <')'> ) (*|MethodExpr*)
+           label = #'\p{Lu}[\p{Lu}_0-9]*\b'
+           <Literal> = BasicLit | veclit | dictlit | functionlit
+             functionlit = <'func'> _ Function
+             <BasicLit> = int_lit | string_lit | regex  | rune_lit    (*| float_lit | imaginary_lit *)
+               <int_lit> = decimallit    (*| octal_lit | hex_lit .*)
+		 decimallit = #'[1-9][0-9]*' | #'[0-9]'
+	       regex = <'/'> #'[^/]+'<'/'>                                 (* TODO: handle / escape *)
+	       <string_lit> = rawstringlit   | interpretedstringlit
+                 rawstringlit = <#'\x60'> #'[^\x60]*' <#'\x60'>     (* \x60 is back quote character *)
+                 interpretedstringlit = <#'\"'> #'[^\"]*' <#'\"'>     (* TODO: handle string escape *)
+	       <rune_lit> = <'\''> ( unicode_value | byte_value ) <'\''> 
+		 <unicode_value> = unicodechar | littleuvalue | escaped_char
+                   unicodechar = #'[^\n ]'
+                   <escaped_char> = newlinechar | spacechar | backspacechar | returnchar | tabchar |
+                                    backslashchar | squotechar| dquotechar
+		     newlinechar   = <'\\n'>
+		     spacechar     = <' '>
+		     backspacechar = <'\\b'>
+		     returnchar    = <'\\r'>
+		     tabchar       = <'\\t'>
+		     backslashchar = <'\\\\'>
+		     squotechar    = <'\\\''>
+		     dquotechar    = <'\\"'>
+		 <byte_value> = octalbytevalue                                  (* | hex_byte_value *)
+                   octalbytevalue = <'\\'> octaldigit octaldigit octaldigit
+                     octaldigit = #'[0-7]'
+                   littleuvalue = <'\\u'> hexdigit hexdigit hexdigit hexdigit
+                     hexdigit = #'[0-9a-fA-F]'
+	     veclit = <'['> _ (( Expression { _ <','> _ Expression _ } )? )? <']'>
+	     dictlit = '{' _ ( dictelement _ { <','> _ dictelement } )? _ '}'
+               dictelement = Expression _ <':'> _ Expression
+           new = <'new'> <__> symbol
+           <OperandName> = symbol                                                 (*| QualifiedIdent*)
+       unary_op = '+' | '-' | '!' | '^' | '*' | '&' | '<-'
+     withconst = <'const'> _ <'('> _ { consts } _ <')'> _ expressions
+       consts = [ const { NL const } ]
+         const = Identifier _ <'='> _ Expression 
 `)
+
+func infix(expression) {
+	expression
+} (left, operator, right) {
+	str("(", operator, " ", left, " ", right, ")")
+}
 
 func funcgoParse(fgo) {
         const(
@@ -128,6 +150,7 @@ func funcgoParse(fgo) {
                 failure.pprintFailure(parsed)
                 throw(new Exception(`"SYNTAX ERROR"`))
         } else {
+	    // pprint.pprint(parsed)
             insta.transform(
                 {
                         SOURCEFILE:     func(header, body) {str(header, body, "\n")},
@@ -138,9 +161,12 @@ func funcgoParse(fgo) {
                         IMPORTSPEC:     func(identifier, dotted) {
                                 str("\n  (:require [", dotted, " :as ", identifier, "])")
                         },
-                        INFIX: func(left, operator, right) {
-                                str("(", operator, " ", left, " ", right, ")")
-                        },
+                        PRECEDENCE0: infix,
+                        PRECEDENCE1: infix,
+                        PRECEDENCE2: infix,
+                        PRECEDENCE3: infix,
+                        PRECEDENCE4: infix,
+                        PRECEDENCE5: infix,
                         IFELSEEXPR: func(condition, exprs) {
                                 str("(when ", condition, " ", exprs, ")")
                         } (condition, block1, block2) {
@@ -163,7 +189,7 @@ func funcgoParse(fgo) {
                                 str("(try ", expressions, " ", catches, " ", finally, ")" )
                         },
                         CATCHES: func(&catches){
-				string.join(" ", catches)
+                                string.join(" ", catches)
                         },
                         CATCH: func(typ, exception, expressions) {
                                 str("(catch ", typ, " ", exception, " ", expressions,")")
@@ -181,19 +207,19 @@ func funcgoParse(fgo) {
                                 str("(", function, " ", call, ")")
                         },
                         EXPRESSIONLIST: func(expr0, &exprRest){
-				string.join(" ", expr0 cons exprRest)
+                                string.join(" ", expr0 cons exprRest)
                         },
                         EXPRESSIONS: func(expr0, &exprRest){
-				string.join(" ", expr0 cons exprRest)
+                                string.join(" ", expr0 cons exprRest)
                         },
                         CONSTS:  func(&consts) {
-				"\n" string.join consts
+                                "\n" string.join consts
                         },
                         BLOCK: func (expr){
                                 expr
                         } (expr0, &exprRest) {
                                 str("(do ",
-					string.join(" ", expr0 cons exprRest),
+                                        string.join(" ", expr0 cons exprRest),
                                         ")")
                         },
                         INDEXED: func(xs, i){ str("(", xs, " ", i, ")") },
@@ -203,7 +229,7 @@ func funcgoParse(fgo) {
                                         expressions = last(xs)
                                 )
                                 str("(let [",
-					" " string.join consts,
+                                        " " string.join consts,
                                         "] ",
                                         expressions,
                                         ")")
@@ -214,13 +240,17 @@ func funcgoParse(fgo) {
                         } (pkg, identifier) {
                                 str(pkg, "/", identifier)
                         },
+			BINARYOP: identity,
+			MULOP: identity,
+			ADDOP: identity,
+			RELOP: identity,
                         FUNCTIONDECL:   func(identifier, function) {
                                 str("(defn ", identifier, " ", function, ")")
                         },
                         FUNCTIONLIT:    func(function) {str("(fn ", function, ")")},
                         FUNCTIONPARTS:  func(&functionpart) {
                                 str("(",
-					") (" string.join functionpart,
+                                        ") (" string.join functionpart,
                                         ")")
                         },
                         FUNCTIONPART0:  func(expression) {
@@ -236,7 +266,7 @@ func funcgoParse(fgo) {
                         str("[", parameters, " ", varadic, "] ", expression)
                         },
                         PARAMETERS:     func(arg0, &argsRest) {
-				string.join(" ", arg0 cons argsRest)
+                                string.join(" ", arg0 cons argsRest)
                         },
                         VARADIC:        func(parameter) {str("& ", parameter)},
                         VECLIT:         func() {
@@ -244,7 +274,7 @@ func funcgoParse(fgo) {
                         } (&expressions) {
                                 str(
                                         "[",
-					" " string.join expressions,
+                                        " " string.join expressions,
                                         "]"
                                 )
                         },
@@ -259,7 +289,7 @@ func funcgoParse(fgo) {
                                 })
                         },
                         DOTTED:         func(idf0, &idfRest){
-				string.join(".", idf0 cons idfRest)
+                                string.join(".", idf0 cons idfRest)
                         },
                         DECIMALLIT:    identity,
                         REGEX:          func(s){str(`#"`, s, `"`)},
@@ -282,7 +312,9 @@ func funcgoParse(fgo) {
                         ISIDENTIFIER:   func(initial, identifier) {
                                 str( string.lowerCase(initial), identifier, "?")
                         },
-			EQUALS: func() { "=" },
+                        EQUALS: func() { "=" },
+                        AND: func() { "and" },
+                        OR: func() { "or" },
                         MUTIDENTIFIER:  func(initial, identifier) {
                                 str( string.lowerCase(initial), identifier, "!")
                         },
