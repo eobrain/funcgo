@@ -6,7 +6,7 @@ import(
 
 func fgoc(project, &args) {
         const(
-                result = sh.sh("java", "-jar", "bin/funcgo-0.1.11-standalone.jar")
+                result = sh.sh("java", "-jar", "bin/funcgo-0.1.12-standalone.jar")
         )
         println(result[ERR])
         println(result[OUT])
