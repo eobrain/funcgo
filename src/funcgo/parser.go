@@ -32,7 +32,7 @@ sourcefile = [ NL ] packageclause _ expressions _
    <Expression>  = precedence0 | withconst | shortvardecl | ifelseexpr | tryexpr | forrange |
                    forlazy | fortimes
      precedence0 = precedence1 | ( precedence0 _ symbol _ precedence1 )
-       symbol = (( Identifier <'.'> )? !Keyword Identifier ) | javastatic | '=>' | '->>' | '->'
+       symbol = (( Identifier <'.'> )? !Keyword Identifier ) | javastatic | '=>' | '->>'
          Keyword = ( '\bfor\b' | '\brange\b' )
        precedence1 = precedence2 | ( precedence1 _ or _ precedence2 )
 	 or = <'||'>
@@ -76,7 +76,7 @@ sourcefile = [ NL ] packageclause _ expressions _
 	   bitnot = <'^'>
 	   not    = <'!'>
        deref = <'*'> _ UnaryExpr
-       javafield  = Expression _ <'->'> _ JavaIdentifier
+       javafield  = UnaryExpr _ <'->'> _ JavaIdentifier
        <PrimaryExpr> = functioncall | javamethodcall | Operand | functiondecl |  indexed
                                                                 (*Conversion |
                                                                 BuiltinCall |
@@ -85,7 +85,7 @@ sourcefile = [ NL ] packageclause _ expressions _
                                                                 PrimaryExpr TypeAssertion |*)
          indexed = PrimaryExpr _ <'['> _ Expression _ <']'>
          functioncall = PrimaryExpr Call
-         javamethodcall = Expression _ <'->'> _ JavaIdentifier _ Call
+         javamethodcall = UnaryExpr _ <'->'> _ JavaIdentifier _ Call
            <Call> = <'('> _ ( ArgumentList _ )? <')'>
              <ArgumentList> = expressionlist                                         (* [ _ '...' ] *)
                expressionlist = Expression { _ <','> _ Expression }

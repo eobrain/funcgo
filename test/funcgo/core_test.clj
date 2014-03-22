@@ -178,6 +178,12 @@ import(
       (parse "println(a, e->getMessage())") => (parsed "(println a (. e (getMessage)))")
       (parse "System::getProperty(\"foo\")")  => (parsed "(System/getProperty \"foo\")")
       (parse "Math::PI")                      => (parsed "Math/PI")
+      (parse "999 * f->foo()")                => (parsed  "(* 999 (. f (foo)))")
+      (parse "f->foo() / b->bar()")           => (parsed  "(/ (. f (foo)) (. b (bar)))")
+      (parse "999 * f->foo() / b->bar()")     => (parsed  "(/ (* 999 (. f (foo))) (. b (bar)))")
+      (parse "999 * f->foo")                  => (parsed  "(* 999 (. f foo))")
+      (parse "f->foo / b->bar")             => (parsed  "(/ (. f foo) (. b bar))")
+      (parse "999 * f->foo / b->bar")         => (parsed  "(/ (* 999 (. f foo)) (. b bar))")
       )
 (test/fact "there are some non-alphanumeric symbols"
            (parse "foo(a,=>,b)") => (parsed "(foo a => b)")
