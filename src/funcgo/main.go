@@ -38,7 +38,7 @@ func compileFile(inFile) {
 		writer->close()
 		println("Compiled ",
 			inPath, "to", outFile->getPath(),
-			"(", double(100 * (outFile->length()) / (inFile->length())), ")")
+			"(", double(100 * outFile->length() / inFile->length()), ")")
 	}
 }
 
