@@ -148,7 +148,7 @@ test.fact("seq() exposes the characters in a string",
 
 func isYelling(s) {
   isEvery(
-	  func(ch) {  not(Character::isLetter(ch)) or Character::isUpperCase(ch)  },
+	  func(ch) { !Character::isLetter(ch) || Character::isUpperCase(ch) },
 	  s
   )
 }

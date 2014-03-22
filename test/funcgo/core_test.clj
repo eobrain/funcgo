@@ -221,9 +221,22 @@ import(
            (parse "a / b + c")    => (parsed "(+ (/ a b) c)")
            )
 
+(test/fact "associativity"
+           (parse "x / y * z") => (parsed "(* (/ x y) z)")
+           (parse "x * y / z") => (parsed "(/ (* x y) z)")
+           (parse "x + y - z") => (parsed "(- (+ x y) z)")
+           (parse "x - y + z") => (parsed "(+ (- x y) z)"))
+
 (test/fact "parentheses"
            (parse "(a or b) and c") => (parsed "(and (or a b) c)")
            (parse "a * b - c") => (parsed "(- (* a b) c)"))
+
+(test/fact "unary"
+           (parse "+a")  => (parsed "(+ a)")
+           (parse "-a")  => (parsed "(- a)")
+           (parse "!a")  => (parsed "(not a)")
+           (parse "^a")  => (parsed "(bit-not a)")
+           (parse "<-a") => (parsed "@a"))
 
 (test/fact "full source file" (fgo/funcgo-parse "
 package foo

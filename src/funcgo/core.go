@@ -45,7 +45,8 @@ sourcefile = [ NL ] packageclause _ expressions _
 	       equals = <'=='>
                noteq  = <'!='>
 	     precedence4 = precedence5 | precedence4 _ addop _ precedence5
-	       addop = '+' | '-' | '|' | '^'
+	       addop = '+' | '-' | '|' | bitxor
+                 bitxor = <'^'>
 	       precedence5 = UnaryExpr | ( precedence5 _ mulop _ UnaryExpr )
 	         mulop = '*' | (!comment '/') | '%' | '<<' | '>>' | '&' | '&^'
 	   javastatic = JavaIdentifier _ <'::'> _ JavaIdentifier
@@ -71,7 +72,12 @@ sourcefile = [ NL ] packageclause _ expressions _
        catches = ( catch { _ catch } )?
          catch = <'catch'> _ Identifier _ Identifier _ <'{'> _ expressions _ <'}'>
        finally = <'finally'> _ <'{'> _ expressions _ <'}'>
-     <UnaryExpr> = PrimaryExpr | javafield | ( unary_op _ UnaryExpr )
+     <UnaryExpr> = PrimaryExpr | javafield | unaryexpr | deref
+       unaryexpr = unary_op _ UnaryExpr
+	 <unary_op> = '+' | '-' | '!' | not | '*' | '&' | bitnot
+	   bitnot = <'^'>
+	   not    = <'!'>
+       deref = <'<-'> _ UnaryExpr
        javafield  = Expression _ <'->'> _ JavaIdentifier
        <PrimaryExpr> = functioncall | javamethodcall | Operand | functiondecl |  indexed
                                                                 (*Conversion |
@@ -130,7 +136,6 @@ sourcefile = [ NL ] packageclause _ expressions _
                dictelement = Expression _ <':'> _ Expression
            new = <'new'> <__> symbol
            <OperandName> = symbol                                                 (*| QualifiedIdent*)
-       unary_op = '+' | '-' | '!' | '^' | '*' | '&' | '<-'
      withconst = <'const'> _ <'('> _ { consts } _ <')'> _ expressions
        consts = [ const { NL const } ]
          const = Identifier _ <'='> _ Expression 
@@ -140,6 +145,10 @@ func infix(expression) {
 	expression
 } (left, operator, right) {
 	str("(", operator, " ", left, " ", right, ")")
+}
+
+func listStr(&item) {
+	str("(", string.join(" ", item), ")")
 }
 
 func funcgoParse(fgo) {
@@ -320,6 +329,11 @@ func funcgoParse(fgo) {
                         },
                         ESCAPEDIDENTIFIER:  func(identifier) { identifier },
                         NOTEQ:   func() { "not=" },
+			UNARYEXPR: func(operator, expression) { listStr(operator, expression) },
+			BITXOR: func(){ "bit-xor" },
+			BITNOT: func(){ "bit-not" },
+			NOT: func(){ "not" },
+			DEREF: func(expression) { str("@", expression) },
                         JAVAFIELD:      func(expression, identifier) {
                                 str("(. ", expression, " ", identifier, ")")
                         },
