@@ -33,12 +33,12 @@ func compileFile(inFile, opts) {
                 outFile = io.file(string.replace(inPath, /\.go$/, ".clj"))
         )
         if opts[FORCE] || outFile->lastModified() < inFile->lastModified() {
+                println(inPath)
                 const(
                         clj = core.funcgoParse(slurp(inFile), opts[NODES])
                         // TODO(eob) open using with-open
                         writer = io.writer(outFile)
                 )
-                println(inPath)
                 writer->write(str(";; Compiled from ", inFile, "\n"))
                 for expr := range readString( str("[", clj, "]")) {
                         pprint.pprint(expr, writer)
@@ -75,7 +75,7 @@ func _main(&args) {
 						println("\n", e->getMessage())
 					}
 				}
-			}else{
+			} else {
 				for arg := range otherArgs {
 					compileFile(io.file(arg), opts)
 				}

@@ -341,3 +341,60 @@ test.fact("simple string replacement via string.replace",
 	},
 	=>, "Those Canadian neighbors have colored behavior when it comes to word endings"
 )
+
+test.fact("More complex string replacement requires regular expressions",
+	{
+		// Add Markdown-style links for any GitHub issue numbers present in comment
+		func linkifyComment(repo, comment) {
+			string.replace(
+				comment,
+				/#(\d+)/,
+				str("[#$1](https://github.com/", repo, "/issues/$1)")
+			)
+		}
+		linkifyComment(
+			"next/big-thing",
+			"As soon as we fix #42 and #1337 we should be set to release!"
+		)
+	},
+	=>, "As soon as we fix [#42](https://github.com/next/big-thing/issues/42) and [#1337](https://github.com/next/big-thing/issues/1337) we should be set to release!"
+)
+
+
+test.fact("Use string.split to split strings",
+	
+	"HEADER1,HEADER2,HEADER3" string.split /,/,
+	=>, ["HEADER1", "HEADER2", "HEADER3"],
+	
+	"Spaces   Newlines\n\n" string.split /\s+/,
+	=>, ["Spaces", "Newlines"],
+	
+	// whitespace splitting with implicit trim
+	"field1    field2 field3   "  string.split /\s+/,
+	=>, ["field1", "field2", "field3"],
+	
+	// avoid implicit trimming by adding limit of -1
+
+	string.split("ryan,neufeld,", /,/, -1),
+	=>, ["ryan", "neufeld", ""],
+	
+	{
+		dataDelimiters := /[ :-]/
+			
+		//No-limit split on any delimiter
+		"2013-04-05 14:39" string.split dataDelimiters
+	},
+	=>, ["2013", "04", "05", "14", "39"],
+
+	// Limit of 1 - functionally: return this string in a collection
+	string.split("2013-04-05 14:39", dataDelimiters, 1),
+	=>, ["2013-04-05 14:39"],
+
+	// Limit of 2
+	string.split("2013-04-05 14:39", dataDelimiters, 2),
+	=>, ["2013", "04-05 14:39"],
+
+	// Limit of 100
+	string.split("2013-04-05 14:39", dataDelimiters, 100),
+	=>, ["2013", "04", "05", "14", "39"]
+)
