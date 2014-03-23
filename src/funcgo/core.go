@@ -23,6 +23,8 @@ import (
 
 
 func funcgoParse(fgo) {
+	funcgoParse(fgo, false)
+} (fgo, isNodes) {
         const(
                 parsed = parser.funcgoParser(string.replace(fgo, /\t/, "        "))
         )
@@ -30,8 +32,10 @@ func funcgoParse(fgo) {
                 failure.pprintFailure(parsed)
                 throw(new Exception(`"SYNTAX ERROR"`))
         } else {
-	    // pprint.pprint(parsed)
-            insta.transform(codegen.codeGenerator, parsed)
+		if isNodes {
+			pprint.pprint(parsed)
+		}
+		insta.transform(codegen.codeGenerator, parsed)
         }
 }
 

@@ -21,34 +21,20 @@ import (
 )
 
 cliOptions := [
-        // An option with a required argument
-        ["-p", "--port PORT", "Port number",
-                DEFAULT, 80,
-                PARSE_FN, func(x){Integer::parseInt(x)},
-                VALIDATE, [
-                        func(x){ func(x){0 < x && x < 65536}}, //0x10000}},
-                        "Must be a number between 0 and 65536"
-                ]
-        ],
-        // A non-idempotent option
-        ["-v", nil, "Verbosity level",
-                ID, VERBOSITY,
-                DEFAULT, 0,
-                ASSOC_FN, func(m, k, _) { updateIn( m, [k], inc)}
-        ],
-        // A boolean option defaulting to nil
-        ["-h", "--help"]
+        ["-n", "--nodes", "print out the parse tree that the parser produces"],
+        ["-f", "--force", "Force compiling even if not out-of-date"],
+        ["-h", "--help", "print help"]
 ]
 
 
-func compileFile(inFile) {
+func compileFile(inFile, opts) {
         const(
                 inPath = inFile->getPath()
                 outFile = io.file(string.replace(inPath, /\.go$/, ".clj"))
         )
-        if outFile->lastModified() < inFile->lastModified() {
+        if opts[FORCE] || outFile->lastModified() < inFile->lastModified() {
                 const(
-                        clj = core.funcgoParse(slurp(inFile))
+                        clj = core.funcgoParse(slurp(inFile), opts[NODES])
                         // TODO(eob) open using with-open
                         writer = io.writer(outFile)
                 )
@@ -70,21 +56,30 @@ func compileFile(inFile) {
 
  // Convert funcgo to clojure
 func _main(&args) {
-        //args cli.parseOpts cliOptions
-	//println(cli.parseOpts(args, cliOptions))
-        if not(seq(args)) {
-                for f := range fileSeq(io.file(".")) {
-                        try {
-                                if f->getName()->endsWith(".go") { 
-                                        compileFile(f)
-                                }
-                        } catch Exception e {
-                                println("\n", e->getMessage())
-                        }
-                }
-        }else{
-                for arg := range args {
-                        compileFile(io.file(arg))
-                }
-        }
+	const(
+		cmdLine   = args cli.parseOpts cliOptions
+		otherArgs = cmdLine[ARGUMENTS]
+		opts      = cmdLine[OPTIONS]
+	) {
+		if cmdLine[ERRORS] || opts[HELP]{
+			println("ERROR: ", cmdLine[ERRORS])
+			println(cmdLine[SUMMARY])
+		}else{
+			if not(seq(otherArgs)) {
+				for f := range fileSeq(io.file(".")) {
+					try {
+						if f->getName()->endsWith(".go") { 
+							compileFile(f, opts)
+						}
+					} catch Exception e {
+						println("\n", e->getMessage())
+					}
+				}
+			}else{
+				for arg := range otherArgs {
+					compileFile(io.file(arg), opts)
+				}
+			}
+		}
+	}
 }
