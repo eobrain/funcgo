@@ -30,34 +30,37 @@ func compileFile(inFile) {
 			// TODO(eob) open using with-open
 			writer = io.writer(outFile)
 		)
+		println(inPath)
 		writer->write(str(";; Compiled from ", inFile, "\n"))
 		for expr := range readString( str("[", clj, "]")) {
 			pprint.pprint(expr, writer)
 			writer->newLine()
 		}
 		writer->close()
-		println("Compiled ",
-			inPath, "to", outFile->getPath(),
-			"(", double(100 * outFile->length() / inFile->length()), ")")
+		println("  -->", outFile->getPath())
+		if (outFile->length) / (inFile->length) < 0.5 {
+			println("WARNING: Output file is only",
+				int(100 * (outFile->length) / (inFile->length)),
+				"% the size of the input file")
+		}
 	}
 }
 
  // Convert funcgo to clojure
 func _main(&args) {
-  try {
-	  if not(seq(args)) {
-		  println("Compiling out-of-date go files")
-		  for f := range fileSeq(io.file(".")) {
-			  if f->getName()->endsWith(".go") { 
-				  compileFile(f)
-			  }
-		  }
-	  }else{
-		  for arg := range args {
-			  compileFile(io.file(arg))
-		  }
-	  }
-  } catch Exception e {
-          println("\n", e->getMessage())
-  }
+	if not(seq(args)) {
+		for f := range fileSeq(io.file(".")) {
+			try {
+				if f->getName()->endsWith(".go") { 
+					compileFile(f)
+				}
+			} catch Exception e {
+				println("\n", e->getMessage())
+			}
+		}
+	}else{
+		for arg := range args {
+			compileFile(io.file(arg))
+		}
+	}
 }

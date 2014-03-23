@@ -19,7 +19,8 @@ import (
 
 funcgoParser := insta.parser(`
 sourcefile = [ NL ] packageclause _ expressions _
- <_> = <#'[ \t\x0B\f\r\n]*'> | comment+  (* optional whitespace *)
+ <_> =      <#'[ \t\x0B\f\r\n]*'> | comment+                                 (* optional whitespace *)
+ <_nonNL> = <#'[ \t\x0B\f\r]*'>                                  (* optional non-newline whitespace *)
  <NL> = nl | comment+
    <nl> = <#'\s*[\n;]\s*'>                     (* whitespace with at least one newline or semicolon *)
    <comment> = <#'[;\s]*//[^\n]*\n\s*'>
@@ -28,12 +29,15 @@ sourcefile = [ NL ] packageclause _ expressions _
    importdecl = <'import'> _ <'('>  _ { importspec _ } <')'>
      importspec = Identifier _ dotted
        dotted = Identifier { <'.'> Identifier }
- expressions = Expression { NL Expression }
-   <Expression>  = precedence0 | withconst | shortvardecl | ifelseexpr | tryexpr | forrange |
-                   forlazy | fortimes
-     precedence0 = precedence1 | ( precedence0 _ symbol _ precedence1 )
+ expressions = Expression | expressions NL Expression
+   <Expression>  = precedence0 | shortvardecl | ifelseexpr | tryexpr | forrange |
+                   forlazy | fortimes | withconst
+     withconst = <'const'> _ <'('> _ { consts } _ <')'> _ expressions
+       consts = [ const { NL const } ]
+         const = Identifier _ <'='> _ Expression
+     precedence0 = precedence1 | ( precedence0 _nonNL symbol _nonNL precedence1 )
        symbol = (( Identifier <'.'> )? !Keyword Identifier ) | javastatic | '=>' | '->>'
-         Keyword = ( '\bfor\b' | '\brange\b' )
+         Keyword = '\bconst\b' | '\bfor\b' | 'new' | '\bpackage\b' | '\brange\b'
        precedence1 = precedence2 | ( precedence1 _ or _ precedence2 )
 	 or = <'||'>
 	 precedence2 = precedence3 | precedence2 _ and _ precedence3
@@ -139,7 +143,4 @@ sourcefile = [ NL ] packageclause _ expressions _
                dictelement = Expression _ <':'> _ Expression
            new = <'new'> <__> symbol
            <OperandName> = symbol                                                 (*| QualifiedIdent*)
-     withconst = <'const'> _ <'('> _ { consts } _ <')'> _ expressions
-       consts = [ const { NL const } ]
-         const = Identifier _ <'='> _ Expression 
 `)
