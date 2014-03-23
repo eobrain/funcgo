@@ -229,7 +229,9 @@ func filename(name, i) {
 
 test.fact("format is another way of constructing strings",
         filename("my-awesome-file.txt", 42),
-        =>, "042-my-awesome-file.txt"
+        =>, "042-my-awesome-file.txt",
+	"%07.3f" format 0.005,
+	=>, "000.005"
 )
 
 // Create a table using justification
@@ -264,3 +266,49 @@ mapv(
 // First Name           | Last Name            | Employee ID
 // Ryan                 | Neufeld              | 2
 // Luke                 | Vanderhart           | 1
+
+test.fact("Regular expressions, using reFind",
+
+	/\d+/ reFind "I've just finished reading Fahrenheit 451",
+	=>, "451",
+
+	/Bees/ reFind "Beads aren't cheap.",
+	=>, nil
+)
+
+test.fact("To match only the whole string use reMatches",
+
+	/\w+/ reFind "my-param",
+	=>, "my",
+
+	/\w+/ reMatches "my-param",
+	=>, nil,
+
+	/\w+/ reMatches "justLetters",
+	=>, "justLetters"
+)
+
+// Extract Twitter identifiers in a tweet
+func mentions(tweet) {
+  /(@|#)(\w+)/ reSeq tweet
+}
+
+// Capture and decompose a phone number and its title
+rePhoneNumber := /(\w+): \((\d{3})\) (\d{3}-\d{4})/  
+
+test.fact("Extract strings from a larger string using reSeq",
+
+        /\w+/ reSeq "My Favorite Things",
+	=>, ["My", "Favorite", "Things"],
+
+	/\d{3}-\d{4}/ reSeq "My phone number is 555-1234.",
+	=>, ["555-1234"],
+
+        mentions("So long, @earth, and thanks for all the #fish. #goodbyes"),
+        =>, [["@earth", "@", "earth"], ["#fish", "#", "fish"], ["#goodbyes", "#", "goodbyes"]],
+
+        rePhoneNumber reSeq "Home: (919) 555-1234, Work: (191) 555-1234",
+        =>, [["Home: (919) 555-1234", "Home", "919", "555-1234"],
+	["Work: (191) 555-1234", "Work", "191", "555-1234"]]
+
+)
