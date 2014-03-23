@@ -77,3 +77,14 @@ test.fact("escaped identifier",
 	parse(`\for`), =>, parsed("for")
 )
 
+test.fact("multiple expressions inside func",
+	parse(`func(){if c {d}}`),    =>, parsed(`(fn [] (when c d))`),
+	parse(`func(){b;c}`),         =>, parsed(`(fn [] b c)`),
+	parse(`func(){b;if c {d}}`), =>, parsed(`(fn [] b (when c d))`)
+)
+
+//test.fact("subsequent const nests",
+//	parse(`const(a=1)x;const(b=2)y`), =>, parsed(`(let [a 1] x (let [b 2] y))`))
+
+
+//	parse(``), =>, parsed(``),

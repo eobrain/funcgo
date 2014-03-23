@@ -31,7 +31,7 @@ sourcefile = [ NL ] packageclause _ expressions _
        dotted = Identifier { <'.'> Identifier }
  expressions = Expression | expressions NL Expression
    <Expression>  = precedence0 | shortvardecl | ifelseexpr | tryexpr | forrange |
-                   forlazy | fortimes | withconst
+                   forlazy | fortimes | withconst | block
      withconst = <'const'> _ <'('> _ { consts } _ <')'> _ expressions
        consts = [ const { NL const } ]
          const = Identifier _ <'='> _ Expression
@@ -97,11 +97,11 @@ sourcefile = [ NL ] packageclause _ expressions _
            <Function> = FunctionPart | functionparts
              functionparts = FunctionPart _ FunctionPart { _ FunctionPart }
                <FunctionPart> = functionpart0 | functionpartn | vfunctionpart0 | vfunctionpartn
-                 functionpart0 = <'('> _ <')'> _ <'{'> _ Expression _ <'}'>
-		 vfunctionpart0 = <'('> _ varadic _ <')'> _ <'{'> _ Expression _ <'}'>
-		 functionpartn  = <'('> _ parameters _ <')'> _ <'{'> _ Expression _ <'}'>
+                 functionpart0 = <'('> _ <')'> _ <'{'> _ expressions _ <'}'>
+		 vfunctionpart0 = <'('> _ varadic _ <')'> _ <'{'> _ expressions _ <'}'>
+		 functionpartn  = <'('> _ parameters _ <')'> _ <'{'> _ expressions _ <'}'>
 		 vfunctionpartn = <'('> _ parameters _  <','> _ varadic _ <')'> _
-                                  <'{'> _ Expression _ <'}'>
+                                  <'{'> _ expressions _ <'}'>
                    parameters = Identifier { <','> _ Identifier }
                    varadic = <'&'> Identifier
          <Operand> = Literal | OperandName | label | new  | ( <'('> Expression <')'> ) (*|MethodExpr*)
