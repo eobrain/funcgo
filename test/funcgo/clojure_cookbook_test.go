@@ -5,11 +5,13 @@ import(
         string clojure.string
 )
 
-func add(x,y) {
-        x + y
-}
 test.fact("Simple example",
-        add(1,2),
+	{
+		func add(x,y) {
+			x + y
+		}
+		add(1,2)
+	},
         =>, 3
 )
 
@@ -93,11 +95,13 @@ test.fact("Can concatenate consts.",
         =>, "Doe, John - age: 42"
 )
 
-firstName := "John"
-lastName := "Doe"
-age := 42
 test.fact("Can concatenate vars.",
-        str(lastName, ", ", firstName, " - age: ", age),
+	{
+		firstName := "John"
+		lastName := "Doe"
+		age := 42
+		str(lastName, ", ", firstName, " - age: ", age)
+	},
         =>, "Doe, John - age: 42"
 )
 
@@ -106,32 +110,37 @@ test.fact("turn characters into a string",
         =>, "ROT13: Whyvhf Pnrfne"
 )
 
-lines := [
-        "#! /bin/bash\n",
-        "du -a ./ | sort -n -r\n"
-]
 test.fact("make file from lines (with newlines)",
-        str apply lines,
+	{
+		lines := [
+			"#! /bin/bash\n",
+			"du -a ./ | sort -n -r\n"
+		]
+		str apply lines
+	},
         =>,  "#! /bin/bash\ndu -a ./ | sort -n -r\n"
 )
 
-header := "first_name,last_name,employee_number\n"
-rows := [
-        "luke,vanderhart,1",
-        "ryan,neufeld,2"
-]
 test.fact("Making CSV from header vector of rows",
-        apply(str, header, ("\n" interpose rows)),
+	{
+		header := "first_name,last_name,employee_number\n"
+		rows := [
+			"luke,vanderhart,1",
+			"ryan,neufeld,2"
+		]
+		apply(str, header, ("\n" interpose rows))
+	},
         =>, `first_name,last_name,employee_number
 luke,vanderhart,1
 ryan,neufeld,2`
 )
 
 
-foodItems := ["milk", "butter", "flour", "eggs"]
 test.fact("Join can be easier",
-
-        string.join(", ", foodItems),
+	{
+		foodItems := ["milk", "butter", "flour", "eggs"]
+		string.join(", ", foodItems)
+	},
         =>, "milk, butter, flour, eggs",
 
         ", " string.join foodItems,
@@ -209,27 +218,32 @@ test.fact("char function does the opposite",
         =>,  "secret messages"
 )
 
-me := {FIRST_NAME: "Ryan", FAVORITE_LANGUAGE: "Clojure"}
 
 test.fact("str is the easiest way of formatting values into a string",
 	
-        str("My name is ", me[FIRST_NAME],
-                ", and I really like to program in ", me[FAVORITE_LANGUAGE]),
-        =>, "My name is Ryan, and I really like to program in Clojure",
+	{
+		me := {FIRST_NAME: "Eamonn", FAVORITE_LANGUAGE: "Funcgo"}
+		str("My name is ", me[FIRST_NAME],
+			", and I really like to program in ", me[FAVORITE_LANGUAGE])
+	},
+        =>, "My name is Eamonn, and I really like to program in Funcgo",
 
         str apply (" " interpose [1, 2.000, 3/1, 4/9]),
         =>, "1 2.0 3 4/9"
 )
 
 
-// Produce a filename with a zero-padded sortable index
-func filename(name, i) {
-        format("%03d-%s", i, name)
-}
 
 test.fact("format is another way of constructing strings",
-        filename("my-awesome-file.txt", 42),
+	{
+		// Produce a filename with a zero-padded sortable index
+		func filename(name, i) {
+			format("%03d-%s", i, name)
+		}
+		"my-awesome-file.txt" filename 42
+	},
         =>, "042-my-awesome-file.txt",
+
 	"%07.3f" format 0.005,
 	=>, "000.005"
 )
@@ -245,20 +259,14 @@ employees := [
         ["Luke", "Vanderhart", 1]
 ]
 
-mapv(
-	println,
-        map(
-		tableify,
-                concat([header], employees)
-	)
-)
+println mapv (tableify map ([header] concat employees))
 // *out*
 // First Name           | Last Name            | Employee ID
 // Ryan                 | Neufeld              | 2
 // Luke                 | Vanderhart           | 1
 
 ->>(
-        concat([header], employees),
+        [header] concat employees,
         map(tableify),
         mapv(println)
 )
@@ -288,27 +296,48 @@ test.fact("To match only the whole string use reMatches",
 	=>, "justLetters"
 )
 
-// Extract Twitter identifiers in a tweet
-func mentions(tweet) {
-  /(@|#)(\w+)/ reSeq tweet
-}
-
-// Capture and decompose a phone number and its title
-rePhoneNumber := /(\w+): \((\d{3})\) (\d{3}-\d{4})/  
-
 test.fact("Extract strings from a larger string using reSeq",
-
+	
         /\w+/ reSeq "My Favorite Things",
 	=>, ["My", "Favorite", "Things"],
-
+	
 	/\d{3}-\d{4}/ reSeq "My phone number is 555-1234.",
 	=>, ["555-1234"],
-
-        mentions("So long, @earth, and thanks for all the #fish. #goodbyes"),
+	
+        {
+		// Extract Twitter identifiers in a tweet
+		func mentions(tweet) {
+			/(@|#)(\w+)/ reSeq tweet
+		}
+		
+		mentions("So long, @earth, and thanks for all the #fish. #goodbyes")
+	},
         =>, [["@earth", "@", "earth"], ["#fish", "#", "fish"], ["#goodbyes", "#", "goodbyes"]],
 
-        rePhoneNumber reSeq "Home: (919) 555-1234, Work: (191) 555-1234",
+        {
+		// Capture and decompose a phone number and its title
+		rePhoneNumber := /(\w+): \((\d{3})\) (\d{3}-\d{4})/  
+		rePhoneNumber reSeq "Home: (919) 555-1234, Work: (191) 555-1234"
+	},
         =>, [["Home: (919) 555-1234", "Home", "919", "555-1234"],
-	["Work: (191) 555-1234", "Work", "191", "555-1234"]]
+		["Work: (191) 555-1234", "Work", "191", "555-1234"]]
 
+)
+
+
+test.fact("simple string replacement via string.replace",
+	{
+		aboutMe := "My favorite color is green!"
+		string.replace(aboutMe, "green", "red")
+	},
+	=>, "My favorite color is red!",
+	{
+		func deCanadianize(s) {
+			string.replace(s, "ou", "o")
+		}
+		deCanadianize(str(
+			"Those Canadian neighbours have coloured behaviour",
+			" when it comes to word endings"))
+	},
+	=>, "Those Canadian neighbors have colored behavior when it comes to word endings"
 )
