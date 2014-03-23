@@ -86,6 +86,9 @@ codeGenerator :=  {
 	EXPRESSIONS: func(expr0, &exprRest){
 		string.join(" ", expr0 cons exprRest)
 	},
+	EXPRESSIONSXXX: func(expr0, &exprRest){
+		string.join(" ", expr0 cons exprRest)
+	},
 	CONSTS:  func(&consts) {
 		"\n" string.join consts
 	},

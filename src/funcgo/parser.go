@@ -32,7 +32,7 @@ sourcefile = [ NL ] packageclause _ expressions _
  expressions = Expression | expressions NL Expression
    <Expression>  = precedence0 | shortvardecl | ifelseexpr | tryexpr | forrange |
                    forlazy | fortimes | withconst | block
-     withconst = <'const'> _ <'('> _ { consts } _ <')'> _ expressions
+     withconst = <'const'> _ <'('> _ { consts } _ <')'> _ ( expressions | <'{'> _ expressions _ <'}'> )
        consts = [ const { NL const } ]
          const = Identifier _ <'='> _ Expression
      precedence0 = precedence1 | ( precedence0 _nonNL symbol _nonNL precedence1 )
