@@ -683,13 +683,8 @@ test.fact("Can do trig",
 			distanceBetween(p1, p2, earthRadius)
 		} (p1, p2, radius) {
 			const(
-				// TODO(eob) implement destructuring
-				lat1long1 = degreesToRadians(p1)
-				lat2long2 = degreesToRadians(p2)
-				lat1  = lat1long1[0]
-				long1 = lat1long1[1]
-				lat2  = lat2long2[0]
-				long2 = lat2long2[1]
+				[lat1, long1] = degreesToRadians(p1)
+				[lat2, long2] = degreesToRadians(p2)
 			)
 			radius * Math::acos(
 					Math::sin(lat1) * Math::sin(lat2)

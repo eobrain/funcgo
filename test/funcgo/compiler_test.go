@@ -86,5 +86,50 @@ test.fact("multiple expressions inside func",
 test.fact("subsequent const nests",
 	parse(`const(a=1){x;const(b=2)y}`), =>, parsed(`(let [a 1] x (let [b 2] y))`))
 
+// See http://blog.jayfields.com/2010/07/clojure-destructuring.html
+test.fact("Vector Destructuring",
+	parse(`const([a,b]=ab) f(a,b)`),
+	=>,
+	parsed(`(let [[a b] ab] (f a b))`),
+
+	parse(`const([x, &more] = indexes) f(x, more)`), 
+	=>,
+	parsed(`(let [[x & more] indexes] (f x more))`),
+
+	parse(`const([x, &more, AS, full] = indexes) f(x, more, full)`),
+	=>,
+	parsed(`(let [[x & more :as full] indexes] (f x more full))`),
+
+	// TODO(eob) implement KEYS:
+	//parse(`const({KEYS: [x, y]} = point) f(x, y)`),
+	//=>,
+	//parsed(`(let [{:keys [x y]} point] (f x y))`),
+
+	parse(`const([[a,b],[c,d]] = numbers) f(a, b, c, d)`),
+	=>,
+	parsed(`(let [[[a b] [c d]] numbers] (f a b c d))`)
+)
+
+test.fact("Map Destructuring",
+	parse(`const({theX: X, theY: Y} = point) f(theX, theY)`),
+	=>,
+	parsed(`(let [{the-x :x the-y :y} point] (f the-x the-y))`),
+
+	parse(`const({name: NAME, {KEYS: [pages, \isbn10]}: DETAILS} = book) f(name,pages,\isbn10)`),
+	=>,
+	parsed(`(let [{name :name {:keys [pages isbn10]} :details} book] (f name pages isbn10))`),
+	
+	parse(`const({name: NAME, [hole1, hole2]: SCORES} = golfer) f(name, hole1, hole2)`),
+	=>,
+	parsed(`(let [{name :name [hole1 hole2] :scores} golfer] (f name hole1 hole2))`),
+
+	parse(`func printStatus({name: NAME, [hole1, hole2]: SCORES}) { f(name, hole1, hole2) }`),
+	=>,
+	parsed(`(defn print-status [{name :name [hole1 hole2] :scores}] (f name hole1 hole2))`),
+
+	parse(`printStatus( {NAME: "Jim", SCORES: [3, 5, 4, 5]} )`),
+	=>,
+	parsed(`(print-status {:name "Jim" :scores [3 5 4 5] })`)
+)
 
 //	parse(``), =>, parsed(``),

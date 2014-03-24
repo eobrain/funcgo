@@ -34,7 +34,13 @@ sourcefile = [ NL ] packageclause _ expressions _
                    forlazy | fortimes | withconst | block
      withconst = <'const'> _ <'('> _ { consts } _ <')'> _ ( expressions | <'{'> _ expressions _ <'}'> )
        consts = [ const { NL const } ]
-         const = Identifier _ <'='> _ Expression
+         const = Destruct _ <'='> _ Expression
+           <Destruct> = Identifier | vecdestruct | dictdestruct
+             vecdestruct = <'['> _ VecDestructElem _ { <','> _ VecDestructElem _  } <']'>
+               <VecDestructElem> = Destruct | varadicdestruct | label
+                 varadicdestruct = <'&'> Destruct
+             dictdestruct = <'{'> dictdestructelem {  <','> _ dictdestructelem } <'}'>
+               dictdestructelem = (Destruct|label) _ <':'> _ Expression
      precedence0 = precedence1 | ( precedence0 _nonNL symbol _nonNL precedence1 )
        symbol = (( Identifier <'.'> )? !Keyword Identifier ) | javastatic | '=>' | '->>'
          Keyword = '\bconst\b' | '\bfor\b' | 'new' | '\bpackage\b' | '\brange\b'
@@ -102,7 +108,7 @@ sourcefile = [ NL ] packageclause _ expressions _
 		 functionpartn  = <'('> _ parameters _ <')'> _ <'{'> _ expressions _ <'}'>
 		 vfunctionpartn = <'('> _ parameters _  <','> _ varadic _ <')'> _
                                   <'{'> _ expressions _ <'}'>
-                   parameters = Identifier { <','> _ Identifier }
+                   parameters = Destruct { <','> _ Destruct }
                    varadic = <'&'> Identifier
          <Operand> = Literal | OperandName | label | new  | ( <'('> Expression <')'> ) (*|MethodExpr*)
            label = #'\b\p{Lu}[\p{Lu}_0-9]*\b'

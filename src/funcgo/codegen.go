@@ -20,6 +20,10 @@ func listStr(&item) {
 	str("(", string.join(" ", item), ")")
 }
 
+func vecStr(&item) {
+	str("[", string.join(" ", item), "]")
+}
+
 func infix(expression) {
 	expression
 } (left, operator, right) {
@@ -114,6 +118,14 @@ codeGenerator :=  {
 			")")
 	},
 	CONST: func(identifier, expression) {str(identifier, " ", expression)},
+	VECDESTRUCT: vecStr,
+	DICTDESTRUCT: func(&elems) {
+		str('{', (" " string.join elems), "}")
+	}, 
+        DICTDESTRUCTELEM: func(destruct, label) {
+		str(destruct, " ", label)
+	},
+	VARADICDESTRUCT:  func(destruct) {str("& ", destruct)},
 	SYMBOL: func(identifier){
 		identifier
 	} (pkg, identifier) {
