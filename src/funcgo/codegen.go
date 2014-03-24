@@ -16,11 +16,11 @@ import (
         string  clojure.string
 )
 
-func listStr(&item) {
+func listStr(item...) {
 	str("(", string.join(" ", item), ")")
 }
 
-func vecStr(&item) {
+func vecStr(item...) {
 	str("[", string.join(" ", item), "]")
 }
 
@@ -35,7 +35,7 @@ codeGenerator :=  {
 	PACKAGECLAUSE:  func(dotted, importDecl) {
 		str("(ns ", dotted, " (:gen-class)", importDecl, ")\n\n")
 	},
-	IMPORTDECL:     func(&importSpecs) {apply(str, importSpecs)},
+	IMPORTDECL:     func(importSpecs...) {apply(str, importSpecs)},
 	IMPORTSPEC:     func(identifier, dotted) {
 		str("\n  (:require [", dotted, " :as ", identifier, "])")
 	},
@@ -66,7 +66,7 @@ codeGenerator :=  {
 	} (expressions, catches, finally) {
 		listStr("try", expressions, catches, finally)
 	},
-	CATCHES: func(&catches){
+	CATCHES: func(catches...){
 		string.join(" ", catches)
 	},
 	CATCH: func(typ, exception, expressions) {
@@ -84,21 +84,21 @@ codeGenerator :=  {
 	} (function, call) {
 		listStr(function, call)
 	},
-	EXPRESSIONLIST: func(expr0, &exprRest){
+	EXPRESSIONLIST: func(expr0, exprRest...){
 		string.join(" ", expr0 cons exprRest)
 	},
-	EXPRESSIONS: func(expr0, &exprRest){
+	EXPRESSIONS: func(expr0, exprRest...){
 		string.join(" ", expr0 cons exprRest)
 	},
-	EXPRESSIONSXXX: func(expr0, &exprRest){
+	EXPRESSIONSXXX: func(expr0, exprRest...){
 		string.join(" ", expr0 cons exprRest)
 	},
-	CONSTS:  func(&consts) {
+	CONSTS:  func(consts...) {
 		"\n" string.join consts
 	},
 	BLOCK: func (expr){
 		expr
-	} (expr0, &exprRest) {
+	} (expr0, exprRest...) {
 		str(
 			"(do ",
 			(" " string.join (expr0 cons exprRest)),
@@ -106,7 +106,7 @@ codeGenerator :=  {
 		)
 	},
 	INDEXED: func(xs, i){ listStr(xs, i) },
-	WITHCONST: func(&xs){
+	WITHCONST: func(xs...){
 		const(
 			consts = butlast(xs)
 			expressions = last(xs)
@@ -119,13 +119,13 @@ codeGenerator :=  {
 	},
 	CONST: func(identifier, expression) {str(identifier, " ", expression)},
 	VECDESTRUCT: vecStr,
-	DICTDESTRUCT: func(&elems) {
+	DICTDESTRUCT: func(elems...) {
 		str('{', (" " string.join elems), "}")
 	}, 
         DICTDESTRUCTELEM: func(destruct, label) {
 		str(destruct, " ", label)
 	},
-	VARADICDESTRUCT:  func(destruct) {str("& ", destruct)},
+	VARIADICDESTRUCT:  func(destruct) {str("& ", destruct)},
 	SYMBOL: func(identifier){
 		identifier
 	} (pkg, identifier) {
@@ -139,7 +139,7 @@ codeGenerator :=  {
 		listStr("defn", identifier, function)
 	},
 	FUNCTIONLIT:    func(function) {listStr("fn", function)},
-	FUNCTIONPARTS:  func(&functionpart) {
+	FUNCTIONPARTS:  func(functionpart...) {
 		str("(",
 			") (" string.join functionpart,
 			")")
@@ -147,29 +147,29 @@ codeGenerator :=  {
 	FUNCTIONPART0:  func(expression) {
 		"[] " str expression
 	},
-	VFUNCTIONPART0:  func(varadic, expression) {
-		str("[", varadic, "] ", expression)
+	VFUNCTIONPART0:  func(variadic, expression) {
+		str("[", variadic, "] ", expression)
 	},
 	FUNCTIONPARTN:  func(parameters, expression) {
 		str("[", parameters, "] ", expression)
 	},
-	VFUNCTIONPARTN: func(parameters, varadic, expression) {
-		str("[", parameters, " ", varadic, "] ", expression)
+	VFUNCTIONPARTN: func(parameters, variadic, expression) {
+		str("[", parameters, " ", variadic, "] ", expression)
 	},
-	PARAMETERS:     func(arg0, &argsRest) {
+	PARAMETERS:     func(arg0, argsRest...) {
 		" " string.join (arg0 cons argsRest)
 	},
-	VARADIC:        func(parameter) {str("& ", parameter)},
+	VARIADIC:       func(parameter) {str("& ", parameter)},
 	VECLIT:         func() {
 		"[]"
-	} (&expressions) {
+	} (expressions...) {
 		str(
 			"[",
 			" " string.join expressions,
 			"]"
 		)
 	},
-	DICTLIT:        func(&dictElems) {apply(str, dictElems)},
+	DICTLIT:        func(dictElems...) {apply(str, dictElems)},
 	DICTELEMENT:    func(key, value) {str(key, " ", value, " ")},
 	LABEL:          func(s) {
 		str(":", string.replace(string.lowerCase(s), /_/, "-"))
@@ -179,7 +179,7 @@ codeGenerator :=  {
 			str(first(s), "-", string.lowerCase(last(s)))
 		})
 	},
-	DOTTED:         func(idf0, &idfRest){
+	DOTTED:         func(idf0, idfRest...){
 		"." string.join (idf0 cons idfRest)
 	},
 	DECIMALLIT:    identity,
@@ -225,7 +225,7 @@ codeGenerator :=  {
 	JAVAFIELD:      func(expression, identifier) {
 		listStr(".", expression, identifier)
 	},
-	JAVASTATIC:      func(&parts) {
+	JAVASTATIC:      func(parts...) {
 		"/" string.join parts
 	},
 	JAVAMETHODCALL: func(expression, identifier) {

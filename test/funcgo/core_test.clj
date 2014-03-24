@@ -79,18 +79,18 @@ import(
 (test/fact "named multifunctions"
       (parse "func n(a){b}(c){d}")=>(parsed "(defn n ([a] b) ([c] d))"))
 (test/fact "named varadic"
-      (parse "func n(&a){d}")  =>(parsed "(defn n [& a] d)")
-      (parse "func n(a,&b){d}")=>(parsed "(defn n [a & b] d)")
-      (parse "func n(a,b,&c){d}")=>(parsed "(defn n [a b & c] d)"))
+      (parse "func n(a...){d}")  =>(parsed "(defn n [& a] d)")
+      (parse "func n(a,b...){d}")=>(parsed "(defn n [a & b] d)")
+      (parse "func n(a,b,c...){d}")=>(parsed "(defn n [a b & c] d)"))
 (test/fact "anonymous functions"
       (parse "func(){c}")      => (parsed "(fn [] c)")
       (parse "func(a,b){c}")   => (parsed "(fn [a b] c)"))
 (test/fact "anon multifunctions"
       (parse "func(a){b}(c){d}")=> (parsed "(fn ([a] b) ([c] d))"))
 (test/fact "anon varadic"
-      (parse "func(&a){d}")    => (parsed "(fn [& a] d)")
-      (parse "func(a,&b){d}")  => (parsed "(fn [a & b] d)")
-      (parse "func(a,b,&c){d}")=>(parsed "(fn [a b & c] d)"))
+      (parse "func(a...){d}")    => (parsed "(fn [& a] d)")
+      (parse "func(a,b...){d}")  => (parsed "(fn [a & b] d)")
+      (parse "func(a,b,c...){d}")=>(parsed "(fn [a b & c] d)"))
 (test/fact "can have raw strings"
       (parse "`one two`")      => (parsed "\"one two\""))
 (test/fact "can have strings"

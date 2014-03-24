@@ -92,11 +92,11 @@ test.fact("Vector Destructuring",
 	=>,
 	parsed(`(let [[a b] ab] (f a b))`),
 
-	parse(`const([x, &more] = indexes) f(x, more)`), 
+	parse(`const([x, more...] = indexes) f(x, more)`), 
 	=>,
 	parsed(`(let [[x & more] indexes] (f x more))`),
 
-	parse(`const([x, &more, AS, full] = indexes) f(x, more, full)`),
+	parse(`const([x, more..., AS, full] = indexes) f(x, more, full)`),
 	=>,
 	parsed(`(let [[x & more :as full] indexes] (f x more full))`),
 

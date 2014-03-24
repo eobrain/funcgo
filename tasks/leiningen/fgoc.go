@@ -4,9 +4,9 @@ import(
         io clojure.java.io
 )
 
-func fgoc(project, &args) {
+func fgoc(project, args...) {
         const(
-		cmdLine = ["java", "-jar", "bin/funcgo-0.1.18-standalone.jar"] concat args
+		cmdLine = ["java", "-jar", "bin/funcgo-0.1.19-standalone.jar"] concat args
                 result  = sh.sh apply cmdLine
         )
         println(result[ERR])

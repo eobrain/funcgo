@@ -37,8 +37,8 @@ sourcefile = [ NL ] packageclause _ expressions _
          const = Destruct _ <'='> _ Expression
            <Destruct> = Identifier | vecdestruct | dictdestruct
              vecdestruct = <'['> _ VecDestructElem _ { <','> _ VecDestructElem _  } <']'>
-               <VecDestructElem> = Destruct | varadicdestruct | label
-                 varadicdestruct = <'&'> Destruct
+               <VecDestructElem> = Destruct | variadicdestruct | label
+                 variadicdestruct = Destruct <'...'>
              dictdestruct = <'{'> dictdestructelem {  <','> _ dictdestructelem } <'}'>
                dictdestructelem = (Destruct|label) _ <':'> _ Expression
      precedence0 = precedence1 | ( precedence0 _nonNL symbol _nonNL precedence1 )
@@ -104,12 +104,12 @@ sourcefile = [ NL ] packageclause _ expressions _
              functionparts = FunctionPart _ FunctionPart { _ FunctionPart }
                <FunctionPart> = functionpart0 | functionpartn | vfunctionpart0 | vfunctionpartn
                  functionpart0 = <'('> _ <')'> _ <'{'> _ expressions _ <'}'>
-		 vfunctionpart0 = <'('> _ varadic _ <')'> _ <'{'> _ expressions _ <'}'>
+		 vfunctionpart0 = <'('> _ variadic _ <')'> _ <'{'> _ expressions _ <'}'>
 		 functionpartn  = <'('> _ parameters _ <')'> _ <'{'> _ expressions _ <'}'>
-		 vfunctionpartn = <'('> _ parameters _  <','> _ varadic _ <')'> _
+		 vfunctionpartn = <'('> _ parameters _  <','> _ variadic _ <')'> _
                                   <'{'> _ expressions _ <'}'>
                    parameters = Destruct { <','> _ Destruct }
-                   varadic = <'&'> Identifier
+                   variadic = Identifier <'...'>
          <Operand> = Literal | OperandName | label | new  | ( <'('> Expression <')'> ) (*|MethodExpr*)
            label = #'\b\p{Lu}[\p{Lu}_0-9]*\b'
            <Literal> = BasicLit | veclit | dictlit | functionlit

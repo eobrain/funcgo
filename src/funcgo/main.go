@@ -55,7 +55,7 @@ func compileFile(inFile, opts) {
 }
 
  // Convert funcgo to clojure
-func _main(&args) {
+func _main(args...) {
 	const(
 		cmdLine   = args cli.parseOpts cliOptions
 		otherArgs = cmdLine[ARGUMENTS]
