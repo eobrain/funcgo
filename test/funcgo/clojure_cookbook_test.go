@@ -3,6 +3,7 @@ import(
         test midje.sweet
         fgo funcgo.core
         string clojure.string
+	inf inflections.core
 )
 
 test.fact("Simple example",
@@ -398,3 +399,308 @@ test.fact("Use string.split to split strings",
 	string.split("2013-04-05 14:39", dataDelimiters, 100),
 	=>, ["2013", "04", "05", "14", "39"]
 )
+
+
+// The following requires the following in leinigen dependencies
+//    [inflections "0.9.5"]
+test.fact("can use inf.pluralize to with word labelling counts",
+	// In import have
+	//      inf inflections.core
+
+	1 inf.pluralize "monkey",
+	=>, "1 monkey",
+
+	12 inf.pluralize "monkey",
+	=>, "12 monkeys",
+
+	// Can provide non-standard pluralization as an arg
+
+	inf.pluralize(1, "box", "boxen"),
+	=>, "1 box",
+
+	inf.pluralize(3, "box", "boxen"),
+	=>, "3 boxen",
+
+	// Or you can add your own rules
+	inf.plural("box"),
+	=>, "boxes",
+
+	{
+		// Words ending in 'ox' pluralize with 'en' (and not 'es')
+		/(ox)(?i)$/ inf.mutatePlural "$1en"
+		
+		inf.plural("box")
+	},
+	=>, "boxen",
+
+	// plural is also the basis for pluralize...
+	2 inf.pluralize "box",
+	=>, "2 boxen",
+
+	// Convert "snake_case" to "CamelCase"
+	inf.camelize("my_object"),
+	=>, "MyObject",
+
+	// Clean strings for usage as URL parameters
+	inf.parameterize("My most favorite URL!"),
+	=>, "my-most-favorite-url",
+
+	// Turn numbers into ordinal numbers
+	inf.ordinalize(42),
+	=>, "42nd"
+)
+
+test.fact("Can convert between different types of language things (note Funcgo mangling).",
+
+	symbol("valid?"),
+	=>, quote(isValid),
+
+	str(quote(isValid)),
+	=>, "valid?",
+
+	name(TRIUMPH),
+	=>, "triumph",
+
+	str(TRIUMPH),
+	=>, ":triumph",
+
+	keyword("fantastic"),
+	=>, FANTASTIC,
+
+	keyword(quote(fantastic)),
+	=>, FANTASTIC,
+
+	symbol(name(WONDERFUL)),
+	=>, quote(wonderful),
+
+	// If you only want the name part of a keyword.
+	// (We have to escape into Clojure for this.)
+	name(\`:user/valid?`),
+	=>, "valid?",
+
+	// If you only want the namespace
+	namespace(\`:user/valid?`),
+	=>, "user",
+
+	str(\`:user/valid?`),
+	=>, ":user/valid?",
+
+	str(\`:user/valid?`)->substring(1),
+	=>, "user/valid?",
+
+	keyword(quote(produce.onions)),
+	=>, \`:produce/onions`,
+
+	symbol(str(\`:produce/onions`)->substring(1)),
+	=>, quote(produce.onions),
+
+	// keyword and symbol also have 2-argument (infix) versions
+	{
+		shoppingArea := "bakery"
+		shoppingArea keyword "bagels"
+	},
+	=>, \`:bakery/bagels`,
+
+	shoppingArea symbol "cakes",
+	=>, quote(bakery.cakes)
+)
+
+test.fact("Funcgo has numbers",
+
+	// Avogadro's number
+	6.0221413e23,
+	=>, 6.0221413E23,
+
+	// 1 Angstrom in meters
+	1e-10,
+	=>, 1.0E-10,
+
+	// Size-bounded integers can overflow
+	try {
+		9999 * 9999 * 9999 * 9999 * 9999
+
+	} catch \ArithmeticException e {
+		e->getMessage
+	},
+	=>, "integer overflow",
+
+	// which you can avoid using Big integers
+	9999N * 9999 * 9999 * 9999 * 9999,
+	=>, 99950009999000049999N,
+
+	2 * Double::MAX_VALUE,
+	=>, Double::POSITIVE_INFINITY,
+
+	2 * bigdec(Double::MAX_VALUE),
+	=>, 3.5953862697246314E+308M,
+
+	// Result of integer division is a ratio type
+	type(1 / 3),
+	=>, \`clojure.lang.Ratio`,
+
+	3 * (1 / 3),
+	=>, 1N,
+
+	(1 / 3) + 0.3,
+	=>, 0.6333333333333333,
+
+	// Avoid losing precision
+	rationalize(0.3),
+	=>, 3/10,
+
+	(1 / 3) + rationalize(0.3),
+	=>, 19/30
+)
+
+test.fact("Can parse numbers from strings.",
+
+	Integer::parseInt("-42"),
+	=>, -42,
+
+	Double::parseDouble("3.14"),
+	=>, 3.14,
+
+	bigdec("3.141592653589793238462643383279502884197"),
+	=>, 3.141592653589793238462643383279502884197M,
+
+	bigint("122333444455555666666777777788888888999999999"),
+	=>, 122333444455555666666777777788888888999999999N
+
+)
+
+test.fact("Can coerce numbers.",
+
+	int(2.0001),
+	=>, 2,
+
+	int(2.999999999),
+	=>, 2,
+
+	Math::round(2.0001),
+	=>, 2,
+
+	Math::round(2.999),
+	=>, 3,
+
+	int(2.99 + 0.5),
+	=>, 3,
+
+	Math::ceil(2.0001),
+	=>, 3.0,
+
+	Math::floor(2.999),
+	=>, 2.0,
+
+	3 withPrecision (7M / 9),
+	=>, 0.778M,
+
+	1 withPrecision (7M / 9),
+	=>, 0.8M,
+
+	withPrecision(1, ROUNDING, \FLOOR, (7M / 9)),
+	=>, 0.7M,
+
+	// note non-big arithmetic not effected by withPrecision
+	3 withPrecision (1 / 3),
+	=>, 1/3,
+
+	3 withPrecision (bigdec(1) / 3),
+	=>, 0.333M
+)
+
+test.fact("Easy to implement fuzzy equality",
+
+	{
+		func fuzzyEq(tolerance, x, y) {
+			const(
+				diff = Math::abs(x - y)
+			)
+			diff < tolerance
+		}
+		fuzzyEq(0.01, 10, 10.000000000001)
+	},
+	=>, true,
+
+	fuzzyEq(0.01, 10, 10.1),
+	=>, false,
+
+	0.22 - 0.23,
+	=>, -0.010000000000000009,
+
+	0.23 - 0.24,
+	=>, -0.009999999999999981,
+
+	{
+		isEqualWithinTen := partial(fuzzyEq, 10)
+		100 isEqualWithinTen 109
+	},
+	=>, true,
+
+	100 isEqualWithinTen 110,
+	=>, false
+)
+
+test.fact("Can sort with fuzzy equality",
+	{
+		func fuzzyComparator(tolerance) {
+			func(x, y) {
+				if fuzzyEq(tolerance, x, y) {
+					0
+				} else {
+					x compare y
+				}
+			}
+		}
+		fuzzyComparator(10) sort [100, 11, 150, 10, 9]
+	},
+	=>, [11, 10, 9, 100, 150]  // 100 and 150 have moved, but not 11, 10, and 9
+)
+
+
+test.fact("Can do trig",
+
+	{
+		// Calculating sin(a + b). The formula for this is
+		// sin(a + b) = sin a * cos b + sin b cos a
+		func sinPlus(a, b) {
+			Math::sin(a) * Math::cos(b) + Math::sin(b) * Math::cos(a)
+		}
+		sinPlus(0.1, 0.3)
+	},
+	=>, 0.38941834230865047,
+
+	{
+		// Calculating the distance in kilometers between two points on Earth
+		earthRadius := 6371.009
+
+		func degreesToRadians(point) {
+			func(x){Math::toRadians(x)} mapv point
+		}
+
+		// Calculate the distance in km between two points on Earth. Each
+		// point is a pair of degrees latitude and longitude, in that order.
+		func distanceBetween(p1, p2) {
+			distanceBetween(p1, p2, earthRadius)
+		} (p1, p2, radius) {
+			const(
+				// TODO(eob) implement destructuring
+				lat1long1 = degreesToRadians(p1)
+				lat2long2 = degreesToRadians(p2)
+				lat1  = lat1long1[0]
+				long1 = lat1long1[1]
+				lat2  = lat2long2[0]
+				long2 = lat2long2[1]
+			)
+			radius * Math::acos(
+					Math::sin(lat1) * Math::sin(lat2)
+					+
+					Math::cos(lat1) * Math::cos(lat2) * Math::cos(long1 - long2)
+				)
+		}
+
+		[49.2000, -98.1000] distanceBetween [35.9939, -78.8989]
+	},
+	=>, 2139.42827188432
+)
+
+

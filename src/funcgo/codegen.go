@@ -95,9 +95,11 @@ codeGenerator :=  {
 	BLOCK: func (expr){
 		expr
 	} (expr0, &exprRest) {
-		str("(do ",
-			string.join(" ", expr0 cons exprRest),
-			")")
+		str(
+			"(do ",
+			(" " string.join (expr0 cons exprRest)),
+			")"
+		)
 	},
 	INDEXED: func(xs, i){ listStr(xs, i) },
 	WITHCONST: func(&xs){
@@ -143,7 +145,7 @@ codeGenerator :=  {
 		str("[", parameters, " ", varadic, "] ", expression)
 	},
 	PARAMETERS:     func(arg0, &argsRest) {
-		string.join(" ", arg0 cons argsRest)
+		" " string.join (arg0 cons argsRest)
 	},
 	VARADIC:        func(parameter) {str("& ", parameter)},
 	VECLIT:         func() {
@@ -166,14 +168,17 @@ codeGenerator :=  {
 		})
 	},
 	DOTTED:         func(idf0, &idfRest){
-		string.join(".", idf0 cons idfRest)
+		"." string.join (idf0 cons idfRest)
 	},
 	DECIMALLIT:    identity,
+	BIGINTLIT:     str,
+	BIGFLOATLIT:   str,
 	FLOATLIT:      str,
 	DECIMALS:      identity,
 	EXPONENT:      str,
 	REGEX:         func(s){str(`#"`, s, `"`)},
 	INTERPRETEDSTRINGLIT: func(s){str(`"`, s, `"`)},
+	CLOJUREESCAPE: identity,
 	LITTLEUVALUE:  func(d1,d2,d3,d4){str(`\u`,d1,d2,d3,d4)},
 	OCTALBYTEVALUE:  func(d1,d2,d3){str(`\o`,d1,d2,d3)},
 	UNICODECHAR:   func(s){`\` str s},
@@ -208,8 +213,8 @@ codeGenerator :=  {
 	JAVAFIELD:      func(expression, identifier) {
 		listStr(".", expression, identifier)
 	},
-	JAVASTATIC:      func(clazz, identifier) {
-		str(clazz, "/", identifier)
+	JAVASTATIC:      func(&parts) {
+		"/" string.join parts
 	},
 	JAVAMETHODCALL: func(expression, identifier) {
 		str("(. ", expression, " (", identifier, "))")

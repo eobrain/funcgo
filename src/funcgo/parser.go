@@ -51,7 +51,7 @@ sourcefile = [ NL ] packageclause _ expressions _
                  bitxor = <'^'>
 	       precedence5 = UnaryExpr | ( precedence5 _ mulop _ UnaryExpr )
 	         mulop = '*' | (!comment '/') | '%' | '<<' | '>>' | '&' | '&^'
-	   javastatic = JavaIdentifier _ <'::'> _ JavaIdentifier
+	   javastatic = JavaIdentifier _ ( <'::'> _ JavaIdentifier )+
 	     <JavaIdentifier> = #'\b[\p{L}_][\p{L}_\p{Digit}]*\b'
 	   <Identifier> = identifier | dashidentifier | isidentifier | mutidentifier |
 			  escapedidentifier
@@ -70,7 +70,7 @@ sourcefile = [ NL ] packageclause _ expressions _
                [ <__> <'if'> <__> Expression ] _ <'{'> _ expressions _ <'}'>
      fortimes = <'for'> <__> Identifier _ <':='> _ <'times'> <_> Expression _
                 <'{'> _ expressions _ <'}'>
-     tryexpr = <'try'> _ <'{'> _ expressions _ <'}'> _ catches _ finally?
+     tryexpr = <'try'> _ <'{'> _ expressions _ <'}'> _ catches ( _ finally )?
        catches = ( catch { _ catch } )?
          catch = <'catch'> _ Identifier _ Identifier _ <'{'> _ expressions _ <'}'>
        finally = <'finally'> _ <'{'> _ expressions _ <'}'>
@@ -108,18 +108,21 @@ sourcefile = [ NL ] packageclause _ expressions _
            label = #'\b\p{Lu}[\p{Lu}_0-9]*\b'
            <Literal> = BasicLit | veclit | dictlit | functionlit
              functionlit = <'func'> _ Function
-             <BasicLit> = int_lit | string_lit | regex  | rune_lit | floatlit (*| imaginary_lit *)
+             <BasicLit> = int_lit | bigintlit | string_lit | regex  | rune_lit | floatlit | bigfloatlit (*| imaginary_lit *)
                floatlit = decimals '.' [ decimals ] [ exponent ]
                         | decimals exponent
                         | '.' decimals [ exponent ]
                  decimals  = #'[0-9]+'
                  exponent  = ( 'e' | 'E' ) [ '+' | '-' ] decimals
+               bigfloatlit = (floatlit | int_lit) 'M'
                <int_lit> = decimallit    (*| octal_lit | hex_lit .*)
 		 decimallit = #'[1-9][0-9]*' | #'[0-9]'
+               bigintlit = int_lit 'N'
 	       regex = <'/'> #'[^/\n]+'<'/'>                               (* TODO: handle / escape *)
-	       <string_lit> = rawstringlit   | interpretedstringlit
+	       <string_lit> = rawstringlit | interpretedstringlit | clojureescape
                  rawstringlit = <#'\x60'> #'[^\x60]*' <#'\x60'>     (* \x60 is back quote character *)
                  interpretedstringlit = <#'\"'> #'[^\"]*' <#'\"'>     (* TODO: handle string escape *)
+                 clojureescape = <'\\'> <#'\x60'> #'[^\x60]*' <#'\x60'>       (* \x60 is back quote *)
 	       <rune_lit> = <'\''> ( unicode_value | byte_value ) <'\''> 
 		 <unicode_value> = unicodechar | littleuvalue | escaped_char
                    unicodechar = #'[^\n ]'

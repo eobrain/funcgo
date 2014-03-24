@@ -5,8 +5,9 @@ import(
 )
 
 func fgoc(project, &args) {
-        const( // TODO(eob) pass args to command line
-                result = sh.sh("java", "-jar", "bin/funcgo-0.1.17-standalone.jar")
+        const(
+		cmdLine = ["java", "-jar", "bin/funcgo-0.1.18-standalone.jar"] concat args
+                result  = sh.sh apply cmdLine
         )
         println(result[ERR])
         println(result[OUT])
