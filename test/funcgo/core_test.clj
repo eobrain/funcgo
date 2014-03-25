@@ -214,9 +214,11 @@ import(
            (parse "'\\234'") => (parsed "\\o234"))
 
 (test/fact "indexing"
-           (parse "aaa[BBB]") => (parsed "(aaa :bbb)")
-           (parse "aaa[bbb]") => (parsed "(aaa bbb)")
-           (parse "aaa[6]") => (parsed "(aaa 6)"))
+           (parse "aaa(BBB)") => (parsed "(aaa :bbb)")
+           (parse "aaa[bbb]") => (parsed "(nth aaa bbb)")
+           (parse "v(6)") => (parsed "(v 6)")
+           (parse "v[6]") => (parsed "(nth v 6)")
+           (parse "aaa[6]") => (parsed "(nth aaa 6)"))
 
 (test/fact "precedent"
            (parse "a || b < c")   => (parsed "(or a (< b c))")

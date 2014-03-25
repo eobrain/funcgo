@@ -132,4 +132,7 @@ test.fact("Map Destructuring",
 	parsed(`(print-status {:name "Jim" :scores [3 5 4 5] })`)
 )
 
+//test.fact("Label as property"
+//)
+
 //	parse(``), =>, parsed(``),

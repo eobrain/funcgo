@@ -105,7 +105,7 @@ codeGenerator :=  {
 			")"
 		)
 	},
-	INDEXED: func(xs, i){ listStr(xs, i) },
+	INDEXED: func(xs, i){ listStr("nth", xs, i) },
 	WITHCONST: func(xs...){
 		const(
 			consts = butlast(xs)

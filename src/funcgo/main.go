@@ -32,10 +32,10 @@ func compileFile(inFile, opts) {
                 inPath = inFile->getPath()
                 outFile = io.file(string.replace(inPath, /\.go$/, ".clj"))
         )
-        if opts[FORCE] || outFile->lastModified() < inFile->lastModified() {
+        if opts(FORCE) || outFile->lastModified() < inFile->lastModified() {
                 println(inPath)
                 const(
-                        clj = core.funcgoParse(slurp(inFile), opts[NODES])
+                        clj = core.funcgoParse(slurp(inFile), opts(NODES))
                         // TODO(eob) open using with-open
                         writer = io.writer(outFile)
                 )
@@ -58,12 +58,12 @@ func compileFile(inFile, opts) {
 func _main(args...) {
 	const(
 		cmdLine   = args cli.parseOpts cliOptions
-		otherArgs = cmdLine[ARGUMENTS]
-		opts      = cmdLine[OPTIONS]
+		otherArgs = cmdLine(ARGUMENTS)
+		opts      = cmdLine(OPTIONS)
 	) {
-		if cmdLine[ERRORS] || opts[HELP]{
-			println("ERROR: ", cmdLine[ERRORS])
-			println(cmdLine[SUMMARY])
+		if cmdLine(ERRORS) || opts(HELP){
+			println("ERROR: ", cmdLine(ERRORS))
+			println(cmdLine(SUMMARY))
 		}else{
 			if not(seq(otherArgs)) {
 				for f := range fileSeq(io.file(".")) {

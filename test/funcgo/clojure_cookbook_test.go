@@ -224,8 +224,8 @@ test.fact("str is the easiest way of formatting values into a string",
 	
 	{
 		me := {FIRST_NAME: "Eamonn", FAVORITE_LANGUAGE: "Funcgo"}
-		str("My name is ", me[FIRST_NAME],
-			", and I really like to program in ", me[FAVORITE_LANGUAGE])
+		str("My name is ", me(FIRST_NAME),
+			", and I really like to program in ", me(FAVORITE_LANGUAGE))
 	},
         =>, "My name is Eamonn, and I really like to program in Funcgo",
 
@@ -723,7 +723,7 @@ test.fact("Doing statistics",
 	{
 		func mean(coll) {
 			const(
-				sum = apply(+, coll)
+				sum = + apply coll
 				count = count(coll)
 			)
 			if isPos(count) {
@@ -740,5 +740,30 @@ test.fact("Doing statistics",
 	=>, 5.0,
 
 	mean([]),
-	=>, 0
+	=>, 0,
+
+	{
+		func median(coll) {
+			const(
+				sorted  = sort(coll)
+				cnt     = count(sorted)
+				halfway = int(cnt / 2)
+			)
+			if isOdd(cnt) {
+				sorted[halfway]
+			} else {
+				const(
+					bottom    = halfway - 1
+					bottomVal = sorted[bottom]
+					topVal    = sorted[halfway]
+				)
+				mean([bottomVal, topVal])
+			}
+		}
+		median([5, 2, 4, 1, 3])
+	},
+	=>, 3,
+
+	median([7, 0, 2, 3]),
+	=>, 5/2  // The average of 2 and 3.
 )
