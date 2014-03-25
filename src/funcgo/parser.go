@@ -42,8 +42,8 @@ sourcefile = [ NL ] packageclause _ expressions _
              dictdestruct = <'{'> dictdestructelem {  <','> _ dictdestructelem } <'}'>
                dictdestructelem = (Destruct|label) _ <':'> _ Expression
      precedence0 = precedence1 | ( precedence0 _nonNL symbol _nonNL precedence1 )
-       symbol = (( Identifier <'.'> )? !Keyword Identifier ) | javastatic | '=>' | '->>'
-         Keyword = '\bconst\b' | '\bfor\b' | 'new' | '\bpackage\b' | '\brange\b'
+       symbol = (( Identifier <'.'> )? !Keyword Identifier ) | javastatic
+           Keyword = '\bconst\b' | '\bfor\b' | 'new' | '\bpackage\b' | '\brange\b'
        precedence1 = precedence2 | ( precedence1 _ or _ precedence2 )
 	 or = <'||'>
 	 precedence2 = precedence3 | precedence2 _ and _ precedence3
@@ -53,10 +53,10 @@ sourcefile = [ NL ] packageclause _ expressions _
 	       equals = <'=='>
                noteq  = <'!='>
 	     precedence4 = precedence5 | precedence4 _ addop _ precedence5
-	       addop = '+' | '-' | '|' | bitxor
+	       addop = '+' | '-' | ( !or '|' ) | bitxor
                  bitxor = <'^'>
 	       precedence5 = UnaryExpr | ( precedence5 _ mulop _ UnaryExpr )
-	         mulop = '*' | (!comment '/') | '%' | '<<' | '>>' | '&' | '&^'
+	         mulop = '*' | (!comment '/') | '%' | '<<' | '>>' | (!and '&') | '&^'
 	   javastatic = JavaIdentifier _ ( <'::'> _ JavaIdentifier )+
 	     <JavaIdentifier> = #'\b[\p{L}_][\p{L}_\p{Digit}]*\b'
 	   <Identifier> = identifier | dashidentifier | isidentifier | mutidentifier |
@@ -82,7 +82,7 @@ sourcefile = [ NL ] packageclause _ expressions _
        finally = <'finally'> _ <'{'> _ expressions _ <'}'>
      <UnaryExpr> = PrimaryExpr | javafield | unaryexpr | deref
        unaryexpr = unary_op _ UnaryExpr
-	 <unary_op> = '+' | '-' | '!' | not | '&' | bitnot
+	 <unary_op> = '+' | '-' | '!' | not | (!and '&') | bitnot
 	   bitnot = <'^'>
 	   not    = <'!'>
        deref = <'*'> _ UnaryExpr
@@ -151,5 +151,6 @@ sourcefile = [ NL ] packageclause _ expressions _
 	     dictlit = '{' _ ( dictelement _ { <','> _ dictelement } )? _ '}'
                dictelement = Expression _ <':'> _ Expression
            new = <'new'> <__> symbol
-           <OperandName> = symbol                                                 (*| QualifiedIdent*)
+           <OperandName> = symbol | NonAlphaSymbol                           (*| QualifiedIdent*)
+             <NonAlphaSymbol> = '=>' | '->>' | relop | addop | mulop | unary_op
 `)

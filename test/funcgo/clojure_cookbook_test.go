@@ -687,10 +687,10 @@ test.fact("Can do trig",
 				[lat2, long2] = degreesToRadians(p2)
 			)
 			radius * Math::acos(
-					Math::sin(lat1) * Math::sin(lat2)
-					+
-					Math::cos(lat1) * Math::cos(lat2) * Math::cos(long1 - long2)
-				)
+				Math::sin(lat1) * Math::sin(lat2)
+				+
+				Math::cos(lat1) * Math::cos(lat2) * Math::cos(long1 - long2)
+			)
 		}
 
 		[49.2000, -98.1000] distanceBetween [35.9939, -78.8989]
@@ -699,3 +699,46 @@ test.fact("Can do trig",
 )
 
 
+test.fact("Can convert numbers to various bases",
+
+	13 Integer::toString 2,
+	=>, "1101",
+
+	42 Integer::toString 16,
+	=>, "2a",
+
+	35 Integer::toString 36,
+	=>, "z",
+
+	{
+		func toBase(radix, n) { n Integer::toString radix }
+		baseTwo := toBase partial 2
+		baseTwo(9001)
+	},
+	=>, "10001100101001"
+)
+
+test.fact("Doing statistics",
+
+	{
+		func mean(coll) {
+			const(
+				sum = apply(+, coll)
+				count = count(coll)
+			)
+			if isPos(count) {
+				sum / count
+			} else {
+				0
+			}
+		}
+		mean([1, 2, 3, 4])
+	},
+	=>, 5/2,
+
+	mean([1, 1.6, 7.4, 10]),
+	=>, 5.0,
+
+	mean([]),
+	=>, 0
+)
