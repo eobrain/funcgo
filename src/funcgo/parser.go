@@ -30,12 +30,14 @@ sourcefile = [ NL ] packageclause _ expressions _
      importspec = Identifier _ dotted
        dotted = Identifier { <'.'> Identifier }
  expressions = Expression | expressions NL Expression
-   <Expression>  = precedence0 | shortvardecl | ifelseexpr | tryexpr | forrange |
+   <Expression>  = precedence0 | vardecl | shortvardecl | ifelseexpr | tryexpr | forrange |
                    forlazy | fortimes | withconst | block
      withconst = <'const'> _ <'('> _ { consts } _ <')'> _ ( expressions | <'{'> _ expressions _ <'}'> )
        consts = [ const { NL const } ]
          const = Destruct _ <'='> _ Expression
-           <Destruct> = Identifier | vecdestruct | dictdestruct
+           <Destruct> = Identifier | typedidentifier | vecdestruct | dictdestruct
+             typedidentifier = Identifier _ type
+               type = JavaIdentifier _ ( <'.'>  _ JavaIdentifier )*
              vecdestruct = <'['> _ VecDestructElem _ { <','> _ VecDestructElem _  } <']'>
                <VecDestructElem> = Destruct | variadicdestruct | label
                  variadicdestruct = Destruct <'...'>
@@ -66,7 +68,8 @@ sourcefile = [ NL ] packageclause _ expressions _
 	     isidentifier = <'is'> #'\p{L}' identifier
 	     mutidentifier = <'mutate'> #'\p{L}' identifier
 	     escapedidentifier = <'\\'> #'\b[\p{L}_][\p{L}_\p{Digit}]*\b'
-     shortvardecl   = Identifier _ <':='> _ Expression
+     shortvardecl = Identifier _ <':='> _ Expression
+     vardecl = <'var'> _  Identifier ( _ type )? _ <'='> _ Expression
      ifelseexpr = <'if'> _ Expression _ ( ( block _ <'else'> _ block ) |
                   ( _ <'{'> _ expressions _ <'}'> )   )
        block = <'{'> _ Expression { NL Expression } _ <'}'>

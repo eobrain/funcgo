@@ -26,8 +26,27 @@ cliOptions := [
         ["-h", "--help", "print help"]
 ]
 
+// A version of pprint that preserves type hints.
+// See https://groups.google.com/forum/#!topic/clojure/5LRmPXutah8
+func prettyPrint(obj, writer) {
+        const(
+                origDispatch = \`pprint/*print-pprint-dispatch*`
+        )
+        pprint.withPprintDispatch(
+                func(o) {
+                        if meta(o) {
+                                print("^")
+                                origDispatch(meta(o)(TAG))
+                                print(" ")
+                                pprint.pprintNewline(FILL)
+                        }
+                        origDispatch(o)
+                },
+                pprint.pprint(obj, writer)
+        )
+}
 
-func compileFile(inFile, opts) {
+func compileFile(inFile java.io.File, opts) {
         const(
                 inPath = inFile->getPath()
                 outFile = io.file(string.replace(inPath, /\.go$/, ".clj"))
@@ -37,11 +56,11 @@ func compileFile(inFile, opts) {
                 const(
                         clj = core.funcgoParse(slurp(inFile), opts(NODES))
                         // TODO(eob) open using with-open
-                        writer = io.writer(outFile)
+                        writer java.io.BufferedWriter = io.writer(outFile)
                 )
                 writer->write(str(";; Compiled from ", inFile, "\n"))
                 for expr := range readString( str("[", clj, "]")) {
-                        pprint.pprint(expr, writer)
+                        prettyPrint(expr, writer)
                         writer->newLine()
                 }
                 writer->close()
@@ -67,9 +86,12 @@ func _main(args...) {
 		}else{
 			if not(seq(otherArgs)) {
 				for f := range fileSeq(io.file(".")) {
+					const(
+						ff java.io.File = f
+					)
 					try {
-						if f->getName()->endsWith(".go") { 
-							compileFile(f, opts)
+						if ff->getName()->endsWith(".go") { 
+							compileFile(ff, opts)
 						}
 					} catch Exception e {
 						println("\n", e->getMessage())

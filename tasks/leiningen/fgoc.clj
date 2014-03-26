@@ -5,12 +5,14 @@
  (:require [clojure.java.shell :as sh])
  (:require [clojure.java.io :as io]))
 
+(set! *warn-on-reflection* true)
+
 (defn
  fgoc
  [project & args]
  (let
   [cmd-line
-   (concat ["java" "-jar" "bin/funcgo-0.1.20-standalone.jar"] args)
+   (concat ["java" "-jar" "bin/funcgo-0.1.21-standalone.jar"] args)
    result
    (apply sh/sh cmd-line)]
   (println (result :err))

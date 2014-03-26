@@ -156,9 +156,9 @@ test.fact("seq() exposes the characters in a string",
         =>, ['H', 'e', 'l', 'l', 'o', ',', ' ', 'w', 'o', 'r', 'l', 'd', '!']
 )
 
-func isYelling(s) {
+func isYelling(s String) {
   isEvery(
-          func(ch) { !Character::isLetter(ch) || Character::isUpperCase(ch) },
+          func(ch Character) { !Character::isLetter(ch) || Character::isUpperCase(ch) },
           s
   )
 }
@@ -611,7 +611,7 @@ test.fact("Can coerce numbers.",
 test.fact("Easy to implement fuzzy equality",
 
 	{
-		func fuzzyEq(tolerance, x, y) {
+		func fuzzyEq(tolerance, x double, y double) {
 			const(
 				diff = Math::abs(x - y)
 			)

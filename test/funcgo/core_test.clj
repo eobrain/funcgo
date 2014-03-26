@@ -2,56 +2,12 @@
 	(:require [midje.sweet :as test])
 	(:require [funcgo.core :as fgo]))
 
-(test/fact "smallest complete program has no import and a single expression"
-      (fgo/funcgo-parse "package foo;import ()12345")  => "(ns foo (:gen-class))
-
-12345
-")
-
-(test/fact "Can use newlines instead of semicolons"  (fgo/funcgo-parse "
-package foo
-import (
-)
-12345
-")  =>  "(ns foo (:gen-class))
-
-12345
-")
-
-(test/fact "package can be dotted"
-      (fgo/funcgo-parse "package foo.bar;import ()12345")  =>  "(ns foo.bar (:gen-class))
-
-12345
-")
-
-(test/fact "can import other packages" (fgo/funcgo-parse "
-package foo
-import(
-  b bar
-)
-12345
-")  => "(ns foo (:gen-class)
-  (:require [bar :as b]))
-
-12345
-")
-
 (defn parse [expr]
   (fgo/funcgo-parse (str "package foo;import ()" expr)))
 
 (defn parsed [expr]
-  (str "(ns foo (:gen-class))\n\n" expr "\n"))
+  (str "(ns foo (:gen-class))(set! *warn-on-reflection* true)\n\n" expr "\n"))
 
-(test/fact "can refer to symbols"
-      (parse "a")              => (parsed "a"))
-(test/fact "can refer to numbers"
-           (parse "99")             => (parsed "99")
-           (parse "9")              => (parsed "9")
-           (parse "0")              => (parsed "0"))
-(test/fact "outside symbols"       (parse "other.foo")
-      => (parsed "other/foo"))
-(test/fact "can define things"     (parse "a := 12345")
-      => (parsed "(def a 12345)"))
 (test/fact "can call function"
       (parse "f()")            => (parsed "(f)")
       (parse "f(x)")           => (parsed "(f x)")
@@ -283,7 +239,7 @@ func FooBar(iii, jjj) {
 }
 ")  => "(ns foo (:gen-class)
   (:require [bar.baz :as b])
-  (:require [foo.faz.fedudle :as ff]))
+  (:require [foo.faz.fedudle :as ff]))(set! *warn-on-reflection* true)
 
 (def x (b/bbb \"blah blah\")) (defn Foo-bar [iii jjj] (ff/fumanchu {:ooo (fn [m n] (str m n)) :ppp (fn [m n] (str m n)) :qqq qq }))
 ")

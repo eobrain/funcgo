@@ -33,7 +33,7 @@ func infix(expression) {
 codeGenerator :=  {
 	SOURCEFILE:     func(header, body) {str(header, body, "\n")},
 	PACKAGECLAUSE:  func(dotted, importDecl) {
-		str("(ns ", dotted, " (:gen-class)", importDecl, ")\n\n")
+		str("(ns ", dotted, " (:gen-class)", importDecl, ")(set! *warn-on-reflection* true)\n\n")
 	},
 	IMPORTDECL:     func(importSpecs...) {apply(str, importSpecs)},
 	IMPORTSPEC:     func(identifier, dotted) {
@@ -79,6 +79,11 @@ codeGenerator :=  {
 	SHORTVARDECL:   func(identifier, expression) {
 		listStr("def", identifier, expression)
 	},
+	VARDECL:   func(identifier, expression) {
+		listStr("def", identifier, expression)
+	} (identifier, typ, expression) {
+		listStr("def", "^" str typ, identifier, expression)
+	},
 	FUNCTIONCALL:    func(function) {
 		listStr(function)
 	} (function, call) {
@@ -117,7 +122,9 @@ codeGenerator :=  {
 			expressions,
 			")")
 	},
-	CONST: func(identifier, expression) {str(identifier, " ", expression)},
+	CONST: func(identifier, expression) {
+		str(identifier, " ", expression)
+	},
 	VECDESTRUCT: vecStr,
 	DICTDESTRUCT: func(elems...) {
 		str('{', (" " string.join elems), "}")
@@ -179,6 +186,9 @@ codeGenerator :=  {
 			str(first(s), "-", string.lowerCase(last(s)))
 		})
 	},
+	TYPEDIDENTIFIER: func(identifier, typ) {
+		str(`^`, typ, " ", identifier)
+	},
 	DOTTED:         func(idf0, idfRest...){
 		"." string.join (idf0 cons idfRest)
 	},
@@ -227,6 +237,9 @@ codeGenerator :=  {
 	},
 	JAVASTATIC:      func(parts...) {
 		"/" string.join parts
+	},
+	TYPE:      func(parts...) {
+		"." string.join parts
 	},
 	JAVAMETHODCALL: func(expression, identifier) {
 		str("(. ", expression, " (", identifier, "))")
