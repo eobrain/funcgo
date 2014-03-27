@@ -11,13 +11,13 @@
 // Eamonn O'Brien-Strain e@obrain.com - initial author
 //////
 
-package  funcgo.main
+package  funcgo/main
 import (
-        io     clojure.java.io
-        pprint clojure.pprint
-        string clojure.string
-        cli    clojure.tools.cli
-        core   funcgo.core
+        "clojure/java/io"
+        "clojure/pprint"
+        "clojure/string"
+        "clojure/tools/cli"
+        "funcgo/core"
 )
 
 cliOptions := [

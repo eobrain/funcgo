@@ -11,9 +11,9 @@
 // Eamonn O'Brien-Strain e@obrain.com - initial author
 //////
 
-package  funcgo.codegen
+package  funcgo/codegen
 import (
-        string  clojure.string
+        "clojure/string"
 )
 
 func listStr(item...) {

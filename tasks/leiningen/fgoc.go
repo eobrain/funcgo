@@ -1,12 +1,12 @@
-package leiningen.fgoc
+package leiningen/fgoc
 import(
-        sh clojure.java.shell
-        io clojure.java.io
+        sh "clojure/java/shell"
+        "clojure/java/io"
 )
 
 func fgoc(project, args...) {
         const(
-		cmdLine = ["java", "-jar", "bin/funcgo-0.1.21-standalone.jar"] concat args
+		cmdLine = ["java", "-jar", "bin/funcgo-0.1.22-standalone.jar"] concat args
                 result  = sh.sh apply cmdLine
         )
         println(result(ERR))

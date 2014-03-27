@@ -11,9 +11,9 @@
 // Eamonn O'Brien-Strain e@obrain.com - initial author
 //////
 
-package  funcgo.parser
+package  funcgo/parser
 import (
-        insta instaparse.core
+        insta "instaparse/core"
 )
 
 

@@ -11,14 +11,14 @@
 // Eamonn O'Brien-Strain e@obrain.com - initial author
 //////
 
-package  funcgo.core
+package  funcgo/core
 import (
-        insta   instaparse.core
-        pprint  clojure.pprint
-        failure instaparse.failure
-        string  clojure.string
-	parser  funcgo.parser
-	codegen funcgo.codegen
+        insta   "instaparse/core"
+        "clojure/pprint"
+        "instaparse/failure"
+        "clojure/string"
+	"funcgo/parser"
+	"funcgo/codegen"
 )
 
 
