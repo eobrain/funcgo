@@ -32,12 +32,14 @@ func infix(expression) {
 
 codeGenerator :=  {
 	SOURCEFILE:     func(header, body) {str(header, body, "\n")},
-	PACKAGECLAUSE:  func(dotted, importDecl) {
-		str("(ns ", dotted, " (:gen-class)", importDecl, ")(set! *warn-on-reflection* true)\n\n")
+	PACKAGECLAUSE:  func(imported, importDecl) {
+		str("(ns ", imported, " (:gen-class)", importDecl, ")(set! *warn-on-reflection* true)\n\n")
 	},
 	IMPORTDECL:     func(importSpecs...) {apply(str, importSpecs)},
-	IMPORTSPEC:     func(identifier, dotted) {
-		str("\n  (:require [", dotted, " :as ", identifier, "])")
+	IMPORTSPEC:     func(identifier, imported) {
+		str("\n  (:require [", imported, " :as ", identifier, "])")
+	} (imported) {
+		str("\n  (:require [", imported, " :as ", last(imported string.split /\./), "])")
 	},
 	PRECEDENCE0: infix,
 	PRECEDENCE1: infix,
@@ -189,7 +191,7 @@ codeGenerator :=  {
 	TYPEDIDENTIFIER: func(identifier, typ) {
 		str(`^`, typ, " ", identifier)
 	},
-	DOTTED:         func(idf0, idfRest...){
+	IMPORTED:         func(idf0, idfRest...){
 		"." string.join (idf0 cons idfRest)
 	},
 	DECIMALLIT:    identity,

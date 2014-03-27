@@ -1,9 +1,9 @@
-package funcgo.clojure_cookbook_test
+package funcgo/clojure_cookbook_test
 import(
-        test midje.sweet
-        fgo funcgo.core
-        string clojure.string
-	inf inflections.core
+        test "midje/sweet"
+        fgo "funcgo/core"
+        string "clojure/string"
+	inf "inflections/core"
 )
 
 test.fact("Simple example",
@@ -33,7 +33,7 @@ test.fact("Infix is most convenient for math operators.",
 
 test.fact("Dotted identifers are from other packages.",
         // import section includes
-        //    string clojure.string
+        //    string "clojure/string"
         string.isBlank(""),
         =>, true
 )
@@ -405,7 +405,7 @@ test.fact("Use string.split to split strings",
 //    [inflections "0.9.5"]
 test.fact("can use inf.pluralize to with word labelling counts",
 	// In import have
-	//      inf inflections.core
+	//      inf "inflections/core"
 
 	1 inf.pluralize "monkey",
 	=>, "1 monkey",

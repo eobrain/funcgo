@@ -7,6 +7,8 @@ pom.xml.asc
 /.lein-*
 /.nrepl-port
 *~
+/src/*.clj
 /src/funcgo/*.clj
+/test/*.clj
 /test/funcgo/clojure_cookbook_test.clj
 /test/funcgo/compiler_test.clj

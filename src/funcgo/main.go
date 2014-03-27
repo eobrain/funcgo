@@ -99,7 +99,11 @@ func _main(args...) {
 				}
 			} else {
 				for arg := range otherArgs {
-					compileFile(io.file(arg), opts)
+					try {
+						compileFile(io.file(arg), opts)
+					} catch Exception e {
+						println("\n", e->getMessage())
+					}
 				}
 			}
 		}

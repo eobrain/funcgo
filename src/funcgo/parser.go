@@ -24,11 +24,11 @@ sourcefile = [ NL ] packageclause _ expressions _
  <NL> = nl | comment+
    <nl> = <#'\s*[\n;]\s*'>                     (* whitespace with at least one newline or semicolon *)
    <comment> = <#'[;\s]*//[^\n]*\n\s*'>
- packageclause = <'package'> <__> dotted NL importdecl
+ packageclause = <'package'> <__> imported NL importdecl
    __ =  #'[ \t\x0B\f\r\n]+' | comment+     (* whitespace *)
-   importdecl = <'import'> _ <'('>  _ { importspec _ } <')'>
-     importspec = Identifier _ dotted
-       dotted = Identifier { <'.'> Identifier }
+   importdecl = <'import'> _ <'('>  _ { importspec _ } <')'> | <'import'>  _ importspec
+     importspec = ( Identifier _ )?  <'"'> imported <'"'> 
+       imported = Identifier { <'/'> Identifier }
  expressions = Expression | expressions NL Expression
    <Expression>  = precedence0 | vardecl | shortvardecl | ifelseexpr | tryexpr | forrange |
                    forlazy | fortimes | withconst | block
@@ -37,15 +37,15 @@ sourcefile = [ NL ] packageclause _ expressions _
          const = Destruct _ <'='> _ Expression
            <Destruct> = Identifier | typedidentifier | vecdestruct | dictdestruct
              typedidentifier = Identifier _ type
-               type = JavaIdentifier _ ( <'.'>  _ JavaIdentifier )*
+               type = JavaIdentifier ( <'.'>  JavaIdentifier )*
              vecdestruct = <'['> _ VecDestructElem _ { <','> _ VecDestructElem _  } <']'>
                <VecDestructElem> = Destruct | variadicdestruct | label
                  variadicdestruct = Destruct <'...'>
              dictdestruct = <'{'> dictdestructelem {  <','> _ dictdestructelem } <'}'>
                dictdestructelem = (Destruct|label) _ <':'> _ Expression
      precedence0 = precedence1 | ( precedence0 _nonNL symbol _nonNL precedence1 )
-       symbol = (( Identifier <'.'> )? !Keyword Identifier ) | javastatic
-           Keyword = '\bconst\b' | '\bfor\b' | 'new' | '\bpackage\b' | '\brange\b'
+       symbol = (( Identifier <'.'> )? Identifier ) | javastatic
+           Keyword = '\bconst\b' | '\bfor\b' | '\bnew\b' | '\bpackage\b' | '\brange\b'
        precedence1 = precedence2 | ( precedence1 _ or _ precedence2 )
 	 or = <'||'>
 	 precedence2 = precedence3 | precedence2 _ and _ precedence3
@@ -59,10 +59,10 @@ sourcefile = [ NL ] packageclause _ expressions _
                  bitxor = <'^'>
 	       precedence5 = UnaryExpr | ( precedence5 _ mulop _ UnaryExpr )
 	         mulop = '*' | (!comment '/') | '%' | '<<' | '>>' | (!and '&') | '&^'
-	   javastatic = JavaIdentifier _ ( <'::'> _ JavaIdentifier )+
+	   javastatic = type _ <'::'> _ JavaIdentifier
 	     <JavaIdentifier> = #'\b[\p{L}_][\p{L}_\p{Digit}]*\b'
-	   <Identifier> = identifier | dashidentifier | isidentifier | mutidentifier |
-			  escapedidentifier
+	   <Identifier> = !Keyword  (identifier | dashidentifier | isidentifier | mutidentifier |
+			  escapedidentifier)
 	     identifier = #'\b[\p{L}_][\p{L}_\p{Digit}]*\b'
 	     dashidentifier = <'_'> identifier
 	     isidentifier = <'is'> #'\p{L}' identifier
@@ -153,7 +153,7 @@ sourcefile = [ NL ] packageclause _ expressions _
 	     veclit = <'['> _ (( Expression { _ <','> _ Expression _ } )? )? <']'>
 	     dictlit = '{' _ ( dictelement _ { <','> _ dictelement } )? _ '}'
                dictelement = Expression _ <':'> _ Expression
-           new = <'new'> <__> symbol
+           new = <'new'> <__> type
            <OperandName> = symbol | NonAlphaSymbol                           (*| QualifiedIdent*)
              <NonAlphaSymbol> = '=>' | '->>' | relop | addop | mulop | unary_op
 `)

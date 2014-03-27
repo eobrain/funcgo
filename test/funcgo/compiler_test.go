@@ -1,7 +1,7 @@
-package funcgo.compiler_test
+package funcgo/compiler_test
 import (
-        test midje.sweet
-        fgo funcgo.core
+        test "midje/sweet"
+        fgo "funcgo/core"
 )
 
 test.fact("smallest complete program has no import and a single expression",
@@ -26,7 +26,7 @@ import (
 `)
 
 test.fact("package can be dotted",
-        fgo.funcgoParse("package foo.bar;import ()12345"),
+        fgo.funcgoParse("package foo/bar;import ()12345"),
         => ,
         `(ns foo.bar (:gen-class))(set! *warn-on-reflection* true)
 
@@ -37,7 +37,7 @@ test.fact("can import other packages",
         fgo.funcgoParse(`
 package foo
 import(
-  b bar
+  b "bar"
 )
 12345
 `),

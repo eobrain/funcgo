@@ -221,8 +221,8 @@
 (test/fact "full source file" (fgo/funcgo-parse "
 package foo
 import(
-  b bar.baz
-  ff foo.faz.fedudle
+  b \"bar/baz\"
+  ff \"foo/faz/fedudle\"
 )
 
 x := b.bbb(`blah blah`)
