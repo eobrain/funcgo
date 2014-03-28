@@ -32,7 +32,7 @@ sourcefile = [ NL ] packageclause _ expressions _
  expressions = Expression | expressions NL Expression
    <Expression>  = precedence0 | vardecl | shortvardecl | ifelseexpr | tryexpr | forrange |
                    forlazy | fortimes | withconst | block
-     withconst = <'const'> _ <'('> _ { consts } _ <')'> _ ( expressions | <'{'> _ expressions _ <'}'> )
+     withconst = <'const'> _ ( const | <'('> _ { consts } _ <')'> ) _ ( expressions | <'{'> _ expressions _ <'}'> )
        consts = [ const { NL const } ]
          const = Destruct _ <'='> _ Expression
            <Destruct> = Identifier | typedidentifier | vecdestruct | dictdestruct
@@ -106,10 +106,10 @@ sourcefile = [ NL ] packageclause _ expressions _
            <Function> = FunctionPart | functionparts
              functionparts = FunctionPart _ FunctionPart { _ FunctionPart }
                <FunctionPart> = functionpart0 | functionpartn | vfunctionpart0 | vfunctionpartn
-                 functionpart0 = <'('> _ <')'> _ <'{'> _ expressions _ <'}'>
-		 vfunctionpart0 = <'('> _ variadic _ <')'> _ <'{'> _ expressions _ <'}'>
-		 functionpartn  = <'('> _ parameters _ <')'> _ <'{'> _ expressions _ <'}'>
-		 vfunctionpartn = <'('> _ parameters _  <','> _ variadic _ <')'> _
+                 functionpart0 = <'('> _ <')'>  ( _ type )? _ <'{'> _ expressions _ <'}'>
+		 vfunctionpart0 = <'('> _ variadic _ <')'> ( _ type )? _ <'{'> _ expressions _ <'}'>
+		 functionpartn  = <'('> _ parameters _ <')'> ( _ type )? _ <'{'> _ expressions _ <'}'>
+		 vfunctionpartn = <'('> _ parameters _  <','> _ variadic _ <')'> ( _ type )? _
                                   <'{'> _ expressions _ <'}'>
                    parameters = Destruct { <','> _ Destruct }
                    variadic = Identifier <'...'>

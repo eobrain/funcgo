@@ -612,10 +612,9 @@ test.fact("Easy to implement fuzzy equality",
 
 	{
 		func fuzzyEq(tolerance, x double, y double) {
-			const(
-				diff = Math::abs(x - y)
-			)
-			diff < tolerance
+			const diff = Math::abs(x - y) {
+				diff < tolerance
+			}
 		}
 		fuzzyEq(0.01, 10, 10.000000000001)
 	},

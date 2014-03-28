@@ -1,0 +1,3 @@
+All of the main*.go files in this directory are copied from
+http://tour.golang.org and used in accordance to its creative commons
+and open source licenses.

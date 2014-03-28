@@ -4,3 +4,4 @@ import(
 )
 
 Println := println
+Printf  := printf
