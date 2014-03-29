@@ -236,11 +236,13 @@ codeGenerator :=  {
 		str( s.lowerCase(initial), identifier, "!")
 	},
 	ESCAPEDIDENTIFIER:  func(identifier) { identifier },
-	NOTEQ:   func() { "not=" },
 	UNARYEXPR: func(operator, expression) { listStr(operator, expression) },
-	BITXOR: func(){ "bit-xor" },
-	BITNOT: func(){ "bit-not" },
-	NOT: func(){ "not" },
+	NOTEQ:       func(){ "not=" },
+	BITXOR:      func(){ "bit-xor" },
+	BITNOT:      func(){ "bit-not" },
+	SHIFTLEFT:   func(){ "bit-shift-left" },
+	SHIFTRIGHT:  func(){ "bit-shift-right" },
+	NOT:         func(){ "not" },
 	DEREF: func(expression) { str("@", expression) },
 	JAVAFIELD:      func(expression, identifier) {
 		listStr(".", expression, identifier)

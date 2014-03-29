@@ -178,4 +178,10 @@ test.fact("type hints",
 	parsed(`(fn (^long [a] (/ a 3)) (^double [a b] (+ a b)))`)
 )
 
+test.fact("expression",
+	parse(`1<<64 - 1`),         =>, parsed(`(- (bit-shift-left 1 64) 1)`),
+	parse(`var a = 1<<64 - 1`), =>, parsed(`(def a (- (bit-shift-left 1 64) 1))`)
+)
+
+
 //      parse(``), =>, parsed(``),

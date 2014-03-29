@@ -30,7 +30,7 @@ sourcefile = [ NL ] packageclause _ expressions _
      importspec = ( Identifier _ )?  <'"'> imported <'"'> 
        imported = Identifier { <'/'> Identifier }
  expressions = Expression | expressions NL Expression
-   <Expression>  = precedence0 | vardecl | shortvardecl | ifelseexpr | tryexpr | forrange |
+   <Expression>  = precedence0 | Vars | shortvardecl | ifelseexpr | tryexpr | forrange |
                    forlazy | fortimes | withconst | block
      withconst = <'const'> _ ( const NL | <'('> _ { consts } _ <')'> _ ) ( expressions | <'{'> _ expressions _ <'}'> )
        consts = [ const { NL const } ]
@@ -58,7 +58,9 @@ sourcefile = [ NL ] packageclause _ expressions _
 	       addop = '+' | '-' | ( !or '|' ) | bitxor
                  bitxor = <'^'>
 	       precedence5 = UnaryExpr | ( precedence5 _ mulop _ UnaryExpr )
-	         mulop = '*' | (!comment '/') | '%' | '<<' | '>>' | (!and '&') | '&^'
+	         mulop = '*' | (!comment '/') | '%' | shiftleft | shiftright | (!and '&') | '&^'
+                   shiftleft = <'<<'>
+                   shiftright = <'>>'>
 	   javastatic = type _ <'::'> _ JavaIdentifier
 	     <JavaIdentifier> = #'\b[\p{L}_][\p{L}_\p{Digit}]*\b'
 	   <Identifier> = !Keyword  (identifier | dashidentifier | isidentifier | mutidentifier |
@@ -69,7 +71,9 @@ sourcefile = [ NL ] packageclause _ expressions _
 	     mutidentifier = <'mutate'> #'\p{L}' identifier
 	     escapedidentifier = <'\\'> #'\b[\p{L}_][\p{L}_\p{Digit}]*\b'
      shortvardecl = Identifier _ <':='> _ Expression
-     vardecl = <'var'> _  Identifier ( _ type )? _ <'='> _ Expression
+                  | Identifier _ ',' _ shortvardecl _ ',' _ Expression
+     <Vars> = <'var'> _ ( <'('> _ vardecl ( NL vardecl )* _ <')'> | vardecl )
+     vardecl = Identifier ( _ type )? _ <'='> _ Expression
      ifelseexpr = <'if'> _ Expression _ ( ( block _ <'else'> _ block ) |
                   ( _ <'{'> _ expressions _ <'}'> )   )
        block = <'{'> _ Expression { NL Expression } _ <'}'>
