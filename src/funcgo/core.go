@@ -25,9 +25,7 @@ import (
 func funcgoParse(fgo) {
 	funcgoParse(fgo, false)
 } (fgo, isNodes) {
-        const(
-                parsed = parser.funcgoParser(string.replace(fgo, /\t/, "        "))
-        )
+        const parsed = parser.funcgoParser(string.replace(fgo, /\t/, "        "))
         if insta.isFailure(parsed) {
                 failure.pprintFailure(parsed)
                 throw(new Exception(`"SYNTAX ERROR"`))

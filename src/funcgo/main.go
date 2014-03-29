@@ -29,9 +29,7 @@ cliOptions := [
 // A version of pprint that preserves type hints.
 // See https://groups.google.com/forum/#!topic/clojure/5LRmPXutah8
 func prettyPrint(obj, writer) {
-        const(
-                origDispatch = \`pprint/*print-pprint-dispatch*`
-        )
+        const origDispatch = \`pprint/*print-pprint-dispatch*`
         pprint.withPprintDispatch(
                 func(o) {
                         if meta(o) {
@@ -86,9 +84,7 @@ func _main(args...) {
 		}else{
 			if not(seq(otherArgs)) {
 				for f := range fileSeq(io.file(".")) {
-					const(
-						ff java.io.File = f
-					)
+					const ff java.io.File = f
 					try {
 						if ff->getName()->endsWith(".go") { 
 							compileFile(ff, opts)

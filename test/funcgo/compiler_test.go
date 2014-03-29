@@ -102,7 +102,7 @@ test.fact("multiple expressions inside func",
 
 test.fact("subsequent const nests",
         parse(`const(a=1){x;const(b=2)y}`), =>, parsed(`(let [a 1] x (let [b 2] y))`),
-        parse(`const a=1 {x;const b=2 y}`), =>, parsed(`(let [a 1] x (let [b 2] y))`)
+        parse(`const a=1; {x;const b=2; y}`), =>, parsed(`(let [a 1] x (let [b 2] y))`)
 )
 
 // See http://blog.jayfields.com/2010/07/clojure-destructuring.html
@@ -111,7 +111,7 @@ test.fact("Vector Destructuring",
         =>,
         parsed(`(let [[a b] ab] (f a b))`),
 
-        parse(`const [a,b]=ab f(a,b)`),
+        parse(`const [a,b]=ab; f(a,b)`),
         =>,
         parsed(`(let [[a b] ab] (f a b))`),
 
@@ -119,7 +119,7 @@ test.fact("Vector Destructuring",
         =>,
         parsed(`(let [[x & more] indexes] (f x more))`),
 
-        parse(`const [x, more...] = indexes f(x, more)`), 
+        parse(`const [x, more...] = indexes; f(x, more)`), 
         =>,
         parsed(`(let [[x & more] indexes] (f x more))`),
 
@@ -142,7 +142,7 @@ test.fact("Map Destructuring",
         =>,
         parsed(`(let [{the-x :x the-y :y} point] (f the-x the-y))`),
 
-        parse(`const {theX: X, theY: Y} = point f(theX, theY)`),
+        parse(`const {theX: X, theY: Y} = point; f(theX, theY)`),
         =>,
         parsed(`(let [{the-x :x the-y :y} point] (f the-x the-y))`),
 
@@ -165,7 +165,7 @@ test.fact("Map Destructuring",
 
 test.fact("type hints",
         parse(`const(a Foo = 3) f(a)`), =>, parsed(`(let [^Foo a 3] (f a))`),
-        parse(`const a Foo = 3 f(a)`), =>, parsed(`(let [^Foo a 3] (f a))`),
+        parse(`const a Foo = 3; f(a)`), =>, parsed(`(let [^Foo a 3] (f a))`),
         parse(`func g(a Foo) { f(a) }`),  =>, parsed(`(defn g [^Foo a] (f a))`),
         parse(`func(a Foo) { f(a) }`),  =>, parsed(`(fn [^Foo a] (f a))`),
         parse(`func g(a) Foo { f(a) }`),  =>, parsed(`(defn g ^Foo [a] (f a))`),
