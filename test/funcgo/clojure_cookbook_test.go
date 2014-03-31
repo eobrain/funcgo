@@ -8,10 +8,10 @@ import(
 
 test.fact("Simple example",
 	{
-		func add(x,y) {
+		func add(x, y) {
 			x + y
 		}
-		add(1,2)
+		add(1, 2)
 	},
         =>, 3
 )
@@ -33,7 +33,7 @@ test.fact("Infix is most convenient for math operators.",
 
 test.fact("Dotted identifers are from other packages.",
         // import section includes
-        //    string "clojure/string"
+        //    "clojure/string"
         string.isBlank(""),
         =>, true
 )
