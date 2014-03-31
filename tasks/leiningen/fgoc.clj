@@ -12,7 +12,7 @@
  [project & args]
  (let
   [cmd-line
-   (concat ["java" "-jar" "bin/funcgo-0.1.23-standalone.jar"] args)
+   (concat ["java" "-jar" "bin/funcgo-0.1.24-standalone.jar"] args)
    result
    (apply sh/sh cmd-line)]
   (println (result :err))

@@ -244,6 +244,9 @@ codeGenerator :=  {
 	SHIFTRIGHT:  func(){ "bit-shift-right" },
 	NOT:         func(){ "not" },
 	DEREF: func(expression) { str("@", expression) },
+	SYNTAXQUOTE: func(expression)     { str("`", expression) },
+	UNQUOTE: func(expression)         { str("~", expression) },
+	UNQUOTESPLICING: func(expression) { str("~@", expression) },
 	JAVAFIELD:      func(expression, identifier) {
 		listStr(".", expression, identifier)
 	},

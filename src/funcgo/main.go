@@ -72,7 +72,7 @@ func compileFile(inFile java.io.File, opts) {
 }
 
  // Convert funcgo to clojure
-func _main(args...) {
+func Compile(args...) {
 	const(
 		cmdLine   = args cli.parseOpts cliOptions
 		otherArgs = cmdLine(ARGUMENTS)
@@ -104,4 +104,9 @@ func _main(args...) {
 			}
 		}
 	}
+}
+
+ // Convert funcgo to clojure
+func _main(args...) {
+	Compile apply args
 }

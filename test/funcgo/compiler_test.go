@@ -183,5 +183,14 @@ test.fact("expression",
 	parse(`var a = 1<<64 - 1`), =>, parsed(`(def a (- (bit-shift-left 1 64) 1))`)
 )
 
+test.fact("quoteing",
+	parse("quote(foo(a))"),           =>, parsed("(quote (foo a))"),
+	parse("syntax foo(a)"),     =>, parsed("`(foo a)"),
+	parse("syntax \\`(foo a)`"), =>, parsed("`(foo a)"),
+
+	parse(`syntax fred(x, unquote x, lst, unquotes lst, 7, 8, NINE)`),
+	=>,
+	parsed("`(fred x ~x lst ~@lst 7 8 :nine)")
+)
 
 //      parse(``), =>, parsed(``),
