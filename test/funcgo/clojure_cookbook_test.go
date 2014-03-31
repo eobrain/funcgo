@@ -2,7 +2,7 @@ package funcgo/clojure_cookbook_test
 import(
         test "midje/sweet"
         fgo "funcgo/core"
-        string "clojure/string"
+        "clojure/string"
 	inf "inflections/core"
 )
 
@@ -17,12 +17,12 @@ test.fact("Simple example",
 )
 
 test.fact("More complex example",
-        into([],  \range(1, 20)),
+        into([], range(1, 20)),
         =>,  [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
 )
 
 test.fact("Any function of two arguments can be written infix",
-        [] into \range(1, 20),
+        [] into range(1, 20),
         =>,  [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
 )
 
@@ -98,9 +98,9 @@ test.fact("Can concatenate consts.",
 
 test.fact("Can concatenate vars.",
 	{
-		firstName := "John"
-		lastName := "Doe"
-		age := 42
+		var firstName = "John"
+		var lastName = "Doe"
+		var age = 42
 		str(lastName, ", ", firstName, " - age: ", age)
 	},
         =>, "Doe, John - age: 42"
@@ -113,7 +113,7 @@ test.fact("turn characters into a string",
 
 test.fact("make file from lines (with newlines)",
 	{
-		lines := [
+		const lines = [
 			"#! /bin/bash\n",
 			"du -a ./ | sort -n -r\n"
 		]
@@ -124,11 +124,13 @@ test.fact("make file from lines (with newlines)",
 
 test.fact("Making CSV from header vector of rows",
 	{
-		header := "first_name,last_name,employee_number\n"
-		rows := [
-			"luke,vanderhart,1",
-			"ryan,neufeld,2"
-		]
+		const(
+			header = "first_name,last_name,employee_number\n"
+			rows = [
+				"luke,vanderhart,1",
+				"ryan,neufeld,2"
+			]
+		)
 		apply(str, header, ("\n" interpose rows))
 	},
         =>, `first_name,last_name,employee_number
@@ -223,7 +225,7 @@ test.fact("char function does the opposite",
 test.fact("str is the easiest way of formatting values into a string",
 	
 	{
-		me := {FIRST_NAME: "Eamonn", FAVORITE_LANGUAGE: "Funcgo"}
+		const me = {FIRST_NAME: "Eamonn", FAVORITE_LANGUAGE: "Funcgo"}
 		str("My name is ", me(FIRST_NAME),
 			", and I really like to program in ", me(FAVORITE_LANGUAGE))
 	},
@@ -317,7 +319,7 @@ test.fact("Extract strings from a larger string using reSeq",
 
         {
 		// Capture and decompose a phone number and its title
-		rePhoneNumber := /(\w+): \((\d{3})\) (\d{3}-\d{4})/  
+		const rePhoneNumber = /(\w+): \((\d{3})\) (\d{3}-\d{4})/  
 		rePhoneNumber reSeq "Home: (919) 555-1234, Work: (191) 555-1234"
 	},
         =>, [["Home: (919) 555-1234", "Home", "919", "555-1234"],
@@ -328,7 +330,7 @@ test.fact("Extract strings from a larger string using reSeq",
 
 test.fact("simple string replacement via string.replace",
 	{
-		aboutMe := "My favorite color is green!"
+		const aboutMe = "My favorite color is green!"
 		string.replace(aboutMe, "green", "red")
 	},
 	=>, "My favorite color is red!",
@@ -669,7 +671,7 @@ test.fact("Can do trig",
 
 	{
 		// Calculating the distance in kilometers between two points on Earth
-		earthRadius := 6371.009
+		const earthRadius = 6371.009
 
 		func degreesToRadians(point) {
 			func(x){Math::toRadians(x)} mapv point
@@ -710,7 +712,7 @@ test.fact("Can convert numbers to various bases",
 
 	{
 		func toBase(radix, n) { n Integer::toString radix }
-		baseTwo := toBase partial 2
+		const baseTwo = toBase partial 2
 		baseTwo(9001)
 	},
 	=>, "10001100101001"
