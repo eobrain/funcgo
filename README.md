@@ -123,7 +123,7 @@ that can be used without needing an `import` statement.
 In keeping with its orientation as a functional programming language,
 Funcgo does *not* have mutable local variables. Instead, inside
 functions and other scopes you should create constants (whose values
-can not be changes.
+can not be changed.
 
 ```
 		var firstName = "John"
@@ -179,13 +179,13 @@ sometimes lead to cleaner and more readable code.
 
 The above example introduces a number of new language features.
 
-First note the _dictionary literal_ which in this case creates a dictionary
-with two entries.
+First note the _dictionary literal_ which creates a dictionary with
+two entries.
 
-In this case the keys are _keywords_ which in Funcgo are distinguished
-by being all-uppercase.  Unlike symbols that evaluate to something
-else, keywords just evaluate to themselves and are most commonly used
-like this as dictionary keys.
+Here the keys are _keywords_ which in Funcgo are distinguished by
+being all-uppercase.  Unlike symbols that evaluate to something else,
+keywords just evaluate to themselves and are most commonly used like
+this as dictionary keys.
 
 Note that to extract values from the dictionary you treat it as if it
 were a function, using the key as the parameter to the function.
@@ -198,14 +198,14 @@ were a function, using the key as the parameter to the function.
 
 This example shows two nested infix expressions.
 
-The inner ones uses the [`interpose`] function to take the vector
-`[1, 2.000, 3/1, 4/9]` and create a new vector with blanks inserted
-between `[1, " ", 2.000, " ", 3/1, " ", 4/9]`.
+The inner ones uses the [`interpose`][interpose] function to take the
+vector `[1, 2.000, 3/1, 4/9]` and create a new vector with blanks
+inserted between `[1, " ", 2.000, " ", 3/1, " ", 4/9]`.
 
 The outer infix expression shows an example of Funcgo being used as a
 functional programming language. The [`apply`][apply] function is an
-example of a function that takes a function as a parameter.  In this
-case [`str`][str]) is passed as the first argument.
+example of a function that takes a function as a parameter.  Here
+[`str`][str] is passed as the first argument.
 
 ```go
 func isYelling(utterance String) {
@@ -216,18 +216,18 @@ func isYelling(utterance String) {
 }
 ```
 
-This example shows an example of Java interoperability. In this case
-symbols are not mangled but are passed on unchanged to Java.  The `::`
-specifies access to a static function.
+This example shows an example of Java interoperability.  The `::`
+specifies access to a static function (with symbol names not being
+mangled, but passed to Java as-is).
 
-This is also the first time we have specified a type for a value, in
-this case the `String` type on the outer function parameter.  This is
-optional, but doing so in this case avoids using Java reflection,
-making for a more efficient implementation.
+This is also the first time we have specified a type for a value,
+specifying the `String` type on the outer function's parameter.  This
+is optional, but doing so in this case avoids Java reflection, making
+for a more efficient implementation.
 
-We also see here an example of an anonymous function, in this case a
-predicate (function returning Boolean) that tests if a character is a
-non-letter or an upper-case letter.
+We also see here an example of an anonymous function, here a predicate
+(function returning Boolean) that tests if a character is a non-letter
+or an upper-case letter.
 
 The [`isEvery`][isevery] function tests whether this predicate is true
 for every character in the string.
