@@ -47,7 +47,7 @@ func prettyPrint(obj, writer) {
 func compileFile(inFile java.io.File, opts) {
         const(
                 inPath = inFile->getPath()
-                outFile = io.file(string.replace(inPath, /\.go$/, ".clj"))
+                outFile = io.file(string.replace(inPath, /\.go(s?)$/, ".clj$1"))
         )
         if opts(FORCE) || outFile->lastModified() < inFile->lastModified() {
                 println(inPath)
@@ -84,9 +84,12 @@ func Compile(args...) {
 		}else{
 			if not(seq(otherArgs)) {
 				for f := range fileSeq(io.file(".")) {
-					const ff java.io.File = f
+					const (
+						ff java.io.File = f
+						name = ff->getName
+					)
 					try {
-						if ff->getName()->endsWith(".go") { 
+						if name->endsWith(".go") || name->endsWith(".gos") { 
 							compileFile(ff, opts)
 						}
 					} catch Exception e {

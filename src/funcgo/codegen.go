@@ -257,6 +257,7 @@ codeGenerator :=  {
 	},
 	JAVASTATIC:      func(parts...) {"/" s.join parts},
 	TYPE:            func(parts...) {"." s.join parts},
+	UNDERSCOREJAVAIDENTIFIER: func(identifier) { "-" str identifier },
 	JAVAMETHODCALL: func(expression, identifier) {
 		str("(. ", expression, " (", identifier, "))")
 	} (expression, identifier, call) {

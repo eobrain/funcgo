@@ -193,22 +193,10 @@ test.fact("quoteing",
 	parsed("`(fred x ~x lst ~@lst 7 8 :nine)")
 )
 
-test.fact("Clojure script import",
-        fgo.funcgoParse(`
-package p
-import(
-  em "macros//enfocus/macros"
-  ef "enfocus/core"
+test.fact("symbol beginning with underscore",
+	parse(`_main`), =>, parsed(`-main`),
+	parse(`_foo`),  =>, parsed(`-foo`),
+	parse(`mutateSet( js.window->_onload, start)`), =>, parsed(`(set! (. js/window -onload) start)`)
 )
-
-12345
-`),
-        =>,
-        `(ns p (:gen-class)
-  (:require-macros [enfocus.macros :as em])
-  (:require [enfocus.core :as ef]))(set! *warn-on-reflection* true)
-
-12345
-`)
 
 //      parse(``), =>, parsed(``),

@@ -1,0 +1,22 @@
+// -*- mode: Go -*-
+
+package mainupload
+
+import(
+	em "macros//enfocus/macros"
+	ef "enfocus/core"
+)
+
+em.defaction(
+	updateSadText,
+	[],
+	["#inputtext"],
+	em.content("Yay! I'm happy!")
+)
+
+em.defaction(
+	makeHappyFace,
+	[],
+	["#inputrow"],
+	em.htmlContent("<img src='/images/smiley_3357_or.png' width='100px' height='100px'></img>")
+)

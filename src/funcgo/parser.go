@@ -64,7 +64,8 @@ sourcefile = [ NL ] packageclause _ expressions _
                    shiftleft = <'<<'>
                    shiftright = <'>>'>
 	   javastatic = type _ <'::'> _ JavaIdentifier
-	     <JavaIdentifier> = #'\b[\p{L}_][\p{L}_\p{Digit}]*\b'
+	     <JavaIdentifier> = #'\b[\p{L}_][\p{L}_\p{Digit}]*\b' | underscorejavaidentifier
+               underscorejavaidentifier = <'_'> JavaIdentifier
 	   <Identifier> = !Keyword  (identifier | dashidentifier | isidentifier | mutidentifier |
 			  escapedidentifier)
 	     identifier = #'\b[\p{L}_][\p{L}_\p{Digit}]*\b'
