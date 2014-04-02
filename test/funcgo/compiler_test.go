@@ -7,10 +7,10 @@ import (
 test.fact("smallest complete program has no import and a single expression",
         fgo.funcgoParse("package foo;import ()12345"),
         =>,
-        "(ns foo (:gen-class))(set! *warn-on-reflection* true)
+        `(ns foo (:gen-class))(set! *warn-on-reflection* true)
 
 12345
-")
+`)
 
 test.fact("Can use newlines instead of semicolons",
         fgo.funcgoParse(`
@@ -192,5 +192,23 @@ test.fact("quoteing",
 	=>,
 	parsed("`(fred x ~x lst ~@lst 7 8 :nine)")
 )
+
+test.fact("Clojure script import",
+        fgo.funcgoParse(`
+package p
+import(
+  em "macros//enfocus/macros"
+  ef "enfocus/core"
+)
+
+12345
+`),
+        =>,
+        `(ns p (:gen-class)
+  (:require-macros [enfocus.macros :as em])
+  (:require [enfocus.core :as ef]))(set! *warn-on-reflection* true)
+
+12345
+`)
 
 //      parse(``), =>, parsed(``),

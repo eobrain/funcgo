@@ -26,9 +26,11 @@ sourcefile = [ NL ] packageclause _ expressions _
    <comment> = <#'[;\s]*//[^\n]*\n\s*'>
  packageclause = <'package'> <__> imported NL importdecl
    __ =  #'[ \t\x0B\f\r\n]+' | comment+     (* whitespace *)
-   importdecl = <'import'> _ <'('>  _ { importspec _ } <')'> | <'import'>  _ importspec
-     importspec = ( Identifier _ )?  <'"'> imported <'"'> 
-       imported = Identifier { <'/'> Identifier }
+   importdecl = <'import'> _ <'('>  _ { ImportSpec _ } <')'> | <'import'>  _ ImportSpec
+     <ImportSpec> = importspec | macroimportspec
+       importspec = ( Identifier _ )?  <'"'> imported <'"'> 
+       macroimportspec = ( Identifier _ )?  <'"'> Identifier <'//'> imported <'"'> 
+         imported = Identifier { <'/'> Identifier }
  expressions = Expression | expressions NL Expression
    <Expression>  = precedence0 | Vars | shortvardecl | ifelseexpr | tryexpr | forrange |
                    forlazy | fortimes | withconst | block

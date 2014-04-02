@@ -41,6 +41,11 @@ codeGenerator :=  {
 	} (imported) {
 		str("\n  (:require [", imported, " :as ", last(imported s.split /\./), "])")
 	},
+	MACROIMPORTSPEC:     func(identifier, macro, imported) {
+		str("\n  (:require-", macro, " [", imported, " :as ", identifier, "])")
+	} (macro, imported) {
+		str("\n  (:require-", macro, " [", imported, " :as ", last(imported s.split /\./), "])")
+	},
 	PRECEDENCE0: infix,
 	PRECEDENCE1: infix,
 	PRECEDENCE2: infix,
