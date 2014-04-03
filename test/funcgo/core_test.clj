@@ -3,7 +3,7 @@
 	(:require [funcgo.core :as fgo]))
 
 (defn parse [expr]
-  (fgo/funcgo-parse (str "package foo;import ()" expr)))
+  (fgo/funcgo-parse "foo.go" (str "package foo;import ()" expr)))
 
 (defn parsed [expr]
   (str "(ns foo (:gen-class))(set! *warn-on-reflection* true)\n\n" expr "\n"))
@@ -218,7 +218,7 @@
            (parse "format") => (parsed "format")
            (parse "ranged") => (parsed "ranged"))
 
-(test/fact "full source file" (fgo/funcgo-parse "
+(test/fact "full source file" (fgo/funcgo-parse "foo.go" "
 package foo
 import(
   b \"bar/baz\"

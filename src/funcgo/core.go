@@ -22,9 +22,9 @@ import (
 )
 
 
-func funcgoParse(fgo) {
-	funcgoParse(fgo, false)
-} (fgo, isNodes) {
+func funcgoParse(path, fgo) {
+	funcgoParse(path, fgo, false)
+} (path, fgo, isNodes) {
         const parsed = parser.funcgoParser(string.replace(fgo, /\t/, "        "))
         if insta.isFailure(parsed) {
                 failure.pprintFailure(parsed)
@@ -33,7 +33,7 @@ func funcgoParse(fgo) {
 		if isNodes {
 			pprint.pprint(parsed)
 		}
-		insta.transform(codegen.codeGenerator, parsed)
+		codegen.codegen(path, parsed)
         }
 }
 

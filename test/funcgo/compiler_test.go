@@ -5,7 +5,7 @@ import (
 )
 
 test.fact("smallest complete program has no import and a single expression",
-        fgo.funcgoParse("package foo;import ()12345"),
+        fgo.funcgoParse("foo.go", "package foo;import ()12345"),
         =>,
         `(ns foo (:gen-class))(set! *warn-on-reflection* true)
 
@@ -13,7 +13,7 @@ test.fact("smallest complete program has no import and a single expression",
 `)
 
 test.fact("Can use newlines instead of semicolons",
-        fgo.funcgoParse(`
+        fgo.funcgoParse("foo.go", `
 package foo
 import (
 )
@@ -26,7 +26,7 @@ import (
 `)
 
 test.fact("package can be dotted",
-        fgo.funcgoParse("package foo/bar;import ()12345"),
+        fgo.funcgoParse("foo.go", "package foo/bar;import ()12345"),
         => ,
         `(ns foo.bar (:gen-class))(set! *warn-on-reflection* true)
 
@@ -34,7 +34,7 @@ test.fact("package can be dotted",
 `)
 
 test.fact("can import other packages",
-        fgo.funcgoParse(`
+        fgo.funcgoParse("foo.go", `
 package foo
 import(
   b "bar"
@@ -49,7 +49,7 @@ import(
 `)
 
 func parse(expr) {
-  fgo.funcgoParse("package foo;import ()" str expr)
+	fgo.funcgoParse("foo.go", "package foo;import ()" str expr)
 }
 
 func parsed(expr) {

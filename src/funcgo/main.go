@@ -52,7 +52,7 @@ func compileFile(inFile java.io.File, opts) {
         if opts(FORCE) || outFile->lastModified() < inFile->lastModified() {
                 println(inPath)
                 const(
-                        clj = core.funcgoParse(slurp(inFile), opts(NODES))
+                        clj = core.funcgoParse(inPath, slurp(inFile), opts(NODES))
                         // TODO(eob) open using with-open
                         writer java.io.BufferedWriter = io.writer(outFile)
                 )
