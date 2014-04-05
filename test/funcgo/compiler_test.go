@@ -5,33 +5,22 @@ import (
 )
 
 test.fact("smallest complete program has no import and a single expression",
-        fgo.funcgoParse("foo.go", "package foo;import ()12345"),
+        fgo.funcgoParse("foo.go", "package foo;12345"),
         =>,
-        `(ns foo (:gen-class))(set! *warn-on-reflection* true)
-
-12345
-`)
+        `(ns foo (:gen-class) ) (set! *warn-on-reflection* true) 12345`)
 
 test.fact("Can use newlines instead of semicolons",
         fgo.funcgoParse("foo.go", `
 package foo
-import (
-)
 12345
 `),
         =>,
-        `(ns foo (:gen-class))(set! *warn-on-reflection* true)
-
-12345
-`)
+        `(ns foo (:gen-class) ) (set! *warn-on-reflection* true) 12345`)
 
 test.fact("package can be dotted",
-        fgo.funcgoParse("foo.go", "package foo/bar;import ()12345"),
+        fgo.funcgoParse("foo.go", "package foo/bar;12345"),
         => ,
-        `(ns foo.bar (:gen-class))(set! *warn-on-reflection* true)
-
-12345
-`)
+        `(ns foo.bar (:gen-class) ) (set! *warn-on-reflection* true) 12345`)
 
 test.fact("can import other packages",
         fgo.funcgoParse("foo.go", `
@@ -42,18 +31,14 @@ import(
 12345
 `),
         =>,
-        `(ns foo (:gen-class)
-  (:require [bar :as b]))(set! *warn-on-reflection* true)
-
-12345
-`)
+        `(ns foo (:gen-class) (:require [bar :as b])) (set! *warn-on-reflection* true) 12345`)
 
 func parse(expr) {
-	fgo.funcgoParse("foo.go", "package foo;import ()" str expr)
+	fgo.funcgoParse("foo.go", "package foo;" str expr)
 }
 
 func parsed(expr) {
-        str("(ns foo (:gen-class))(set! *warn-on-reflection* true)\n\n", expr, "\n")
+        str("(ns foo (:gen-class) ) (set! *warn-on-reflection* true) ", expr)
 }
 
 test.fact("can refer to symbols",

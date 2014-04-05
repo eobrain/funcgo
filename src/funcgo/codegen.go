@@ -21,6 +21,10 @@ func listStr(item...) {
 	str("(", s.join(" ", item), ")")
 }
 
+func blankJoin (xs...){
+	" " s.join xs
+}
+
 func vecStr(item...) {
 	str("[", s.join(" ", item), "]")
 }
@@ -35,24 +39,32 @@ func codegen(path String, parsed) {
 	const(
 		isGoscript    = path->endsWith(".gos")
 		codeGenerator =  {
-			SOURCEFILE:     func(header, body) {str(header, body, "\n")},
-			PACKAGECLAUSE:  func(imported, importDecl) {
+			SOURCEFILE:     func(header, body) {str(header, " ", body)},
+			PACKAGECLAUSE:  func(imported, importDecls) {
 				if isGoscript {
-					str("(ns ", imported, " ", importDecl, ")\n\n")
+					listStr("ns", imported, importDecls)
 				} else {
-					str("(ns ", imported, " (:gen-class)", importDecl, ")(set! *warn-on-reflection* true)\n\n")
+					str(
+						listStr("ns", imported, "(:gen-class)", importDecls),
+						" (set! *warn-on-reflection* true)"
+					)
 				}
 			},
-			IMPORTDECL:     func(importSpecs...) {apply(str, importSpecs)},
-			IMPORTSPEC:     func(identifier, imported) {
-				str("\n  (:require [", imported, " :as ", identifier, "])")
-			} (imported) {
-				str("\n  (:require [", imported, " :as ", last(imported s.split /\./), "])")
+		        IMPORTDECLS: blankJoin,
+			IMPORTDECL:     func() {
+				""
+			} (importSpecs...) {
+				listStr apply (":require" cons importSpecs)
 			},
-			MACROIMPORTSPEC:     func(identifier, macro, imported) {
-				str("\n  (:require-", macro, " [", imported, " :as ", identifier, "])")
-			} (macro, imported) {
-				str("\n  (:require-", macro, " [", imported, " :as ", last(imported s.split /\./), "])")
+			MACROIMPORTDECL:     func() {
+				""
+			} (importSpecs...) {
+				listStr apply (":require-macros" cons importSpecs)
+			},
+			IMPORTSPEC:     func(identifier, imported) {
+				str("[", imported, " :as ", identifier, "]")
+			} (imported) {
+				str("[", imported, " :as ", last(imported s.split /\./), "]")
 			},
 			PRECEDENCE0: infix,
 			PRECEDENCE1: infix,
@@ -81,9 +93,7 @@ func codegen(path String, parsed) {
 			} (expressions, catches, finally) {
 				listStr("try", expressions, catches, finally)
 			},
-			CATCHES: func(catches...){
-				s.join(" ", catches)
-			},
+			CATCHES: blankJoin,
 			CATCH: func(typ, exception, expressions) {
 				listStr("catch", typ, exception, expressions)
 			},

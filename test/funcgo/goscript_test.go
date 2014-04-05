@@ -9,29 +9,44 @@ test.fact("Clojure script import",
         fgo.funcgoParse("p.gos", `
 package p
 import(
-  em "macros//enfocus/macros"
   ef "enfocus/core"
+)
+import macros(
+  em "enfocus/macros"
 )
 
 12345
 `),
         =>,
-        `(ns p 
-  (:require-macros [enfocus.macros :as em])
-  (:require [enfocus.core :as ef]))
-
-12345
-`)
+        `(ns p (:require [enfocus.core :as ef]) (:require-macros [enfocus.macros :as em])) 12345`)
 
 func parse(expr) {
-	fgo.funcgoParse("foo.gos", "package foo;import ()" str expr)
+	fgo.funcgoParse("foo.gos", "package foo;" str expr)
 }
 
 func parsed(expr) {
-        str("(ns foo )\n\n", expr, "\n")
+        str("(ns foo ) ", expr)
 }
 
 
 test.fact("symbol",
 	parse(`apple`), =>, parsed(`apple`)
+)
+
+test.fact("enfocus",
+	fgo.funcgoParse("client.gos", `
+package fgosite/client
+import (
+	ef "enfocus/core"
+        "enfocus/effects"
+        "enfocus/events"
+	"clojure/browser/repl"
+)
+import macros(
+	"enfocus/macros"
+)
+aaa
+`
+	), =>,
+	`(ns fgosite.client (:require [enfocus.core :as ef] [enfocus.effects :as effects] [enfocus.events :as events] [clojure.browser.repl :as repl]) (:require-macros [enfocus.macros :as macros])) aaa`
 )

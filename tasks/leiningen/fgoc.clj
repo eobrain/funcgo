@@ -2,8 +2,7 @@
 (ns
  leiningen.fgoc
  (:gen-class)
- (:require [clojure.java.shell :as sh])
- (:require [clojure.java.io :as io]))
+ (:require [clojure.java.shell :as sh] [clojure.java.io :as io]))
 
 (set! *warn-on-reflection* true)
 

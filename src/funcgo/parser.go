@@ -18,18 +18,21 @@ import (
 
 
 funcgoParser := insta.parser(`
-sourcefile = [ NL ] packageclause _ expressions _
+sourcefile = [ NL ] packageclause expressions _
  <_> =      <#'[ \t\x0B\f\r\n]*'> | comment+                                 (* optional whitespace *)
  <_nonNL> = <#'[ \t\x0B\f\r]*'>                                  (* optional non-newline whitespace *)
  <NL> = nl | comment+
    <nl> = <#'\s*[\n;]\s*'>                     (* whitespace with at least one newline or semicolon *)
    <comment> = <#'[;\s]*//[^\n]*\n\s*'>
- packageclause = <'package'> <__> imported NL importdecl
+ packageclause = <'package'> <__> imported NL importdecls
    __ =  #'[ \t\x0B\f\r\n]+' | comment+     (* whitespace *)
-   importdecl = <'import'> _ <'('>  _ { ImportSpec _ } <')'> | <'import'>  _ ImportSpec
-     <ImportSpec> = importspec | macroimportspec
-       importspec = ( Identifier _ )?  <'"'> imported <'"'> 
-       macroimportspec = ( Identifier _ )?  <'"'> Identifier <'//'> imported <'"'> 
+   importdecls = [importdecl NL] [macroimportdecl NL]
+     importdecl = ( <'import'> _ <'('>  _ { ImportSpec _ } <')'> )
+                 | ( <'import'>  _ ImportSpec )
+     macroimportdecl = ( <'import'> _ <'macros'> _ <'('>  _ { ImportSpec _ } <')'> )
+                     | ( <'import'> _ <'macros'> _ ImportSpec )
+     <ImportSpec> = importspec
+       importspec = ( Identifier _ )?  <'"'> imported <'"'>
          imported = Identifier { <'/'> Identifier }
  expressions = Expression | expressions NL Expression
    <Expression>  = precedence0 | Vars | shortvardecl | ifelseexpr | tryexpr | forrange |
@@ -143,7 +146,7 @@ sourcefile = [ NL ] packageclause _ expressions _
                  rawstringlit = <#'\x60'> #'[^\x60]*' <#'\x60'>     (* \x60 is back quote character *)
                  interpretedstringlit = <#'\"'> #'[^\"]*' <#'\"'>     (* TODO: handle string escape *)
                  clojureescape = <'\\'> <#'\x60'> #'[^\x60]*' <#'\x60'>       (* \x60 is back quote *)
-	       <rune_lit> = <'\''> ( unicode_value | byte_value ) <'\''> 
+	       <rune_lit> = <'\''> ( unicode_value | byte_value ) <'\''>
 		 <unicode_value> = unicodechar | littleuvalue | escaped_char
                    unicodechar = #'[^\n ]'
                    <escaped_char> = newlinechar | spacechar | backspacechar | returnchar | tabchar |

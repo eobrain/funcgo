@@ -2,9 +2,11 @@
 
 package mainupload
 
-import(
-	em "macros//enfocus/macros"
+import (
 	ef "enfocus/core"
+)
+import macros (
+	em "enfocus/macros"
 )
 
 em.defaction(

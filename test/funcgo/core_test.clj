@@ -3,10 +3,10 @@
 	(:require [funcgo.core :as fgo]))
 
 (defn parse [expr]
-  (fgo/funcgo-parse "foo.go" (str "package foo;import ()" expr)))
+  (fgo/funcgo-parse "foo.go" (str "package foo;" expr)))
 
 (defn parsed [expr]
-  (str "(ns foo (:gen-class))(set! *warn-on-reflection* true)\n\n" expr "\n"))
+  (str "(ns foo (:gen-class) ) (set! *warn-on-reflection* true) " expr))
 
 (test/fact "can call function"
       (parse "f()")            => (parsed "(f)")
@@ -237,9 +237,4 @@ func FooBar(iii, jjj) {
     }
   )
 }
-")  => "(ns foo (:gen-class)
-  (:require [bar.baz :as b])
-  (:require [foo.faz.fedudle :as ff]))(set! *warn-on-reflection* true)
-
-(def x (b/bbb \"blah blah\")) (defn Foo-bar [iii jjj] (ff/fumanchu {:ooo (fn [m n] (str m n)) :ppp (fn [m n] (str m n)) :qqq qq }))
-")
+")  => "(ns foo (:gen-class) (:require [bar.baz :as b] [foo.faz.fedudle :as ff])) (set! *warn-on-reflection* true) (def x (b/bbb \"blah blah\")) (defn Foo-bar [iii jjj] (ff/fumanchu {:ooo (fn [m n] (str m n)) :ppp (fn [m n] (str m n)) :qqq qq }))")
