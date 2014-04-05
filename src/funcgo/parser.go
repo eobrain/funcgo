@@ -50,7 +50,6 @@ sourcefile = [ NL ] packageclause expressions _
                dictdestructelem = (Destruct|label) _ <':'> _ Expression
      precedence0 = precedence1 | ( precedence0 _nonNL symbol _nonNL precedence1 )
        symbol = (( Identifier <'.'> )? Identifier ) | javastatic
-           Keyword = '\bconst\b' | '\bfor\b' | '\bnew\b' | '\bpackage\b' | '\brange\b'
        precedence1 = precedence2 | ( precedence1 _ or _ precedence2 )
 	 or = <'||'>
 	 precedence2 = precedence3 | precedence2 _ and _ precedence3
@@ -71,6 +70,7 @@ sourcefile = [ NL ] packageclause expressions _
                underscorejavaidentifier = <'_'> JavaIdentifier
 	   <Identifier> = !Keyword  (identifier | dashidentifier | isidentifier | mutidentifier |
 			  escapedidentifier)
+             Keyword = '\bconst\b' | '\bfor\b' | '\bnew\b' | '\bpackage\b' | '\brange\b' | '\bif\b'
 	     identifier = #'\b[\p{L}_][\p{L}_\p{Digit}]*\b'
 	     dashidentifier = <'_'> identifier
 	     isidentifier = <'is'> #'\p{L}' identifier
@@ -104,7 +104,7 @@ sourcefile = [ NL ] packageclause expressions _
        unquote         = <'unquote'>         _ UnaryExpr
        unquotesplicing = <'unquotes'> _ UnaryExpr
        javafield  = UnaryExpr _ <'->'> _ JavaIdentifier
-       <PrimaryExpr> = functioncall | javamethodcall | Operand | functiondecl |  indexed
+       <PrimaryExpr> = functioncall | javamethodcall | Operand | functiondecl | funclikedecl |  indexed
                                                                 (*Conversion |
                                                                 BuiltinCall |
                                                                 PrimaryExpr Selector |
@@ -117,6 +117,7 @@ sourcefile = [ NL ] packageclause expressions _
              <ArgumentList> = expressionlist                                         (* [ _ '...' ] *)
                expressionlist = Expression { _ <','> _ Expression }
          functiondecl = <'func'> _ Identifier _ Function
+         funclikedecl = <'func'> _ <'('> _ symbol _ <')'> _ Identifier _ Function
            <Function> = FunctionPart | functionparts
              functionparts = FunctionPart _ FunctionPart { _ FunctionPart }
                <FunctionPart> = functionpart0 | functionpartn | vfunctionpart0 | vfunctionpartn

@@ -123,9 +123,7 @@ func codegen(path String, parsed) {
 			EXPRESSIONSXXX: func(expr0, exprRest...){
 				s.join(" ", expr0 cons exprRest)
 			},
-			CONSTS:  func(consts...) {
-				"\n" s.join consts
-			},
+			CONSTS:  blankJoin,
 			BLOCK: func (expr){
 				expr
 			} (expr0, exprRest...) {
@@ -169,6 +167,9 @@ func codegen(path String, parsed) {
 			RELOP: identity,
 			FUNCTIONDECL:   func(identifier, function) {
 				listStr("defn", identifier, function)
+			},
+			FUNCLIKEDECL:   func(funclike, identifier, function) {
+				listStr(funclike, identifier, function)
 			},
 			FUNCTIONLIT:    func(function) {listStr("fn", function)},
 			FUNCTIONPARTS:  func(functionpart...) {
