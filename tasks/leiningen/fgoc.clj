@@ -2,7 +2,8 @@
 (ns
  leiningen.fgoc
  (:gen-class)
- (:require [clojure.java.shell :as sh] [clojure.java.io :as io]))
+ (:require [clojure.java.shell :as sh])
+ (:require [clojure.java.io :as io]))
 
 (set! *warn-on-reflection* true)
 
@@ -11,7 +12,7 @@
  [project & args]
  (let
   [cmd-line
-   (concat ["java" "-jar" "bin/funcgo-0.1.24-standalone.jar"] args)
+   (concat ["java" "-jar" "bin/funcgo-0.1.25-standalone.jar"] args)
    result
    (apply sh/sh cmd-line)]
   (println (result :err))

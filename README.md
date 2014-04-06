@@ -29,6 +29,7 @@ read.
 In this section are Funcgo versions of some of the Clojure examples
 from the [Clojure Cookbook][cookbook].
 
+#### Defining and using a function
 ```go
 		func add(x, y) {
 			x + y
@@ -48,6 +49,7 @@ strategic locations.
 Funcgo does not have a `return` statement, rather a function simply
 returns the value of its last expression (often its only expression).
 
+#### Adding a file header
 ```go
 package example
 import(
@@ -59,6 +61,7 @@ Here we see what the top of a Funcgo source file called `example.go`
 might look like.  Here we import in a Clojure
 [string utility package][string] to be used in this file.
 
+#### Using symbols from other packages
 ```go
         string.isBlank("")
 
@@ -87,17 +90,19 @@ have to refer to the [Clojure documentation of its library][apidoc].
         => "DÉPÊCHEZ-VOUS, L'ORDINATEUR!"
 ```
 
+#### Specifying string escapes and regular expressions
 ```go
         string.replace("Who\t\nput  all this\fwhitespace here?", /\s+/, " ")
 
         => "Who put all this whitespace here?"
 ```
 
-The last example above shows that string escapes are familiar-looking
-to most programmers. It also introduces the syntax for _regular
+The example above shows that string escapes are familiar-looking to
+most programmers. It also introduces the syntax for _regular
 expression literals_, which are written between a pair of `/`
 characters.
 
+#### Concatenating strings
 ```go
         str("John", " ", "Doe")
 
@@ -109,6 +114,7 @@ languages you may be familiar with.  Instead you use the [`str`][str]
 function. This is one of the many functions defined in [`clojure.core`][ccore]
 that can be used without needing an `import` statement.
 
+#### Specifying local (immutable) variables
 ```go
         const(
                 firstName = "John"
@@ -125,6 +131,7 @@ Funcgo does *not* have mutable local variables. Instead, inside
 functions and other scopes you should create constants (whose values
 can not be changed.
 
+#### Specifying global (mutable) variables
 ```
 		var firstName = "John"
 		var lastName = "Doe"
@@ -144,6 +151,7 @@ declarations. Actually either type of declaration can be grouped or
 individual, but for `const` it is better to use the grouped version
 for multiple declarations because it generates more efficient Clojure.
 
+#### Using vectors
 ```go
         into([], range(1, 20))
         
@@ -157,6 +165,7 @@ to create a vector with the same values.
 This example also introduces vector literals, with the empty vector
 being passed as the first parameter of `into`.
 
+#### Getting cleaner syntax using infix notation
 ```go
         [] into range(1, 20)
         
@@ -169,6 +178,7 @@ takes two parameters `foo(param1, param2)` can alternatively be
 written in _infix_ notation as `param1 foo param2`.  This can
 sometimes lead to cleaner and more readable code.
 
+#### Specifying keyword and dictionary literals
 ```go
 		const me = {FIRST_NAME: "Eamonn", FAVORITE_LANGUAGE: "Funcgo"}
 		str("My name is ", me(FIRST_NAME),
@@ -190,6 +200,7 @@ this as dictionary keys.
 Note that to extract values from the dictionary you treat it as if it
 were a function, using the key as the parameter to the function.
 
+#### Combining infix and functional programming
 ```go
         str apply (" " interpose [1, 2.000, 3/1, 4/9])
         
@@ -207,6 +218,7 @@ functional programming language. The [`apply`][apply] function is an
 example of a function that takes a function as a parameter.  Here
 [`str`][str] is passed as the first argument.
 
+#### Inter-operating with Java or JavaScript
 ```go
 func isYelling(utterance String) {
   isEvery(
