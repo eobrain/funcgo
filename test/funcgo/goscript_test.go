@@ -6,7 +6,7 @@ import (
 
 
 test.fact("Clojure script import",
-        fgo.funcgoParse("p.gos", `
+        fgo.Parse("p.gos", `
 package p
 import(
   ef "enfocus/core"
@@ -21,7 +21,7 @@ import macros(
         `(ns p (:require [enfocus.core :as ef]) (:require-macros [enfocus.macros :as em])) 12345`)
 
 func parse(expr) {
-	fgo.funcgoParse("foo.gos", "package foo;" str expr)
+	fgo.Parse("foo.gos", "package foo;" str expr)
 }
 
 func parsed(expr) {
@@ -34,7 +34,7 @@ test.fact("symbol",
 )
 
 test.fact("enfocus",
-	fgo.funcgoParse("client.gos", `
+	fgo.Parse("client.gos", `
 package fgosite/client
 import (
 	ef "enfocus/core"

@@ -3,7 +3,7 @@
 	(:require [funcgo.core :as fgo]))
 
 (defn parse [expr]
-  (fgo/funcgo-parse "foo.go" (str "package foo;" expr)))
+  (fgo/Parse "foo.go" (str "package foo;" expr)))
 
 (defn parsed [expr]
   (str "(ns foo (:gen-class) ) (set! *warn-on-reflection* true) " expr))
@@ -25,19 +25,24 @@
       (parse "{A:1}")          => (parsed "{:a 1 }")
       (parse "{A:1, B:2}")     => (parsed "{:a 1 :b 2 }")
       (parse "{A:1, B:2, C:3}")=> (parsed "{:a 1 :b 2 :c 3 }"))
+(test/fact "private named functions"
+      (parse "func foo(){d}")     => (parsed "(defn- foo [] d)")
+      (parse "func foo(a){d}")    => (parsed "(defn- foo [a] d)")
+      (parse "func foo(a,b){d}")  => (parsed "(defn- foo [a b] d)")
+      (parse "func foo(a,b,c){d}")=> (parsed "(defn- foo [a b c] d)"))
 (test/fact "named functions"
-      (parse "func n(){d}")     => (parsed "(defn n [] d)")
-      (parse "func n(a){d}")    => (parsed "(defn n [a] d)")
-      (parse "func n(a,b){d}")  => (parsed "(defn n [a b] d)")
-      (parse "func n(a,b,c){d}")=> (parsed "(defn n [a b c] d)"))
+      (parse "func Foo(){d}")     => (parsed "(defn Foo [] d)")
+      (parse "func Foo(a){d}")    => (parsed "(defn Foo [a] d)")
+      (parse "func Foo(a,b){d}")  => (parsed "(defn Foo [a b] d)")
+      (parse "func Foo(a,b,c){d}")=> (parsed "(defn Foo [a b c] d)"))
 (test/fact "named functions space"
-      (parse "func n(a,b) {c}") => (parsed "(defn n [a b] c)"))
+      (parse "func n(a,b) {c}") => (parsed "(defn- n [a b] c)"))
 (test/fact "named multifunctions"
-      (parse "func n(a){b}(c){d}")=>(parsed "(defn n ([a] b) ([c] d))"))
+      (parse "func n(a){b}(c){d}")=>(parsed "(defn- n ([a] b) ([c] d))"))
 (test/fact "named varadic"
-      (parse "func n(a...){d}")  =>(parsed "(defn n [& a] d)")
-      (parse "func n(a,b...){d}")=>(parsed "(defn n [a & b] d)")
-      (parse "func n(a,b,c...){d}")=>(parsed "(defn n [a b & c] d)"))
+      (parse "func n(a...){d}")  =>(parsed "(defn- n [& a] d)")
+      (parse "func n(a,b...){d}")=>(parsed "(defn- n [a & b] d)")
+      (parse "func n(a,b,c...){d}")=>(parsed "(defn- n [a b & c] d)"))
 (test/fact "anonymous functions"
       (parse "func(){c}")      => (parsed "(fn [] c)")
       (parse "func(a,b){c}")   => (parsed "(fn [a b] c)"))
@@ -218,7 +223,7 @@
            (parse "format") => (parsed "format")
            (parse "ranged") => (parsed "ranged"))
 
-(test/fact "full source file" (fgo/funcgo-parse "foo.go" "
+(test/fact "full source file" (fgo/Parse "foo.go" "
 package foo
 import(
   b \"bar/baz\"

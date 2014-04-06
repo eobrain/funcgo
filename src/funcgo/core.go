@@ -22,10 +22,10 @@ import (
 )
 
 
-func funcgoParse(path, fgo) {
-	funcgoParse(path, fgo, false)
+func Parse(path, fgo) {
+	Parse(path, fgo, false)
 } (path, fgo, isNodes) {
-        const parsed = parser.funcgoParser(string.replace(fgo, /\t/, "        "))
+        const parsed = parser.Parse(string.replace(fgo, /\t/, "        "))
         if insta.isFailure(parsed) {
                 failure.pprintFailure(parsed)
                 throw(new Exception(`"SYNTAX ERROR"`))
@@ -33,7 +33,7 @@ func funcgoParse(path, fgo) {
 		if isNodes {
 			pprint.pprint(parsed)
 		}
-		codegen.codegen(path, parsed)
+		codegen.Generate(path, parsed)
         }
 }
 

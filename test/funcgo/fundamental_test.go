@@ -5,12 +5,13 @@ import (
 )
 
 func parse(expr) {
-	fgo.funcgoParse("foo.go", "package foo;" str expr)
+	fgo.Parse("foo.go", "package foo;" str expr)
 }
 
 test.fact("func",
-	parse("func a(b,c){d;e}"), =>, parse("defn(a,[b,c],d,e)"),
-	parse("func<defn> a(b,c){d;e}"), =>, parse("func a(b,c){d;e}")
+	parse("func foo(b,c){d;e}"),       =>, parse("\\`defn-`(foo,[b,c],d,e)"),
+	parse("func Foo(b,c){d;e}"),       =>, parse("defn(Foo,[b,c],d,e)"),
+	parse("func<defn> Foo(b,c){d;e}"), =>, parse("func Foo(b,c){d;e}")
 )
 
 test.fact("funcform",

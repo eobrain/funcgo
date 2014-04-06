@@ -17,7 +17,7 @@ import (
 )
 
 
-funcgoParser := insta.parser(`
+var Parse = insta.parser(`
 sourcefile = [ NL ] packageclause expressions _
  <_> =      <#'[ \t\x0B\f\r\n]*'> | comment+                                 (* optional whitespace *)
  <_nonNL> = <#'[ \t\x0B\f\r]*'>                                  (* optional non-newline whitespace *)

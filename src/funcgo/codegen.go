@@ -35,7 +35,7 @@ func infix(expression) {
 	listStr(operator, left, right)
 }
 
-func codegen(path String, parsed) {
+func Generate(path String, parsed) {
 	const(
 		isGoscript    = path->endsWith(".gos")
 		codeGenerator =  {
@@ -166,7 +166,8 @@ func codegen(path String, parsed) {
 			ADDOP: identity,
 			RELOP: identity,
 			FUNCTIONDECL:   func(identifier, function) {
-				listStr("defn", identifier, function)
+				const defn = if /^[A-Z]/ reFind identifier { "defn" } else { "defn-" }
+				listStr(defn, identifier, function)
 			},
 			FUNCLIKEDECL:   func(funclike, identifier, function) {
 				listStr(funclike, identifier, function)
