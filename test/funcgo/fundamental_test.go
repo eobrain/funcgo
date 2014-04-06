@@ -9,11 +9,12 @@ func parse(expr) {
 }
 
 test.fact("func",
-	parse("func a(b,c){d;e}"), =>, parse("defn(a,[b,c],d,e)")
+	parse("func a(b,c){d;e}"), =>, parse("defn(a,[b,c],d,e)"),
+	parse("func<defn> a(b,c){d;e}"), =>, parse("func a(b,c){d;e}")
 )
 
 test.fact("funcform",
-	parse("func(something) a(b,c){d;e}"), =>, parse("something(a,[b,c],d,e)")
+	parse("func<something> a(b,c){d;e}"), =>, parse("something(a,[b,c],d,e)")
 )
 
 test.fact("if",
