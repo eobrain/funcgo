@@ -35,6 +35,12 @@ func infix(expression) {
 	listStr(operator, left, right)
 }
 
+// Capitalized
+func isPublic(identifier) {
+	// TODO(eob) handle general Unicode
+	/^[A-Z]/ reFind identifier
+}
+
 func Generate(path String, parsed) {
 	const(
 		isGoscript    = path->endsWith(".gos")
@@ -102,12 +108,29 @@ func Generate(path String, parsed) {
 			},
 			NEW: func(symbol){str(symbol, ".")},
 			SHORTVARDECL:   func(identifier, expression) {
-				listStr("def", identifier, expression)
+				if isPublic(identifier) {
+					listStr("def", identifier, expression)
+				} else {
+					listStr("def", "^:private", identifier, expression)
+				}
 			},
 			VARDECL:   func(identifier, expression) {
-				listStr("def", identifier, expression)
+				if isPublic(identifier) {
+					listStr("def", identifier, expression)
+				} else {
+					listStr("def", "^:private", identifier, expression)
+				}
 			} (identifier, typ, expression) {
-				listStr("def", "^" str typ, identifier, expression)
+				if isPublic(identifier) {
+					listStr("def", "^" str typ, identifier, expression)
+				} else {
+					listStr("def",
+						"^:private",
+						"^" str typ,
+						identifier,
+						expression
+					)
+				}
 			},
 			FUNCTIONCALL:    func(function) {
 				listStr(function)
@@ -166,7 +189,7 @@ func Generate(path String, parsed) {
 			ADDOP: identity,
 			RELOP: identity,
 			FUNCTIONDECL:   func(identifier, function) {
-				const defn = if /^[A-Z]/ reFind identifier { "defn" } else { "defn-" }
+				const defn = if isPublic(identifier) { "defn" } else { "defn-" }
 				listStr(defn, identifier, function)
 			},
 			FUNCLIKEDECL:   func(funclike, identifier, function) {

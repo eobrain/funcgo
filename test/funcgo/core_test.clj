@@ -242,4 +242,4 @@ func FooBar(iii, jjj) {
     }
   )
 }
-")  => "(ns foo (:gen-class) (:require [bar.baz :as b] [foo.faz.fedudle :as ff])) (set! *warn-on-reflection* true) (def x (b/bbb \"blah blah\")) (defn Foo-bar [iii jjj] (ff/fumanchu {:ooo (fn [m n] (str m n)) :ppp (fn [m n] (str m n)) :qqq qq }))")
+")  => "(ns foo (:gen-class) (:require [bar.baz :as b] [foo.faz.fedudle :as ff])) (set! *warn-on-reflection* true) (def ^:private x (b/bbb \"blah blah\")) (defn Foo-bar [iii jjj] (ff/fumanchu {:ooo (fn [m n] (str m n)) :ppp (fn [m n] (str m n)) :qqq qq }))")

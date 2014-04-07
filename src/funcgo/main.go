@@ -11,6 +11,9 @@
 // Eamonn O'Brien-Strain e@obrain.com - initial author
 //////
 
+// This file contains the entry point for the standalone version of
+// the Funcgo compile and is called by the Leiningen plugin.
+
 package  funcgo/main
 import (
         "clojure/java/io"
@@ -20,7 +23,7 @@ import (
         "funcgo/core"
 )
 
-cliOptions := [
+commandLineOptions := [
         ["-n", "--nodes", "print out the parse tree that the parser produces"],
         ["-f", "--force", "Force compiling even if not out-of-date"],
         ["-h", "--help", "print help"]
@@ -32,16 +35,49 @@ func prettyPrint(obj, writer) {
         const origDispatch = \`pprint/*print-pprint-dispatch*`
         pprint.withPprintDispatch(
                 func(o) {
-                        if meta(o) {
-                                print("^")
-                                origDispatch(meta(o)(TAG))
-                                print(" ")
-                                pprint.pprintNewline(FILL)
-                        }
+			const met = meta(o)
+                        if met {
+				print("^")
+				if count(met) == 1 {
+					if met(TAG) {
+						origDispatch(met(TAG))
+					} else {
+						if met(PRIVATE) == true {
+							origDispatch(PRIVATE)
+						} else {
+							origDispatch(met)
+						}
+					}
+				} else {
+					origDispatch(met)
+				}
+				print(" ")
+				pprint.pprintNewline(FILL)
+			}
                         origDispatch(o)
                 },
                 pprint.pprint(obj, writer)
         )
+}
+
+func writePrettyTo(cljText, writer java.io.BufferedWriter) {
+	for expr := range readString( str("[", cljText, "]")) {
+		prettyPrint(expr, writer)
+		writer->newLine()
+	}
+	writer->close()
+}
+
+
+func CompileString(inPath, fgoText) {
+	const (
+		cljText = core.Parse(inPath, fgoText)
+		strWriter = new java.io.StringWriter()
+		writer = new java.io.BufferedWriter(strWriter)
+	){
+		cljText writePrettyTo writer
+		strWriter->toString()
+	}
 }
 
 func compileFile(inFile java.io.File, opts) {
@@ -52,16 +88,12 @@ func compileFile(inFile java.io.File, opts) {
         if opts(FORCE) || outFile->lastModified() < inFile->lastModified() {
                 println(inPath)
                 const(
-                        clj = core.Parse(inPath, slurp(inFile), opts(NODES))
+                        cljText = core.Parse(inPath, slurp(inFile), opts(NODES))
                         // TODO(eob) open using with-open
-                        writer java.io.BufferedWriter = io.writer(outFile)
+                        writer = io.writer(outFile)
                 )
-                writer->write(str(";; Compiled from ", inFile, "\n"))
-                for expr := range readString( str("[", clj, "]")) {
-                        prettyPrint(expr, writer)
-                        writer->newLine()
-                }
-                writer->close()
+		writer->write(str(";; Compiled from ", inFile, "\n"))
+		cljText writePrettyTo writer
                 println("  -->", outFile->getPath())
                 if (outFile->length) / (inFile->length) < 0.5 {
                         println("WARNING: Output file is only",
@@ -71,10 +103,12 @@ func compileFile(inFile java.io.File, opts) {
         }
 }
 
- // Convert funcgo to clojure
+// Convert Funcgo files to clojure files, using the commandLineOptions
+// to parse the arguments.  By default compiles all modified files
+// under the current directory.
 func Compile(args...) {
 	const(
-		cmdLine   = args cli.parseOpts cliOptions
+		cmdLine   = args cli.parseOpts commandLineOptions
 		otherArgs = cmdLine(ARGUMENTS)
 		opts      = cmdLine(OPTIONS)
 	) {
@@ -109,7 +143,8 @@ func Compile(args...) {
 	}
 }
 
- // Convert funcgo to clojure
+// Entry point for stand-alone compiler. Usage is the same as for the
+// Compile function.
 func _main(args...) {
 	Compile apply args
 }
