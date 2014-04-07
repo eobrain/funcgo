@@ -11,7 +11,4 @@ pom.xml.asc
 /src/*.clj
 /src/*/*.clj
 /test/*.clj
-/test/funcgo/clojure_cookbook_test.clj
-/test/funcgo/compiler_test.clj
-/test/funcgo/goscript_test.clj
-/test/funcgo/fundamental_test.clj
+/test/*/*.clj
