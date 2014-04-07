@@ -41,9 +41,15 @@ func isPublic(identifier) {
 	/^[A-Z]/ reFind identifier
 }
 
+// Return a function that always returns the given constant string.
+func constantFunc(s) {
+	 func(){s}
+}
+
 func Generate(path String, parsed) {
 	const(
 		isGoscript    = path->endsWith(".gos")
+		//context       = string.replace(path, /\//
 		codeGenerator =  {
 			SOURCEFILE:     func(header, body) {str(header, " ", body)},
 			PACKAGECLAUSE:  func(imported, importDecls) {
@@ -256,20 +262,21 @@ func Generate(path String, parsed) {
 			FLOATLIT:      str,
 			DECIMALS:      identity,
 			EXPONENT:      str,
-			REGEX:         func(s){str(`#"`, s, `"`)},
-			INTERPRETEDSTRINGLIT: func(s){str(`"`, s, `"`)},
+			REGEX:         func(s...){str(`#"`, str apply s, `"`)},
+			ESCAPEDSLASH: constantFunc(`/`),
+			INTERPRETEDSTRINGLIT: func(s...){str(`"`, str apply s, `"`)},
 			CLOJUREESCAPE: identity,
 			LITTLEUVALUE:  func(d1,d2,d3,d4){str(`\u`,d1,d2,d3,d4)},
 			OCTALBYTEVALUE:  func(d1,d2,d3){str(`\o`,d1,d2,d3)},
 			UNICODECHAR:   func(s){`\` str s},
-			NEWLINECHAR:   func(){`\newline`},
-			SPACECHAR:     func(){`\space`},
-			BACKSPACECHAR: func(){`\backspace`},
-			RETURNCHAR:    func(){`\return`},
-			TABCHAR:       func(){`\tab`},
-			BACKSLASHCHAR: func(){`\\`},
-			SQUOTECHAR:    func(){`\'`},
-			DQUOTECHAR:    func(){`\"`},
+			NEWLINECHAR:   constantFunc(`\newline`),
+			SPACECHAR:     constantFunc(`\space`),
+			BACKSPACECHAR: constantFunc(`\backspace`),
+			RETURNCHAR:    constantFunc(`\return`),
+			TABCHAR:       constantFunc(`\tab`),
+			BACKSLASHCHAR: constantFunc(`\\`),
+			SQUOTECHAR:    constantFunc(`\'`),
+			DQUOTECHAR:    constantFunc(`\"`),
 			HEXDIGIT:      identity,
 			OCTALDIGIT:    identity,
 			RAWSTRINGLIT:  func(s){str(`"`, s.escape(s, charEscapeString), `"`)},
@@ -285,12 +292,12 @@ func Generate(path String, parsed) {
 			},
 			ESCAPEDIDENTIFIER:  func(identifier) { identifier },
 			UNARYEXPR: func(operator, expression) { listStr(operator, expression) },
-			NOTEQ:       func(){ "not=" },
-			BITXOR:      func(){ "bit-xor" },
-			BITNOT:      func(){ "bit-not" },
-			SHIFTLEFT:   func(){ "bit-shift-left" },
-			SHIFTRIGHT:  func(){ "bit-shift-right" },
-			NOT:         func(){ "not" },
+			NOTEQ:       constantFunc("not="),
+			BITXOR:      constantFunc("bit-xor"),
+			BITNOT:      constantFunc("bit-not"),
+			SHIFTLEFT:   constantFunc("bit-shift-left"),
+			SHIFTRIGHT:  constantFunc("bit-shift-right"),
+			NOT:         constantFunc("not"),
 			DEREF: func(expression) { str("@", expression) },
 			SYNTAXQUOTE: func(expression)     { str("`", expression) },
 			UNQUOTE: func(expression)         { str("~", expression) },
