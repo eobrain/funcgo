@@ -30,9 +30,14 @@ package foo
         `(ns foo (:gen-class)) (set! *warn-on-reflection* true) 12345`)
 
 test.fact("package can be dotted",
-        compileString("foo.go", "package foo/bar;12345"),
+        compileString("foo/bar.go", "package foo/bar;12345"),
         => ,
         `(ns foo.bar (:gen-class)) (set! *warn-on-reflection* true) 12345`)
+
+test.fact("package can be dotted",
+        compileString("yippee/yaday/yahoo/boys.go", "package yippee/yaday/yahoo/boys;12345"),
+        => ,
+        `(ns yippee.yaday.yahoo.boys (:gen-class)) (set! *warn-on-reflection* true) 12345`)
 
 test.fact("can import other packages",
         compileString("foo.go", `
@@ -43,7 +48,8 @@ import(
 12345
 `),
         =>,
-        `(ns foo (:gen-class) (:require [bar :as b])) (set! *warn-on-reflection* true) 12345`)
+        `(ns foo (:gen-class) (:require [bar :as b])) (set! *warn-on-reflection* true) 12345`
+)
 
 func parse(expr) {
 	compileString("foo.go", "package foo;" str expr)
@@ -230,8 +236,8 @@ test.fact("labels have no lower case",
 test.fact("dictionary literals",
 	parse("{}")             ,=>, parsed("{}"),
 	parse("{A:1}")          ,=>, parsed("{:a 1}"),
-	parse("{A:1, B:2}")     ,=>, parsed("{:a 1 :b 2}"),
-	parse("{A:1, B:2, C:3}"),=>, parsed("{:a 1 :b 2 :c 3}")
+	parse("{A:1, B:2}")     ,=>, parsed("{:a 1, :b 2}"),
+	parse("{A:1, B:2, C:3}"),=>, parsed("{:a 1, :b 2, :c 3}")
 )
 test.fact("private named functions",
 	parse("func foo(){d}")     ,=>, parsed("(defn- foo [] d)"),
@@ -275,8 +281,8 @@ test.fact("can have strings",
       parse(`"one two"`)    ,=>, parsed(`"one two"`)
 )
 test.fact("characters in raw",
-	parse("`\n'\b`")   ,=>, parsed("`\\n'\\b`"),
-	parse(str("`", `"`, "`"))   ,=>, parsed(str("`\", `"`, "`"))
+	parse("`\n'\b`")   ,=>, parsed(`"\n'\b"`),
+	parse(str("`", `"`, "`"))   ,=>, parsed(`"\""`)
 )
 test.fact("backslash in raw",
       parse("`foo\\bar`")      ,=>, parsed(`"foo\\bar"`)
@@ -489,5 +495,14 @@ func FooBar(iii, jjj) {
 `)  ,=>, `(ns foo (:gen-class) (:require [bar.baz :as b] [foo.faz.fedudle :as ff])) (set! *warn-on-reflection* true) (def ^:private x (b/bbb "blah blah")) (defn Foo-bar [iii jjj] (ff/fumanchu {:ooo (fn [m n] (str m n)) :ppp (fn [m n] (str m n)) :qqq qq }))`)
 
 
+test.fact("Escaped string terminater",
+      parse(`"aaa\"aaa"`), =>, parsed(`"aaa\"aaa"`)
+)
 
+test.fact("Escaped regex terminater",
+	parse(`/aaa\/bbb/`)          ,=>, parsed(`#"aaa/bbb"`)
+)
+
+//test.fact("",
 //      parse(``), =>, parsed(``),
+//)

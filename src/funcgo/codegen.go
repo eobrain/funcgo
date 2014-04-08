@@ -46,20 +46,46 @@ func constantFunc(s) {
 	 func(){s}
 }
 
+func splitPath(path) {
+	const(
+		slash = path->lastIndexOf(int('/'))
+		beforeSlash = subs(path, 0, slash + 1)
+		afterSlash = subs(path, slash + 1)
+	)
+	[
+		s.replace(beforeSlash, '/', '.'),
+		s.replace(afterSlash, /\.gos?$/, "")
+	]
+}
+
 func Generate(path String, parsed) {
 	const(
 		isGoscript    = path->endsWith(".gos")
-		//context       = string.replace(path, /\//
+		// [parent, name] = splitPath(path)
 		codeGenerator =  {
 			SOURCEFILE:     func(header, body) {str(header, " ", body)},
 			PACKAGECLAUSE:  func(imported, importDecls) {
-				if isGoscript {
-					listStr("ns", imported, importDecls)
-				} else {
-					str(
-						listStr("ns", imported, "(:gen-class)", importDecls),
-						" (set! *warn-on-reflection* true)"
-					)
+				const (
+					fullImported = imported //parent str imported
+				) {
+					//if imported != name {
+					//	throw(new java.lang.Exception(str(
+					//		`Got package "`, imported, `" instead of expected "`,
+					//		name, `" in "`, path, `"`
+					//	)))
+					//}
+					if isGoscript {
+						listStr("ns", fullImported, importDecls)
+					} else {
+						str(
+							listStr("ns",
+								fullImported,
+								"(:gen-class)",
+								importDecls
+							),
+							" (set! *warn-on-reflection* true)"
+						)
+					}
 				}
 			},
 		        IMPORTDECLS: blankJoin,

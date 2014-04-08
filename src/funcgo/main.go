@@ -82,6 +82,7 @@ func CompileString(inPath, fgoText) {
 
 func compileFile(inFile java.io.File, opts) {
         const(
+                //inPath = string.replace(inFile->getPath(), /^[^\/]*\//, "")
                 inPath = inFile->getPath()
                 outFile = io.file(string.replace(inPath, /\.go(s?)$/, ".clj$1"))
         )

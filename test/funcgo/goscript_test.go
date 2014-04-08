@@ -34,7 +34,7 @@ test.fact("symbol",
 )
 
 test.fact("enfocus",
-	fgo.Parse("client.gos", `
+	fgo.Parse("fgosite/client.gos", `
 package fgosite/client
 import (
 	ef "enfocus/core"
