@@ -1,4 +1,4 @@
-package funcgo/fundamental_test
+package fundamental_test
 import (
         test "midje/sweet"
         fgoc "funcgo/main"

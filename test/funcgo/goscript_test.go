@@ -1,4 +1,4 @@
-package funcgo/goscript_test
+package goscript_test
 import (
         test "midje/sweet"
         fgo "funcgo/core"
@@ -35,7 +35,7 @@ test.fact("symbol",
 
 test.fact("enfocus",
 	fgo.Parse("fgosite/client.gos", `
-package fgosite/client
+package client
 import (
 	ef "enfocus/core"
         "enfocus/effects"

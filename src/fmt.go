@@ -1,7 +1,4 @@
 package fmt
 
-import(
-)
-
-Println := println
-Printf  := printf
+var Println = println
+var Printf = printf

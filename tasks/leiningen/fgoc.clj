@@ -1,4 +1,4 @@
-;; Compiled from ./tasks/leiningen/fgoc.go
+;; Compiled from tasks/leiningen/fgoc.go
 (ns
  leiningen.fgoc
  (:gen-class)
@@ -11,7 +11,14 @@
  [project & args]
  (let
   [cmd-line
-   (concat ["java" "-jar" "bin/funcgo-0.1.26-standalone.jar"] args)
+   (concat
+    ["java"
+     "-jar"
+     "bin/funcgo-0.1.27-standalone.jar"
+     "src"
+     "test"
+     "tasks"]
+    args)
    result
    (apply sh/sh cmd-line)]
   (println (result :err))

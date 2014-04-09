@@ -1,4 +1,4 @@
-package funcgo/compiler_test
+package compiler_test
 import (
         test "midje/sweet"
         fgo "funcgo/core"
@@ -30,12 +30,12 @@ package foo
         `(ns foo (:gen-class)) (set! *warn-on-reflection* true) 12345`)
 
 test.fact("package can be dotted",
-        compileString("foo/bar.go", "package foo/bar;12345"),
+        compileString("foo/bar.go", "package bar;12345"),
         => ,
         `(ns foo.bar (:gen-class)) (set! *warn-on-reflection* true) 12345`)
 
 test.fact("package can be dotted",
-        compileString("yippee/yaday/yahoo/boys.go", "package yippee/yaday/yahoo/boys;12345"),
+        compileString("yippee/yaday/yahoo/boys.go", "package boys;12345"),
         => ,
         `(ns yippee.yaday.yahoo.boys (:gen-class)) (set! *warn-on-reflection* true) 12345`)
 

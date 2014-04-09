@@ -11,11 +11,11 @@
 // Eamonn O'Brien-Strain e@obrain.com - initial author
 //////
 
-package  funcgo/parser
-import (
-        insta "instaparse/core"
-)
+package parser
 
+import (
+	insta "instaparse/core"
+)
 
 var Parse = insta.parser(`
 sourcefile = [ NL ] packageclause expressions _

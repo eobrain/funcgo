@@ -11,9 +11,9 @@
 // Eamonn O'Brien-Strain e@obrain.com - initial author
 //////
 
-package  funcgo/core
+package  core
 import (
-        insta   "instaparse/core"
+        insta "instaparse/core"
         "clojure/pprint"
         "instaparse/failure"
         "clojure/string"

@@ -1,8 +1,5 @@
 package net
 
-import(
-)
-
 func Dial(network, address) {
 	const(
 		socket = new java.net.Socket("127.0.0.1", 1234)

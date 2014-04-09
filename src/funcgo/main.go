@@ -14,7 +14,7 @@
 // This file contains the entry point for the standalone version of
 // the Funcgo compile and is called by the Leiningen plugin.
 
-package  funcgo/main
+package  main
 import (
         "clojure/java/io"
         "clojure/pprint"
@@ -23,7 +23,7 @@ import (
         "funcgo/core"
 )
 
-commandLineOptions := [
+var commandLineOptions = [
         ["-n", "--nodes", "print out the parse tree that the parser produces"],
         ["-f", "--force", "Force compiling even if not out-of-date"],
         ["-h", "--help", "print help"]
@@ -80,28 +80,56 @@ func CompileString(inPath, fgoText) {
 	}
 }
 
-func compileFile(inFile java.io.File, opts) {
+func compileFile(inFile java.io.File, root java.io.File, opts) {
         const(
-                //inPath = string.replace(inFile->getPath(), /^[^\/]*\//, "")
                 inPath = inFile->getPath()
                 outFile = io.file(string.replace(inPath, /\.go(s?)$/, ".clj$1"))
         )
         if opts(FORCE) || outFile->lastModified() < inFile->lastModified() {
-                println(inPath)
+                println("  ", inPath)
                 const(
-                        cljText = core.Parse(inPath, slurp(inFile), opts(NODES))
+			prefixLen = root->getAbsolutePath()->length()
+			relative = subs(inFile->getAbsolutePath(), prefixLen + 1)
+                        cljText = core.Parse(relative, slurp(inFile), opts(NODES))
                         // TODO(eob) open using with-open
                         writer = io.writer(outFile)
                 )
 		writer->write(str(";; Compiled from ", inFile, "\n"))
 		cljText writePrettyTo writer
-                println("  -->", outFile->getPath())
+                println("    -->", outFile->getPath())
                 if (outFile->length) / (inFile->length) < 0.5 {
                         println("WARNING: Output file is only",
                                 int(100 * (outFile->length) / (inFile->length)),
                                 "% the size of the input file")
                 }
         }
+}
+
+func compileTree(root, opts) {
+	println("Compiling under root ", root->getName())
+	for f := range fileSeq(root) {
+		const (
+			ff java.io.File = f
+			name = ff->getName
+		)
+		try {
+			if name->endsWith(".go") || name->endsWith(".gos") { 
+				compileFile(ff, root, opts)
+			}
+		} catch Exception e {
+			println("\n", e->getMessage())
+		}
+	}
+}
+
+func printError(cmdLine) {
+	println()
+	if cmdLine(ERRORS) {
+		println(cmdLine(ERRORS))
+	}
+	println("USAGE:  fgoc [options] path ...")
+	println("options:")
+	println(cmdLine(SUMMARY))
 }
 
 // Convert Funcgo files to clojure files, using the commandLineOptions
@@ -112,31 +140,29 @@ func Compile(args...) {
 		cmdLine   = args cli.parseOpts commandLineOptions
 		otherArgs = cmdLine(ARGUMENTS)
 		opts      = cmdLine(OPTIONS)
+		here      = io.file(".")
 	) {
 		if cmdLine(ERRORS) || opts(HELP){
-			println("ERROR: ", cmdLine(ERRORS))
 			println(cmdLine(SUMMARY))
 		}else{
 			if not(seq(otherArgs)) {
-				for f := range fileSeq(io.file(".")) {
-					const (
-						ff java.io.File = f
-						name = ff->getName
-					)
-					try {
-						if name->endsWith(".go") || name->endsWith(".gos") { 
-							compileFile(ff, opts)
-						}
-					} catch Exception e {
-						println("\n", e->getMessage())
-					}
-				}
+				println("Missing directory or file argument.")
+				printError(cmdLine)
 			} else {
+				// file argumentd
 				for arg := range otherArgs {
-					try {
-						compileFile(io.file(arg), opts)
-					} catch Exception e {
-						println("\n", e->getMessage())
+					const (
+						file = io.file(arg)
+					) {
+						if file->isDirectory {
+							compileTree(file, opts)
+						} else {
+							try {
+								compileFile(file, here, opts)
+							} catch Exception e {
+								println("\n", e->getMessage())
+							}
+						}
 					}
 				}
 			}

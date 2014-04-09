@@ -11,7 +11,7 @@
 // Eamonn O'Brien-Strain e@obrain.com - initial author
 //////
 
-package  funcgo/codegen
+package  codegen
 import (
         s     "clojure/string"
         insta "instaparse/core"
@@ -46,7 +46,7 @@ func constantFunc(s) {
 	 func(){s}
 }
 
-func splitPath(path) {
+func splitPath(path String) {
 	const(
 		slash = path->lastIndexOf(int('/'))
 		beforeSlash = subs(path, 0, slash + 1)
@@ -61,19 +61,19 @@ func splitPath(path) {
 func Generate(path String, parsed) {
 	const(
 		isGoscript    = path->endsWith(".gos")
-		// [parent, name] = splitPath(path)
+		[parent, name] = splitPath(path)
 		codeGenerator =  {
 			SOURCEFILE:     func(header, body) {str(header, " ", body)},
 			PACKAGECLAUSE:  func(imported, importDecls) {
 				const (
-					fullImported = imported //parent str imported
+					fullImported = parent str imported
 				) {
-					//if imported != name {
-					//	throw(new java.lang.Exception(str(
-					//		`Got package "`, imported, `" instead of expected "`,
-					//		name, `" in "`, path, `"`
-					//	)))
-					//}
+					if imported != name {
+						throw(new java.lang.Exception(str(
+							`Got package "`, imported, `" instead of expected "`,
+							name, `" in "`, path, `"`
+						)))
+					}
 					if isGoscript {
 						listStr("ns", fullImported, importDecls)
 					} else {

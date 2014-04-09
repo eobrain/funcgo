@@ -1,4 +1,4 @@
-package funcgo/clojure_cookbook_test
+package clojure_cookbook_test
 import(
         test "midje/sweet"
         fgo "funcgo/core"

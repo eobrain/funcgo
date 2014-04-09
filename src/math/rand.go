@@ -1,6 +1,3 @@
-package math/rand
-import (
-)
+package rand
 
-Intn := randInt
-
+var Intn = randInt
