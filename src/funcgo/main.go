@@ -105,7 +105,7 @@ func compileFile(inFile java.io.File, root java.io.File, opts) {
         }
 }
 
-func compileTree(root, opts) {
+func compileTree(root java.io.File, opts) {
 	println("Compiling under root ", root->getName())
 	for f := range fileSeq(root) {
 		const (

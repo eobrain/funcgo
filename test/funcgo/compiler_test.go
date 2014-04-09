@@ -239,6 +239,15 @@ test.fact("dictionary literals",
 	parse("{A:1, B:2}")     ,=>, parsed("{:a 1, :b 2}"),
 	parse("{A:1, B:2, C:3}"),=>, parsed("{:a 1, :b 2, :c 3}")
 )
+//test.fact("set literals",
+//	parse("emptyset")           ,=>, parsed("#{}"),
+//	parse("{A}")                ,=>, parsed("#{:a}"),
+//	parse("{A, B}")             ,=>, parsed("#{:a :b}"),
+//	parse("{A, B, C}")          ,=>, parsed("#{:a :b :c}")
+//	parse(`{"A", "B", "C"}`)    ,=>, parsed(`#{"A" "B" "C"}`)
+//	parse(`{'A', 'B', 'C'}`)    ,=>, parsed(`#{\A \B \C}`)
+//	parse(`{A, "B", 'C', 999}`) ,=>, parsed(`#{:a "B" \C 999}`)
+//)
 test.fact("private named functions",
 	parse("func foo(){d}")     ,=>, parsed("(defn- foo [] d)"),
 	parse("func foo(a){d}")    ,=>, parsed("(defn- foo [a] d)"),
