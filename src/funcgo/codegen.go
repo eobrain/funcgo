@@ -94,7 +94,7 @@ var codeGenerator =  {
 	FORLAZY: func(identifier, seq, expressions) {
 		str("(for [", identifier, " ", seq, "] ", expressions, ")")
 	} (identifier, seq, condition, expressions) {
-		str("(for [", identifier, " ", seq, "] :when ", condition, " ", expressions, ")")
+		str("(for [", identifier, " ", seq, " :when ", condition, "] ", expressions, ")")
 	},
 	FORTIMES: func(identifier, count, expressions) {
 		str("(dotimes [", identifier, " ", count, "] ", expressions, ")")
@@ -241,6 +241,7 @@ var codeGenerator =  {
 	},
 	DICTLIT:        func(dictElems...) {apply(str, dictElems)},
 	DICTELEMENT:    func(key, value) {str(key, " ", value, " ")},
+	SETLIT:          func(elems...) { str("#{", " " s.join elems, "}") },
 	LABEL:          func(s) {
 		str(":", s.replace(s.lowerCase(s), /_/, "-"))
 	},

@@ -46,8 +46,8 @@ sourcefile = [ NL ] packageclause expressions _
              vecdestruct = <'['> _ VecDestructElem _ { <','> _ VecDestructElem _  } <']'>
                <VecDestructElem> = Destruct | variadicdestruct | label
                  variadicdestruct = Destruct <'...'>
-             dictdestruct = <'{'> dictdestructelem {  <','> _ dictdestructelem } <'}'>
-               dictdestructelem = (Destruct|label) _ <':'> _ Expression
+             dictdestruct = <'{'> dictdestructelem {  _ <','> _ dictdestructelem } <'}'>
+               dictdestructelem = Destruct _ <':'> _ Expression
      precedence0 = precedence1 | ( precedence0 _nonNL symbol _nonNL precedence1 )
        symbol = (( Identifier <'.'> )? Identifier ) | javastatic
        precedence1 = precedence2 | ( precedence1 _ or _ precedence2 )
@@ -83,10 +83,10 @@ sourcefile = [ NL ] packageclause expressions _
      ifelseexpr = <'if'> _ Expression _ ( ( block _ <'else'> _ block ) |
                   ( _ <'{'> _ expressions _ <'}'> )   )
        block = <'{'> _ Expression { NL Expression } _ <'}'>
-     forrange = <'for'> <__> Identifier _ <':='> _ <'range'> <_> Expression _
+     forrange = <'for'> <__> Destruct _ <':='> _ <'range'> <_> Expression _
                 <'{'> _ expressions _ <'}'>
-     forlazy = <'for'> <__> Identifier _ <':='> _ <'lazy'> <_> Expression
-               [ <__> <'if'> <__> Expression ] _ <'{'> _ expressions _ <'}'>
+     forlazy = <'for'> <__> Destruct _ <':='> _ <'lazy'> <_> Expression
+               ( <__> <'if'> <__> Expression )? _ <'{'> _ expressions _ <'}'>
      fortimes = <'for'> <__> Identifier _ <':='> _ <'times'> <_> Expression _
                 <'{'> _ expressions _ <'}'>
      tryexpr = <'try'> _ <'{'> _ expressions _ <'}'> _ catches ( _ finally )?
@@ -130,7 +130,7 @@ sourcefile = [ NL ] packageclause expressions _
                    variadic = Identifier <'...'>
          <Operand> = Literal | OperandName | label | new  | ( <'('> Expression <')'> ) (*|MethodExpr*)
            label = #'\b\p{Lu}[\p{Lu}_0-9]*\b'
-           <Literal> = BasicLit | veclit | dictlit | functionlit
+           <Literal> = BasicLit | veclit | dictlit | setlit | functionlit
              functionlit = <'func'> _ Function
              <BasicLit> = int_lit | bigintlit | string_lit | regex  | rune_lit | floatlit | bigfloatlit (*| imaginary_lit *)
                floatlit = decimals '.' [ decimals ] [ exponent ]
@@ -169,6 +169,7 @@ sourcefile = [ NL ] packageclause expressions _
 	     veclit = <'['> _ (( Expression { _ <','> _ Expression _ } )? )? <']'>
 	     dictlit = '{' _ ( dictelement _ { <','> _ dictelement } )? _ '}'
                dictelement = Expression _ <':'> _ Expression
+             setlit = <'set'> _ <'{'> ( _ Expression _ { <','> _ Expression } )? _ <'}'>
            new = <'new'> <__> type
            <OperandName> = symbol | NonAlphaSymbol                           (*| QualifiedIdent*)
              <NonAlphaSymbol> = '=>' | '->>' | relop | addop | mulop | unary_op

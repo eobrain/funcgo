@@ -160,9 +160,9 @@ test.fact("Map Destructuring",
         =>,
         parsed(`(let [{the-x :x, the-y :y} point] (f the-x the-y))`),
 
-        parse(`const({name: NAME, {KEYS: [pages, \isbn10]}: DETAILS} = book) f(name,pages,\isbn10)`),
+        parse(`const({name: NAME, {[pages, \isbn10]: KEYS}: DETAILS} = book) f(name,pages,\isbn10)`),
         =>,
-        parsed(`(let [{name :name, {:keys [pages isbn10]} :details} book] (f name pages isbn10))`),
+        parsed(`(let [{name :name, {[pages isbn10] :keys} :details} book] (f name pages isbn10))`),
         
         parse(`const({name: NAME, [hole1, hole2]: SCORES} = golfer) f(name, hole1, hole2)`),
         =>,
@@ -239,15 +239,15 @@ test.fact("dictionary literals",
 	parse("{A:1, B:2}")     ,=>, parsed("{:a 1, :b 2}"),
 	parse("{A:1, B:2, C:3}"),=>, parsed("{:a 1, :b 2, :c 3}")
 )
-//test.fact("set literals",
-//	parse("emptyset")           ,=>, parsed("#{}"),
-//	parse("{A}")                ,=>, parsed("#{:a}"),
-//	parse("{A, B}")             ,=>, parsed("#{:a :b}"),
-//	parse("{A, B, C}")          ,=>, parsed("#{:a :b :c}")
-//	parse(`{"A", "B", "C"}`)    ,=>, parsed(`#{"A" "B" "C"}`)
-//	parse(`{'A', 'B', 'C'}`)    ,=>, parsed(`#{\A \B \C}`)
-//	parse(`{A, "B", 'C', 999}`) ,=>, parsed(`#{:a "B" \C 999}`)
-//)
+test.fact("set literals",
+	parse("set{}")                 ,=>, parsed("#{}"),
+	parse("set{A}")                ,=>, parsed("#{:a}"),
+	parse("set{A, B}")             ,=>, parsed("#{:a :b}"),
+	parse("set{A, B, C}")          ,=>, parsed("#{:a :c :b}"),
+	parse(`set{"A", "B", "C"}`)    ,=>, parsed(`#{"A" "B" "C"}`),
+	parse(`set{'A', 'B', 'C'}`)    ,=>, parsed(`#{\A \B \C}`),
+	parse(`set{A, "B", 'C', 999}`) ,=>, parsed(`#{"B" \C 999 :a}`)
+)
 test.fact("private named functions",
 	parse("func foo(){d}")     ,=>, parsed("(defn- foo [] d)"),
 	parse("func foo(a){d}")    ,=>, parsed("(defn- foo [a] d)"),
@@ -354,8 +354,10 @@ test.fact("for",
 	parse("for x:=range xs{f(x)}")    ,=>, parsed("(doseq [x xs] (f x))"),
 	parse("for x := range xs {f(x)}") ,=>, parsed("(doseq [x xs] (f x))"),
 	parse("for x:= lazy xs{f(x)}") ,=>, parsed("(for [x xs] (f x))"),
-	parse("for x:= lazy xs if a{f(x)}") ,=>, parsed("(for [x xs] :when a (f x))"),
-	parse("for i:= times n {f(i)}") ,=>, parsed("(dotimes [i n] (f i))")
+	parse("for x:= lazy xs if a{f(x)}") ,=>, parsed("(for [x xs :when a] (f x))"),
+	parse("for i:= times n {f(i)}") ,=>, parsed("(dotimes [i n] (f i))"),
+	parse("for [a,b]:= lazy xs{f(a,b)}") ,=>, parsed("(for [[a b] xs] (f a b))"),
+	parse("for x:=lazy xs if x<0 {f(x)}") ,=>, parsed("(for [x xs :when (< x 0)] (f x))")
 )
 test.fact("Camelcase is converted to dash-separated",
 	parse("foo") ,=>, parsed("foo"),

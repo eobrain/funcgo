@@ -141,7 +141,7 @@ ryan,neufeld,2`
 
 test.fact("Join can be easier",
 	{
-		foodItems := ["milk", "butter", "flour", "eggs"]
+		var foodItems = ["milk", "butter", "flour", "eggs"]
 		string.join(", ", foodItems)
 	},
         =>, "milk, butter, flour, eggs",
@@ -256,8 +256,8 @@ func tableify(row) {
         apply(format, "%-20s | %-20s | %-20s", row)
 }
 
-header := ["First Name", "Last Name", "Employee ID"]
-employees := [
+var header = ["First Name", "Last Name", "Employee ID"]
+var employees = [
         ["Ryan", "Neufeld", 2],
         ["Luke", "Vanderhart", 1]
 ]
@@ -382,7 +382,7 @@ test.fact("Use string.split to split strings",
 	=>, ["ryan", "neufeld", ""],
 	
 	{
-		dataDelimiters := /[ :-]/
+		var dataDelimiters = /[ :-]/
 			
 		//No-limit split on any delimiter
 		"2013-04-05 14:39" string.split dataDelimiters
@@ -498,7 +498,7 @@ test.fact("Can convert between different types of language things (note Funcgo m
 
 	// keyword and symbol also have 2-argument (infix) versions
 	{
-		shoppingArea := "bakery"
+		var shoppingArea = "bakery"
 		shoppingArea keyword "bagels"
 	},
 	=>, \`:bakery/bagels`,
@@ -631,7 +631,7 @@ test.fact("Easy to implement fuzzy equality",
 	=>, -0.009999999999999981,
 
 	{
-		isEqualWithinTen := partial(fuzzyEq, 10)
+		var isEqualWithinTen = partial(fuzzyEq, 10)
 		100 isEqualWithinTen 109
 	},
 	=>, true,
