@@ -24,9 +24,10 @@ import (
 )
 
 var commandLineOptions = [
+        ["-r", "--repl",  "start a Funcgo interactive console"],
         ["-n", "--nodes", "print out the parse tree that the parser produces"],
         ["-f", "--force", "Force compiling even if not out-of-date"],
-        ["-h", "--help", "print help"]
+        ["-h", "--help",  "print help"]
 ]
 
 // A version of pprint that preserves type hints.
@@ -74,44 +75,32 @@ func compileExpression(inPath, fgoText) {
 		cljText = core.Parse(inPath, fgoText, EXPR)
 		strWriter = new java.io.StringWriter()
 		writer = new java.io.BufferedWriter(strWriter)
-	){
+	) {
 		cljText writePrettyTo writer
 		strWriter->toString()
 	}
 }
 
-// func repl(consoleReader jline.console.ConsoleReader) {
-// 	const (
-// 		//cljText = compileExpression("repl.go", readLine())
-// 		cljText = first(core.Parse("repl.go", consoleReader->readLine("fgo=>     "), EXPR))
-// 	){
-// 		println("Clojure: ", cljText)
-// 		println("Result:  ", eval(readString(cljText)))
-// 	}
-// 	recur(consoleReader)
-// }
-
-// func Repl() {
-// 	repl(new jline.console.ConsoleReader())
-// }
-
-func Repl(){
-	const(
+func newConsoleReader() {
+	const (
 		consoleReader = new jline.console.ConsoleReader()
 	){
-		loop(){
-			const (
-				cljText = first(core.Parse(
-					"repl.go",
-					consoleReader->readLine("fgo=>     "),
-					EXPR
-				))
-			){
-				println("Clojure: ", cljText)
-				println("Result:  ", eval(readString(cljText)))
-			}
-			recur()
-		}
+		consoleReader->setPrompt("fgo=>     ")
+		consoleReader
+	}
+}
+
+func repl(){
+	const consoleReader jline.console.ConsoleReader = newConsoleReader()
+	loop(){
+		const cljText = first(core.Parse(
+			"repl.go",
+			consoleReader->readLine(),
+			EXPR
+		))
+		println("Clojure: ", cljText)
+		println("Result:  ", eval(readString(cljText)))
+		recur()
 	}
 }
 
@@ -120,7 +109,7 @@ func CompileString(inPath, fgoText) {
 		cljText = core.Parse(inPath, fgoText)
 		strWriter = new java.io.StringWriter()
 		writer = new java.io.BufferedWriter(strWriter)
-	){
+	) {
 		cljText writePrettyTo writer
 		strWriter->toString()
 	}
@@ -187,31 +176,30 @@ func Compile(args...) {
 		otherArgs = cmdLine(ARGUMENTS)
 		opts      = cmdLine(OPTIONS)
 		here      = io.file(".")
-	) {
-		if cmdLine(ERRORS) || opts(HELP){
-			println(cmdLine(SUMMARY))
-		}else{
-			if not(seq(otherArgs)) {
-				println("Missing directory or file argument.")
-				printError(cmdLine)
-			} else {
-				// file argumentd
-				for arg := range otherArgs {
-					const (
-						file = io.file(arg)
-					) {
-						if file->isDirectory {
-							compileTree(file, opts)
-						} else {
-							try {
-								compileFile(file, here, opts)
-							} catch Exception e {
-								println("\n", e->getMessage())
-							}
-						}
+	)
+	if cmdLine(ERRORS) || opts(HELP){
+		println(cmdLine(SUMMARY))
+	}else{
+		if not(seq(otherArgs)) {
+			println("Missing directory or file argument.")
+			printError(cmdLine)
+		} else {
+			// file argumentd
+			for arg := range otherArgs {
+				const file = io.file(arg)
+				if file->isDirectory {
+					compileTree(file, opts)
+				} else {
+					try {
+						compileFile(file, here, opts)
+					} catch Exception e {
+						println("\n", e->getMessage())
 					}
 				}
 			}
+		}
+		if opts(REPL) {
+			repl()
 		}
 	}
 }
