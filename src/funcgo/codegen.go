@@ -58,6 +58,20 @@ func splitPath(path String) {
 	]
 }
 
+func declBlockFunc(typ) {
+	func(xs...){
+		const(
+			consts = butlast(xs)
+			expressions = last(xs)
+		)
+		str("(", typ, " [",
+			" " s.join consts,
+			"] ",
+			expressions,
+			")")
+	}
+}
+
 // Mapping from parse tree to generators of CLJ code.
 var codeGenerator =  {
 	SOURCEFILE:     func(header, body) {str(header, " ", body)},
@@ -162,17 +176,8 @@ var codeGenerator =  {
 		)
 	},
 	INDEXED: func(xs, i){ listStr("nth", xs, i) },
-	WITHCONST: func(xs...){
-		const(
-			consts = butlast(xs)
-			expressions = last(xs)
-		)
-		str("(let [",
-			" " s.join consts,
-			"] ",
-			expressions,
-			")")
-	},
+	WITHCONST: declBlockFunc("let"),
+	LOOP:      declBlockFunc("loop"),
 	CONST: func(identifier, expression) {
 		str(identifier, " ", expression)
 	},

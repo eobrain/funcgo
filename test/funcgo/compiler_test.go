@@ -514,6 +514,12 @@ test.fact("Escaped regex terminater",
 	parse(`/aaa\/bbb/`)          ,=>, parsed(`#"aaa/bbb"`)
 )
 
+test.fact("tail recursion",
+	parse(`loop(){a;recur()}`),          =>, parsed(`(loop [] a (recur))`),
+	parse(`loop(a=b){c;recur(d)}`),      =>, parsed(`(loop [a b] c (recur d))`),
+	parse(`loop(a=b;c=d){e;recur(f,g)}`), =>, parsed(`(loop [a b c d] e (recur f g))`)
+)
+
 //test.fact("",
 //      parse(``), =>, parsed(``),
 //)

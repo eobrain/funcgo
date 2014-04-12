@@ -69,6 +69,52 @@ func writePrettyTo(cljText, writer java.io.BufferedWriter) {
 }
 
 
+func compileExpression(inPath, fgoText) {
+	const (
+		cljText = core.Parse(inPath, fgoText, EXPR)
+		strWriter = new java.io.StringWriter()
+		writer = new java.io.BufferedWriter(strWriter)
+	){
+		cljText writePrettyTo writer
+		strWriter->toString()
+	}
+}
+
+// func repl(consoleReader jline.console.ConsoleReader) {
+// 	const (
+// 		//cljText = compileExpression("repl.go", readLine())
+// 		cljText = first(core.Parse("repl.go", consoleReader->readLine("fgo=>     "), EXPR))
+// 	){
+// 		println("Clojure: ", cljText)
+// 		println("Result:  ", eval(readString(cljText)))
+// 	}
+// 	recur(consoleReader)
+// }
+
+// func Repl() {
+// 	repl(new jline.console.ConsoleReader())
+// }
+
+func Repl(){
+	const(
+		consoleReader = new jline.console.ConsoleReader()
+	){
+		loop(){
+			const (
+				cljText = first(core.Parse(
+					"repl.go",
+					consoleReader->readLine("fgo=>     "),
+					EXPR
+				))
+			){
+				println("Clojure: ", cljText)
+				println("Result:  ", eval(readString(cljText)))
+			}
+			recur()
+		}
+	}
+}
+
 func CompileString(inPath, fgoText) {
 	const (
 		cljText = core.Parse(inPath, fgoText)
@@ -90,7 +136,7 @@ func compileFile(inFile java.io.File, root java.io.File, opts) {
                 const(
 			prefixLen = root->getAbsolutePath()->length()
 			relative = subs(inFile->getAbsolutePath(), prefixLen + 1)
-                        cljText = core.Parse(relative, slurp(inFile), opts(NODES))
+                        cljText = core.Parse(relative, slurp(inFile), SOURCEFILE, opts(NODES))
                         // TODO(eob) open using with-open
                         writer = io.writer(outFile)
                 )

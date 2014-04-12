@@ -23,9 +23,11 @@ import (
 
 
 func Parse(path, fgo) {
-	Parse(path, fgo, false)
-} (path, fgo, isNodes) {
-        const parsed = parser.Parse(string.replace(fgo, /\t/, "        "))
+	Parse(path, fgo, SOURCEFILE)
+} (path, fgo, startRule) {
+	Parse(path, fgo, startRule, false)
+} (path, fgo, startRule, isNodes) {
+        const parsed = parser.Parse(string.replace(fgo, /\t/, "        "), START, startRule)
         if insta.isFailure(parsed) {
                 failure.pprintFailure(parsed)
                 throw(new Exception(`"SYNTAX ERROR"`))
