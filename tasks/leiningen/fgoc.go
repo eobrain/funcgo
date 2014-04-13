@@ -7,7 +7,7 @@ import(
 func fgoc(project, args...) {
         const(
 		cmdLine = [
-			"java", "-jar", "bin/funcgo-0.1.28.jar",
+			"java", "-jar", "bin/funcgo-0.1.28-standalone.jar",
 			"src", "test", "tasks"
 		] concat args
                 result  = sh.sh apply cmdLine
