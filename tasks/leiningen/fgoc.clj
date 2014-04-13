@@ -12,12 +12,7 @@
  (let
   [cmd-line
    (concat
-    ["java"
-     "-jar"
-     "bin/funcgo-0.1.27-standalone.jar"
-     "src"
-     "test"
-     "tasks"]
+    ["java" "-jar" "bin/funcgo-0.1.28.jar" "src" "test" "tasks"]
     args)
    result
    (apply sh/sh cmd-line)]

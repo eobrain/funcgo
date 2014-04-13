@@ -401,8 +401,9 @@ test.fact("there are some non-alphanumeric symbols",
 	parsed(`(test/fact "interesting" (parse "a") => (parsed "a"))`)
 )
 test.fact("infix",
-	parse("a b c") ,=>, parsed("(b a c)"),
-	parse("22 / 7") ,=>, parsed("(/ 22 7)")
+	parse("a b c")        ,=>, parsed("(b a c)"),
+	parse("22 / 7")       ,=>, parsed("(/ 22 7)"),
+	parse("22 / (7 + 4)") ,=>, parsed("(/ 22 (+ 7 4))")
 )
 
 test.fact("equality",
@@ -515,9 +516,16 @@ test.fact("Escaped regex terminater",
 )
 
 test.fact("tail recursion",
-	parse(`loop(){a;recur()}`),          =>, parsed(`(loop [] a (recur))`),
-	parse(`loop(a=b){c;recur(d)}`),      =>, parsed(`(loop [a b] c (recur d))`),
+	parse(`loop(){a;recur()}`),           =>, parsed(`(loop [] a (recur))`),
+	parse(`loop(a=b){c;recur(d)}`),       =>, parsed(`(loop [a b] c (recur d))`),
 	parse(`loop(a=b;c=d){e;recur(f,g)}`), =>, parsed(`(loop [a b c d] e (recur f g))`)
+)
+
+test.fact("short anonymous functions",
+	parseNoPretty(`func{a+1}`),            =>, parsedNoPretty(`#(+ a 1)`),
+	parseNoPretty(`func{%1+%2}`),          =>, parsedNoPretty(`#(+ %1 %2)`),
+	parseNoPretty(`func{str apply %...}`), =>, parsedNoPretty(`#(apply str %&)`)
+
 )
 
 //test.fact("",

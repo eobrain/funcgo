@@ -206,6 +206,8 @@ var codeGenerator =  {
 		listStr(funclike, identifier, function)
 	},
 	FUNCTIONLIT:    func(function) {listStr("fn", function)},
+	SHORTFUNCTIONLIT:  func(expr) {"#" str expr},
+	PERCENTVARADIC: constantFunc("%&"),
 	FUNCTIONPARTS:  func(functionpart...) {
 		str("(",
 			") (" s.join functionpart,

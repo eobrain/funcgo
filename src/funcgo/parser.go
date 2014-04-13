@@ -141,8 +141,9 @@ sourcefile = NL? packageclause expressions _
                    variadic = Identifier <'...'>
          <Operand> = Literal | OperandName | label | new  | <'('> expr <')'>       (*|MethodExpr*)
            label = #'\b\p{Lu}[\p{Lu}_0-9]*\b'
-           <Literal> = BasicLit | veclit | dictlit | setlit | functionlit
+           <Literal> = BasicLit | veclit | dictlit | setlit | functionlit | shortfunctionlit
              functionlit = <'func'> _ Function
+             shortfunctionlit = <'func'> _ <'{'> _ expr _ <'}'>
              <BasicLit> = int_lit | bigintlit | string_lit | regex  | rune_lit | floatlit | bigfloatlit (*| imaginary_lit *)
                floatlit = decimals '.' decimals? exponent?
                         | decimals exponent
@@ -184,4 +185,6 @@ sourcefile = NL? packageclause expressions _
            new = <'new'> <__> type
            <OperandName> = symbol | NonAlphaSymbol                           (*| QualifiedIdent*)
              <NonAlphaSymbol> = '=>' | '->>' | relop | addop | mulop | unary_op
+                              | #'%[0-9]*' | percentvaradic
+               percentvaradic = <'%...'>
 `)
