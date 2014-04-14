@@ -43,7 +43,7 @@ func isPublic(identifier) {
 
 // Return a function that always returns the given constant string.
 func constantFunc(s) {
-	 func(){s}
+	func(){s}
 }
 
 func splitPath(path String) {
@@ -206,7 +206,13 @@ var codeGenerator =  {
 		listStr(funclike, identifier, function)
 	},
 	FUNCTIONLIT:    func(function) {listStr("fn", function)},
-	SHORTFUNCTIONLIT:  func(expr) {"#" str expr},
+	SHORTFUNCTIONLIT:  func(expr) {
+		if first(expr) == '(' && last(expr) == ')' {
+			"#" str expr
+		}else {
+			str("#(", expr, ")")
+		}
+	},
 	PERCENT: constantFunc("%"),
 	PERCENTNUM: func(digit){"%" str digit},
 	PERCENTVARADIC: constantFunc("%&"),
