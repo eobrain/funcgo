@@ -154,9 +154,7 @@ var codeGenerator =  {
 	} (function, call) {
 		listStr(function, call)
 	},
-	EXPRESSIONLIST: func(expr0, exprRest...){
-		s.join(" ", expr0 cons exprRest)
-	},
+	EXPRESSIONLIST: func{s.join(" ", ...)},
 	EXPRESSIONS: func(expr0, exprRest...){
 		s.join(" ", expr0 cons exprRest)
 	},
