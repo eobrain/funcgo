@@ -43,7 +43,7 @@ func isPublic(identifier) {
 
 // Return a function that always returns the given constant string.
 func constantFunc(s) {
-	func(){s}
+	func{s}
 }
 
 func splitPath(path String) {
@@ -122,10 +122,8 @@ var codeGenerator =  {
 	CATCH: func(typ, exception, expressions) {
 		listStr("catch", typ, exception, expressions)
 	},
-	FINALLY: func(expressions) {
-		listStr("finally", expressions)
-	},
-	NEW: func(symbol){str(symbol, ".")},
+	FINALLY: func{listStr("finally", ..)},
+	NEW:     func{str(.., ".")},
 	SHORTVARDECL:   func(identifier, expression) {
 		if isPublic(identifier) {
 			listStr("def", identifier, expression)
@@ -182,13 +180,11 @@ var codeGenerator =  {
 		str(identifier, " ", expression)
 	},
 	VECDESTRUCT: vecStr,
-	DICTDESTRUCT: func(elems...) {
-		str('{', (" " s.join elems), "}")
-	}, 
+	DICTDESTRUCT: func{str('{', (" " s.join ...), "}")}, 
 	DICTDESTRUCTELEM: func(destruct, label) {
 		str(destruct, " ", label)
 	},
-	VARIADICDESTRUCT:  func(destruct) {str("& ", destruct)},
+	VARIADICDESTRUCT:  func{str("& ", ..)},
 	SYMBOL: func(identifier){
 		identifier
 	} (pkg, identifier) {
@@ -205,22 +201,18 @@ var codeGenerator =  {
 	FUNCLIKEDECL:   func(funclike, identifier, function) {
 		listStr(funclike, identifier, function)
 	},
-	FUNCTIONLIT:    func(function) {listStr("fn", function)},
+	FUNCTIONLIT:    func{listStr("fn", ..)},
 	SHORTFUNCTIONLIT:  func(expr) {
 		if first(expr) == '(' && last(expr) == ')' {
 			"#" str expr
-		}else {
-			str("#(", expr, ")")
+		}else{
+			listStr("fn", "[]", expr)
 		}
 	},
 	PERCENT: constantFunc("%"),
-	PERCENTNUM: func(digit){"%" str digit},
+	PERCENTNUM: func{"%" str ..},
 	PERCENTVARADIC: constantFunc("%&"),
-	FUNCTIONPARTS:  func(functionpart...) {
-		str("(",
-			") (" s.join functionpart,
-			")")
-	},
+	FUNCTIONPARTS:  func{str("(",  ") (" s.join ...,  ")")},
 	FUNCTIONPART0:  func(expression) {
 		"[] " str expression
 	} (typ, expression) {
@@ -244,7 +236,7 @@ var codeGenerator =  {
 	PARAMETERS:     func(arg0, argsRest...) {
 		" " s.join (arg0 cons argsRest)
 	},
-	VARIADIC:       func(parameter) {str("& ", parameter)},
+	VARIADIC:       func{"& " str ..},
 	VECLIT:         func() {
 		"[]"
 	} (expressions...) {
@@ -254,16 +246,16 @@ var codeGenerator =  {
 			"]"
 		)
 	},
-	DICTLIT:        func(dictElems...) {apply(str, dictElems)},
+	DICTLIT:        func{str apply ...},
 	DICTELEMENT:    func(key, value) {str(key, " ", value, " ")},
-	SETLIT:          func(elems...) { str("#{", " " s.join elems, "}") },
-	LABEL:          func(s) {
-		str(":", s.replace(s.lowerCase(s), /_/, "-"))
-	},
-	IDENTIFIER:     func(s) {
-		s.replace(s, /\p{Ll}\p{Lu}/, func(s){
-			str(first(s), "-", s.lowerCase(last(s)))
-		})
+	SETLIT:         func{str("#{",  " " s.join ...,  "}")},
+	LABEL:          func{str(":", s.replace(s.lowerCase(..), /_/, "-"))},
+	IDENTIFIER:     func(string) {
+		s.replace(
+			string,
+			/\p{Ll}\p{Lu}/,
+			func{str(first(..), "-", s.lowerCase(last(..)))}
+		)
 	},
 	TYPEDIDENTIFIER: func(identifier, typ) {
 		str(`^`, typ, " ", identifier)
@@ -277,13 +269,13 @@ var codeGenerator =  {
 	FLOATLIT:      str,
 	DECIMALS:      identity,
 	EXPONENT:      str,
-	REGEX:         func(s...){str(`#"`, str apply s, `"`)},
+	REGEX:         func{str(`#"`,  str apply ...,  `"`)},
 	ESCAPEDSLASH: constantFunc(`/`),
-	INTERPRETEDSTRINGLIT: func(s...){str(`"`, str apply s, `"`)},
+	INTERPRETEDSTRINGLIT: func{str(`"`,  str apply ...,  `"`)},
 	CLOJUREESCAPE: identity,
 	LITTLEUVALUE:  func(d1,d2,d3,d4){str(`\u`,d1,d2,d3,d4)},
 	OCTALBYTEVALUE:  func(d1,d2,d3){str(`\o`,d1,d2,d3)},
-	UNICODECHAR:   func(s){`\` str s},
+	UNICODECHAR:   func{`\` str ..},
 	NEWLINECHAR:   constantFunc(`\newline`),
 	SPACECHAR:     constantFunc(`\space`),
 	BACKSPACECHAR: constantFunc(`\backspace`),
@@ -294,18 +286,18 @@ var codeGenerator =  {
 	DQUOTECHAR:    constantFunc(`\"`),
 	HEXDIGIT:      identity,
 	OCTALDIGIT:    identity,
-	RAWSTRINGLIT:  func(s){str(`"`, s.escape(s, charEscapeString), `"`)},
-	DASHIDENTIFIER: func(s){ "-" str s },
+	RAWSTRINGLIT:  func{str(`"`, s.escape(.., charEscapeString), `"`)},
+	DASHIDENTIFIER: func{ "-" str ..},
 	ISIDENTIFIER:   func(initial, identifier) {
 		str( s.lowerCase(initial), identifier, "?")
 	},
-	EQUALS: func() { "=" },
-	AND: func() { "and" },
-	OR: func() { "or" },
+	EQUALS: constantFunc("="),
+	AND:    constantFunc("and"),
+	OR:     constantFunc("or"),
 	MUTIDENTIFIER:  func(initial, identifier) {
 		str( s.lowerCase(initial), identifier, "!")
 	},
-	ESCAPEDIDENTIFIER:  func(identifier) { identifier },
+	ESCAPEDIDENTIFIER:  identity,
 	UNARYEXPR: func(operator, expression) { listStr(operator, expression) },
 	NOTEQ:       constantFunc("not="),
 	BITXOR:      constantFunc("bit-xor"),
@@ -314,15 +306,15 @@ var codeGenerator =  {
 	SHIFTRIGHT:  constantFunc("bit-shift-right"),
 	NOT:         constantFunc("not"),
 	MOD:         constantFunc("mod"),
-	DEREF: func(expression) { str("@", expression) },
-	SYNTAXQUOTE: func(expression)     { str("`", expression) },
-	UNQUOTE: func(expression)         { str("~", expression) },
-	UNQUOTESPLICING: func(expression) { str("~@", expression) },
+	DEREF:           func{"@"   str ..},
+	SYNTAXQUOTE:     func{"`"   str ..},
+	UNQUOTE:         func{"~"   str ..},
+	UNQUOTESPLICING: func{ "~@" str ..},
 	JAVAFIELD:      func(expression, identifier) {
 		listStr(".", expression, identifier)
 	},
-	JAVASTATIC:      func(parts...) {"/" s.join parts},
-	TYPE:            func(parts...) {"." s.join parts},
+	JAVASTATIC:      func{"/" s.join ...},
+	TYPE:            func{"." s.join ...},
 	UNDERSCOREJAVAIDENTIFIER: func(identifier) { "-" str identifier },
 	JAVAMETHODCALL: func(expression, identifier) {
 		str("(. ", expression, " (", identifier, "))")
