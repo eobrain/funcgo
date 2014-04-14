@@ -154,14 +154,9 @@ var codeGenerator =  {
 	} (function, call) {
 		listStr(function, call)
 	},
-	EXPRESSIONLIST: func{s.join(" ", ...)},
-	EXPRESSIONS: func(expr0, exprRest...){
-		s.join(" ", expr0 cons exprRest)
-	},
-	EXPRESSIONSXXX: func(expr0, exprRest...){
-		s.join(" ", expr0 cons exprRest)
-	},
-	CONSTS:  blankJoin,
+	EXPRESSIONLIST: blankJoin,
+	EXPRESSIONS:    blankJoin,
+	CONSTS:         blankJoin,
 	BLOCK: func (expr){
 		expr
 	} (expr0, exprRest...) {
@@ -231,19 +226,9 @@ var codeGenerator =  {
 	} (parameters, variadic, typ, expression) {
 		str("^", typ, " [", parameters, " ", variadic, "] ", expression)
 	},
-	PARAMETERS:     func(arg0, argsRest...) {
-		" " s.join (arg0 cons argsRest)
-	},
+	PARAMETERS:     blankJoin,
 	VARIADIC:       func{"& " str ..},
-	VECLIT:         func() {
-		"[]"
-	} (expressions...) {
-		str(
-			"[",
-			" " s.join expressions,
-			"]"
-		)
-	},
+	VECLIT:         func{str("[",  " " s.join ...,	"]")},
 	DICTLIT:        func{str apply ...},
 	DICTELEMENT:    func(key, value) {str(key, " ", value, " ")},
 	SETLIT:         func{str("#{",  " " s.join ...,  "}")},
@@ -258,9 +243,7 @@ var codeGenerator =  {
 	TYPEDIDENTIFIER: func(identifier, typ) {
 		str(`^`, typ, " ", identifier)
 	},
-	IMPORTED:         func(idf0, idfRest...){
-		"." s.join (idf0 cons idfRest)
-	},
+	IMPORTED:         func{"." s.join ...},
 	DECIMALLIT:    identity,
 	BIGINTLIT:     str,
 	BIGFLOATLIT:   str,
@@ -313,7 +296,7 @@ var codeGenerator =  {
 	},
 	JAVASTATIC:      func{"/" s.join ...},
 	TYPE:            func{"." s.join ...},
-	UNDERSCOREJAVAIDENTIFIER: func(identifier) { "-" str identifier },
+	UNDERSCOREJAVAIDENTIFIER: func{ "-" str ..},
 	JAVAMETHODCALL: func(expression, identifier) {
 		str("(. ", expression, " (", identifier, "))")
 	} (expression, identifier, call) {

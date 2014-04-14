@@ -168,8 +168,7 @@ func printError(cmdLine) {
 }
 
 // Convert Funcgo files to clojure files, using the commandLineOptions
-// to parse the arguments.  By default compiles all modified files
-// under the current directory.
+// to parse the arguments.
 func Compile(args...) {
 	const(
 		cmdLine   = args cli.parseOpts commandLineOptions
