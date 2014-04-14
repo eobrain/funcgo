@@ -70,9 +70,10 @@ sourcefile = NL? packageclause expressions _
                  bitxor = <'^'>
 	       precedence5 = UnaryExpr
                            | precedence5 _ mulop _ UnaryExpr
-	         mulop = '*' | (!comment '/') | '%' | shiftleft | shiftright | (!and '&') | '&^'
+	         mulop = '*' | (!comment '/') | mod | shiftleft | shiftright | mod | (!and '&') | '&^'
                    shiftleft = <'<<'>
                    shiftright = <'>>'>
+                   mod = <'%'>
 	   javastatic = type _ <'::'> _ JavaIdentifier
 	     <JavaIdentifier> = #'\b[\p{L}_][\p{L}_\p{Digit}]*\b'
                               | underscorejavaidentifier
@@ -185,6 +186,8 @@ sourcefile = NL? packageclause expressions _
            new = <'new'> <__> type
            <OperandName> = symbol | NonAlphaSymbol                           (*| QualifiedIdent*)
              <NonAlphaSymbol> = '=>' | '->>' | relop | addop | mulop | unary_op
-                              | #'%[0-9]*' | percentvaradic
-               percentvaradic = <'%...'>
+                              | percent| percentnum | percentvaradic
+               percent        = <'..'>
+               percentnum     = <'..'> #'[1-9]'
+               percentvaradic = <'...'>
 `)

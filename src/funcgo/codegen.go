@@ -207,6 +207,8 @@ var codeGenerator =  {
 	},
 	FUNCTIONLIT:    func(function) {listStr("fn", function)},
 	SHORTFUNCTIONLIT:  func(expr) {"#" str expr},
+	PERCENT: constantFunc("%"),
+	PERCENTNUM: func(digit){"%" str digit},
 	PERCENTVARADIC: constantFunc("%&"),
 	FUNCTIONPARTS:  func(functionpart...) {
 		str("(",
@@ -305,6 +307,7 @@ var codeGenerator =  {
 	SHIFTLEFT:   constantFunc("bit-shift-left"),
 	SHIFTRIGHT:  constantFunc("bit-shift-right"),
 	NOT:         constantFunc("not"),
+	MOD:         constantFunc("mod"),
 	DEREF: func(expression) { str("@", expression) },
 	SYNTAXQUOTE: func(expression)     { str("`", expression) },
 	UNQUOTE: func(expression)         { str("~", expression) },

@@ -522,9 +522,12 @@ test.fact("tail recursion",
 )
 
 test.fact("short anonymous functions",
-	parseNoPretty(`func{a+1}`),            =>, parsedNoPretty(`#(+ a 1)`),
-	parseNoPretty(`func{%1+%2}`),          =>, parsedNoPretty(`#(+ %1 %2)`),
-	parseNoPretty(`func{str apply %...}`), =>, parsedNoPretty(`#(apply str %&)`)
+	parseNoPretty(`func{a+1}`),           =>, parsedNoPretty(`#(+ a 1)`),
+	parseNoPretty(`func{..+..}`),         =>, parsedNoPretty(`#(+ % %)`),
+	parseNoPretty(`func{..1+..2}`),       =>, parsedNoPretty(`#(+ %1 %2)`),
+	parseNoPretty(`func{.. + ..}`),       =>, parsedNoPretty(`#(+ % %)`),
+	parseNoPretty(`func{..1 + ..2}`),     =>, parsedNoPretty(`#(+ %1 %2)`),
+	parseNoPretty(`func{str apply ...}`), =>, parsedNoPretty(`#(apply str %&)`)
 
 )
 
