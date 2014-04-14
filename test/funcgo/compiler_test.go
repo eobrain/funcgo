@@ -110,34 +110,34 @@ test.fact("escaped identifier",
 
 test.fact("multiple expressions inside func",
         parse(`func(){if c {d}}`),    =>, parsed(`(fn [] (when c d))`),
-        parse(`func(){b;c}`),         =>, parsed(`(fn [] b c)`),
-        parse(`func(){b;if c {d}}`), =>, parsed(`(fn [] b (when c d))`)
+        parse(`func(){b;c}`),         =>, parsed(`(fn [] (do b c))`),
+        parse(`func(){b;if c {d}}`), =>, parsed(`(fn [] (do b (when c d)))`)
 )
 
 test.fact("subsequent const nests",
-        parse(`const(a=1){x;const(b=2)y}`), =>, parsed(`(let [a 1] x (let [b 2] y))`),
-        parse(`const a=1; {x;const b=2; y}`), =>, parsed(`(let [a 1] x (let [b 2] y))`)
+        parse(`{const(a=1)x;{const(b=2)y}}`), =>, parsed(`(let [a 1] x (let [b 2] y))`),
+        parse(`{const a=1; {const b=2; y}}`), =>, parsed(`(let [a 1] (let [b 2] y))`)
 )
 
 // See http://blog.jayfields.com/2010/07/clojure-destructuring.html
 test.fact("Vector Destructuring",
-        parse(`const([a,b]=ab) f(a,b)`),
+        parse(`{const([a,b]=ab) f(a,b)}`),
         =>,
         parsed(`(let [[a b] ab] (f a b))`),
 
-        parse(`const [a,b]=ab; f(a,b)`),
+        parse(`{const [a,b]=ab; f(a,b)}`),
         =>,
         parsed(`(let [[a b] ab] (f a b))`),
 
-        parse(`const([x, more...] = indexes) f(x, more)`), 
+        parse(`{const([x, more...] = indexes) f(x, more)}`), 
         =>,
         parsed(`(let [[x & more] indexes] (f x more))`),
 
-        parse(`const [x, more...] = indexes; f(x, more)`), 
+        parse(`{const [x, more...] = indexes; f(x, more)}`), 
         =>,
         parsed(`(let [[x & more] indexes] (f x more))`),
 
-        parse(`const([x, more..., AS, full] = indexes) f(x, more, full)`),
+        parse(`{const([x, more..., AS, full] = indexes) f(x, more, full)}`),
         =>,
         parsed(`(let [[x & more :as full] indexes] (f x more full))`),
 
@@ -146,25 +146,25 @@ test.fact("Vector Destructuring",
         //=>,
         //parsed(`(let [{:keys [x y]} point] (f x y))`),
 
-        parse(`const([[a,b],[c,d]] = numbers) f(a, b, c, d)`),
+        parse(`{const([[a,b],[c,d]] = numbers) f(a, b, c, d)}`),
         =>,
         parsed(`(let [[[a b] [c d]] numbers] (f a b c d))`)
 )
 
 test.fact("Map Destructuring",
-        parse(`const({theX: X, theY: Y} = point) f(theX, theY)`),
+        parse(`{const({theX: X, theY: Y} = point) f(theX, theY)}`),
         =>,
         parsed(`(let [{the-x :x, the-y :y} point] (f the-x the-y))`),
 
-        parse(`const {theX: X, theY: Y} = point; f(theX, theY)`),
+        parse(`{const {theX: X, theY: Y} = point; f(theX, theY)}`),
         =>,
         parsed(`(let [{the-x :x, the-y :y} point] (f the-x the-y))`),
 
-        parse(`const({name: NAME, {[pages, \isbn10]: KEYS}: DETAILS} = book) f(name,pages,\isbn10)`),
+        parse(`{const({name: NAME, {[pages, \isbn10]: KEYS}: DETAILS} = book) f(name,pages,\isbn10)}`),
         =>,
         parsed(`(let [{name :name, {[pages isbn10] :keys} :details} book] (f name pages isbn10))`),
         
-        parse(`const({name: NAME, [hole1, hole2]: SCORES} = golfer) f(name, hole1, hole2)`),
+        parse(`{const({name: NAME, [hole1, hole2]: SCORES} = golfer) f(name, hole1, hole2)}`),
         =>,
         parsed(`(let [{name :name, [hole1 hole2] :scores} golfer] (f name hole1 hole2))`),
 
@@ -182,8 +182,8 @@ test.fact("Map Destructuring",
 )
 
 test.fact("type hints",
-        parse(`const(a FooType = 3) f(a)`), =>, parsed(`(let [^FooType a 3] (f a))`),
-        parse(`const a FooType = 3; f(a)`), =>, parsed(`(let [^FooType a 3] (f a))`),
+        parse(`{const(a FooType = 3) f(a)}`), =>, parsed(`(let [^FooType a 3] (f a))`),
+        parse(`{const a FooType = 3; f(a)}`), =>, parsed(`(let [^FooType a 3] (f a))`),
         parse(`func g(a FooType) { f(a) }`),  =>, parsed(`(defn- g [^FooType a] (f a))`),
         parse(`func(a FooType) { f(a) }`),  =>, parsed(`(fn [^FooType a] (f a))`),
         parse(`func g(a) FooType { f(a) }`),  =>, parsed(`(defn- g ^FooType [a] (f a))`),
@@ -306,11 +306,11 @@ test.fact("multiple expr ",
 	parse("1\n2\n3")        ,=>, parsed("1 2 3")
 )
 test.fact("const",
-	parse("const(a = 2)a"),=>, parsed("(let [a 2] a)"),
-	parse(" const(  a = 2 ) a"),=>, parsed("(let [a 2] a)"),
-	parse("const(\na = 2\n)\na"),=>, parsed("(let [a 2] a)"),
-	parse(" const(\n  a = 2\n )\n a"),=>, parsed("(let [a 2] a)"),
-	parse("const(a = 2)f(a,b)"),=>, parsed("(let [a 2] (f a b))")
+	parse("{const(a = 2)a}"),=>, parsed("(let [a 2] a)"),
+	parse("{ const(  a = 2 ) a}"),=>, parsed("(let [a 2] a)"),
+	parse("{const(\nb = 2\n)\na}"),=>, parsed("(let [b 2] a)"),
+	parse("{ const(\n  c = 2\n )\n a}"),=>, parsed("(let [c 2] a)"),
+	parse("{const(a = 2)f(a,b)}"),=>, parsed("(let [a 2] (f a b))")
 )
 test.fact("comment",
 	parse("//0 blah blah\naaa0")          ,=>, parsed("aaa0"),
@@ -331,8 +331,8 @@ test.fact("regex",
 //   parse("/aaa\/bbb/"       ,=>, parsed("#\"aaa/bbb"")) TODO implement
 test.fact("if",
 	parse("if a {b}") ,=>, parsed("(when a b)"),
-	parse("if a {b;c}") ,=>, parsed("(when a b c)"),
-	parse("if a {b\nc}") ,=>, parsed("(when a b c)"),
+	parse("if a {b;c}") ,=>, parsed("(when a (do b c))"),
+	parse("if a {b\nc}") ,=>, parsed("(when a (do b c))"),
 	parse("if a {b}else{c}") ,=>, parsed("(if a b c)"),
 	parse("if a {  b  }else{ c  }") ,=>, parsed("(if a b c)"),
 	parse("if a {b;c} else {d;e}") ,=>, parsed("(if a (do b c) (do d e))")

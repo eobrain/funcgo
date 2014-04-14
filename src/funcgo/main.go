@@ -75,19 +75,15 @@ func compileExpression(inPath, fgoText) {
 		cljText = core.Parse(inPath, fgoText, EXPR)
 		strWriter = new java.io.StringWriter()
 		writer = new java.io.BufferedWriter(strWriter)
-	) {
-		cljText writePrettyTo writer
-		strWriter->toString()
-	}
+	)
+	cljText writePrettyTo writer
+	strWriter->toString()
 }
 
 func newConsoleReader() {
-	const (
-		consoleReader = new jline.console.ConsoleReader()
-	){
-		consoleReader->setPrompt("fgo=>     ")
-		consoleReader
-	}
+	const consoleReader = new jline.console.ConsoleReader()
+	consoleReader->setPrompt("fgo=>     ")
+	consoleReader
 }
 
 func repl(){
@@ -109,10 +105,9 @@ func CompileString(inPath, fgoText) {
 		cljText = core.Parse(inPath, fgoText)
 		strWriter = new java.io.StringWriter()
 		writer = new java.io.BufferedWriter(strWriter)
-	) {
-		cljText writePrettyTo writer
-		strWriter->toString()
-	}
+	)
+	cljText writePrettyTo writer
+	strWriter->toString()
 }
 
 func compileFile(inFile java.io.File, root java.io.File, opts) {
@@ -121,27 +116,31 @@ func compileFile(inFile java.io.File, root java.io.File, opts) {
                 outFile = io.file(string.replace(inPath, /\.go(s?)$/, ".clj$1"))
         )
         if opts(FORCE) || outFile->lastModified() < inFile->lastModified() {
-                println("  ", inPath)
-                const(
+		const(
 			prefixLen = root->getAbsolutePath()->length()
 			relative = subs(inFile->getAbsolutePath(), prefixLen + 1)
-                        cljText = core.Parse(relative, slurp(inFile), SOURCEFILE, opts(NODES))
-                        // TODO(eob) open using with-open
-                        writer = io.writer(outFile)
-                )
-		writer->write(str(";; Compiled from ", inFile, "\n"))
-		cljText writePrettyTo writer
-                println("    -->", outFile->getPath())
-                if (outFile->length) / (inFile->length) < 0.5 {
-                        println("WARNING: Output file is only",
-                                int(100 * (outFile->length) / (inFile->length)),
-                                "% the size of the input file")
-                }
+		)
+                print("  ", relative)
+		{
+			const(
+				cljText = core.Parse(relative, slurp(inFile), SOURCEFILE, opts(NODES))
+				// TODO(eob) open using with-open
+				writer = io.writer(outFile)
+			)
+			writer->write(str(";; Compiled from ", inFile, "\n"))
+			cljText writePrettyTo writer
+			println("\t\t-->", outFile->getPath())
+			if (outFile->length) / (inFile->length) < 0.5 {
+				println("WARNING: Output file is only",
+					int(100 * (outFile->length) / (inFile->length)),
+					"% the size of the input file")
+			}
+		}
         }
 }
 
 func compileTree(root java.io.File, opts) {
-	println("Compiling under root ", root->getName())
+	println(root->getName())
 	for f := range fileSeq(root) {
 		const (
 			ff java.io.File = f
@@ -183,7 +182,7 @@ func Compile(args...) {
 			println("Missing directory or file argument.")
 			printError(cmdLine)
 		} else {
-			// file argumentd
+			// file arguments
 			for arg := range otherArgs {
 				const file = io.file(arg)
 				if file->isDirectory {

@@ -87,12 +87,14 @@ test.fact("Concatenate strings",
 )
 
 test.fact("Can concatenate consts.",
-        const(
-                firstName = "John"
-                lastName = "Doe"
-                age = 42
-        )
-        str(lastName, ", ", firstName, " - age: ", age),
+	{
+		const(
+			firstName = "John"
+			lastName = "Doe"
+			age = 42
+		)
+		str(lastName, ", ", firstName, " - age: ", age)
+	},
         =>, "Doe, John - age: 42"
 )
 
@@ -712,8 +714,10 @@ test.fact("Can convert numbers to various bases",
 
 	{
 		func toBase(radix, n) { n Integer::toString radix }
-		const baseTwo = toBase partial 2
-		baseTwo(9001)
+		{
+			const baseTwo = toBase partial 2
+			baseTwo(9001)
+		}
 	},
 	=>, "10001100101001"
 )

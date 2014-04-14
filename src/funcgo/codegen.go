@@ -160,11 +160,7 @@ var codeGenerator =  {
 	BLOCK: func (expr){
 		expr
 	} (expr0, exprRest...) {
-		str(
-			"(do ",
-			(" " s.join (expr0 cons exprRest)),
-			")"
-		)
+		str("(do ",  " " s.join (expr0 cons exprRest),  ")")
 	},
 	INDEXED: func(xs, i){ listStr("nth", xs, i) },
 	WITHCONST: declBlockFunc("let"),
@@ -310,27 +306,24 @@ func packageclauseFunc(path String) {
 		[parent, name] = splitPath(path)
 	)
 	func(imported, importDecls) {
-		const(
-			fullImported = parent str imported
-		){
-			if imported != name {
-				throw(new java.lang.Exception(str(
-					`Got package "`, imported, `" instead of expected "`,
-					name, `" in "`, path, `"`
-				)))
-			}
-			if isGoscript {
-				listStr("ns", fullImported, importDecls)
-			} else {
-				str(
-					listStr("ns",
-						fullImported,
-						"(:gen-class)",
-						importDecls
-					),
-					" (set! *warn-on-reflection* true)"
-				)
-			}
+		const fullImported = parent str imported
+		if imported != name {
+			throw(new java.lang.Exception(str(
+				`Got package "`, imported, `" instead of expected "`,
+				name, `" in "`, path, `"`
+			)))
+		}
+		if isGoscript {
+			listStr("ns", fullImported, importDecls)
+		} else {
+			str(
+				listStr("ns",
+					fullImported,
+					"(:gen-class)",
+					importDecls
+				),
+				" (set! *warn-on-reflection* true)"
+			)
 		}
 	}
 }

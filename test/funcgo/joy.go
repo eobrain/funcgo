@@ -104,8 +104,10 @@ func isGoodMove(to, enemySq){
 rotateCount := ref(0)
 func fakeShuffle(xs) {
 	dosync(rotateCount alter inc)
-	const shift = (*rotateCount) % count(xs)
-	(shift drop xs) concat (shift take xs)
+	{
+		const shift = (*rotateCount) % count(xs)
+		(shift drop xs) concat (shift take xs)
+	}
 }
 
 // Fake shuffle to make test deterministic
@@ -173,9 +175,11 @@ func updateToMove(move) {
 
 func makeMove() {
 	dosync(
-		const move = chooseMove(*toMove)
-		movePiece(move, *toMove)
-		updateToMove(move)
+		{
+			const move = chooseMove(*toMove)
+			movePiece(move, *toMove)
+			updateToMove(move)
+		}
 	)
 }
 

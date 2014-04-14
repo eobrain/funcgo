@@ -36,19 +36,22 @@ sourcefile = NL? packageclause expressions _
          imported = Identifier {<'/'> Identifier}
  expressions = expr | expressions NL expr
    <expr>  = precedence0 | Vars | shortvardecl | ifelseexpr | tryexpr | forrange |
-                   forlazy | fortimes | withconst | loop | block
-     loop = <'loop'> _  <'('> _ {consts} _ <')'> _  <'{'> _ expressions _ <'}'>
-     withconst = <'const'> _ ( const NL | <'('> _ consts _ <')'> _ ) ( expressions | <'{'> _ expressions _ <'}'> )
-       consts = ( const {NL const} )?
-         const = Destruct _ <'='> _ expr
-           <Destruct> = Identifier | typedidentifier | vecdestruct | dictdestruct
-             typedidentifier = Identifier _ type
-               type = JavaIdentifier {<'.'>  JavaIdentifier}
-             vecdestruct = <'['> _ VecDestructElem _ {<','> _ VecDestructElem _ } <']'>
-               <VecDestructElem> = Destruct | variadicdestruct | label
-                 variadicdestruct = Destruct <'...'>
-             dictdestruct = <'{'> dictdestructelem { _ <','> _ dictdestructelem} <'}'>
-               dictdestructelem = Destruct _ <':'> _ expr
+                   forlazy | fortimes | Blocky
+     <Blocky> = block | withconst | loop
+       loop = <'loop'> _  <'('> _ {consts} _ <')'> _ ImpliedDo
+       <ImpliedDo> =  <'{'> _ expressions _ <'}'> | withconst
+       block = <'{'> _ expr {NL expr} _ <'}'>
+       withconst = <'{'> _ <'const'> _ ( const NL | <'('> _ consts _ <')'> )  _ expressions _ <'}'>
+         consts = ( const {NL const} )?
+           const = Destruct _ <'='> _ expr
+	     <Destruct> = Identifier | typedidentifier | vecdestruct | dictdestruct
+	       typedidentifier = Identifier _ type
+		 type = JavaIdentifier {<'.'>  JavaIdentifier}
+	       vecdestruct = <'['> _ VecDestructElem _ {<','> _ VecDestructElem _ } <']'>
+		 <VecDestructElem> = Destruct | variadicdestruct | label
+		   variadicdestruct = Destruct <'...'>
+	       dictdestruct = <'{'> dictdestructelem { _ <','> _ dictdestructelem} <'}'>
+		 dictdestructelem = Destruct _ <':'> _ expr
      precedence0 = precedence1
                  | precedence0 _nonNL symbol _nonNL precedence1
        symbol = ( Identifier <'.'> )? Identifier
@@ -90,21 +93,15 @@ sourcefile = NL? packageclause expressions _
                   | Identifier _ ',' _ shortvardecl _ ',' _ expr
      <Vars> = <'var'> _ ( <'('> _ vardecl {NL vardecl} _ <')'> | vardecl )
      vardecl = Identifier ( _ type )? _ <'='> _ expr
-     ifelseexpr = <'if'> _ expr _ (
-                        block _ <'else'> _ block
-                      |  _ <'{'> _ expressions _ <'}'>
-                   )
-       block = <'{'> _ expr {NL expr} _ <'}'>
-     forrange = <'for'> <__> Destruct _ <':='> _ <'range'> <_> expr _
-                <'{'> _ expressions _ <'}'>
+     ifelseexpr = <'if'> _ expr _ Blocky ( _ <'else'> _ Blocky )?
+     forrange = <'for'> <__> Destruct _ <':='> _ <'range'> <_> expr _  Blocky
      forlazy = <'for'> <__> Destruct _ <':='> _ <'lazy'> <_> expr
-               ( <__> <'if'> <__> expr )? _ <'{'> _ expressions _ <'}'>
-     fortimes = <'for'> <__> Identifier _ <':='> _ <'times'> <_> expr _
-                <'{'> _ expressions _ <'}'>
-     tryexpr = <'try'> _ <'{'> _ expressions _ <'}'> _ catches ( _ finally )?
+               ( <__> <'if'> <__> expr )? _ Blocky
+     fortimes = <'for'> <__> Identifier _ <':='> _ <'times'> <_> expr _ Blocky
+     tryexpr = <'try'> _ ImpliedDo _ catches ( _ finally )?
        catches = ( catch {_ catch} )?
-         catch = <'catch'> _ Identifier _ Identifier _ <'{'> _ expressions _ <'}'>
-       finally = <'finally'> _ <'{'> _ expressions _ <'}'>
+         catch = <'catch'> _ Identifier _ Identifier _ ImpliedDo
+       finally = <'finally'> _ Blocky
      <UnaryExpr> = PrimaryExpr | javafield | ReaderMacro | unaryexpr
        unaryexpr = unary_op _ UnaryExpr
 	 <unary_op> = '+' | '-' | '!' | not | (!and '&') | bitnot
@@ -133,11 +130,11 @@ sourcefile = NL? packageclause expressions _
            <Function> = FunctionPart | functionparts
              functionparts = FunctionPart _ FunctionPart {_ FunctionPart}
                <FunctionPart> = functionpart0 | functionpartn | vfunctionpart0 | vfunctionpartn
-                 functionpart0 = <'('> _ <')'>  ( _ type )? _ <'{'> _ expressions _ <'}'>
-		 vfunctionpart0 = <'('> _ variadic _ <')'> ( _ type )? _ <'{'> _ expressions _ <'}'>
-		 functionpartn  = <'('> _ parameters _ <')'> ( _ type )? _ <'{'> _ expressions _ <'}'>
+                 functionpart0 = <'('> _ <')'>  ( _ type )? _ Blocky
+		 vfunctionpart0 = <'('> _ variadic _ <')'> ( _ type )? _ Blocky
+		 functionpartn  = <'('> _ parameters _ <')'> ( _ type )? _ Blocky
 		 vfunctionpartn = <'('> _ parameters _  <','> _ variadic _ <')'> ( _ type )? _
-                                  <'{'> _ expressions _ <'}'>
+                                 Blocky
                    parameters = Destruct {<','> _ Destruct}
                    variadic = Identifier <'...'>
          <Operand> = Literal | OperandName | label | new  | <'('> expr <')'>       (*|MethodExpr*)
