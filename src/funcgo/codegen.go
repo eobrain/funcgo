@@ -102,6 +102,17 @@ var codeGenerator =  {
 	} (condition, block1, block2) {
 		listStr("if", condition, block1, block2)
 	},
+	LETIFELSEEXPR: func(lhs, rhs, condition, exprs) {
+		str("(let [", lhs, " ", rhs, "] ",
+			listStr("when", condition, exprs),
+			")"
+		)
+	} (lhs, rhs, condition, block1, block2) {
+		str("(let [", lhs, " ", rhs, "] ",
+			listStr("if", condition, block1, block2),
+			")"
+		)
+	},
 	FORRANGE: func(identifier, seq, expressions) {
 		str("(doseq [", identifier, " ", seq, "] ", expressions, ")")
 	},

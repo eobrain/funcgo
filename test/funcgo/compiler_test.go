@@ -532,6 +532,19 @@ test.fact("short anonymous functions",
 
 )
 
+test.fact("Effective Go",
+	parse(`if a := b; f(a) {c}`),
+	=>,
+	parsed("(let [a b] (when (f a) c))"),
+
+	parse(`if err := file.Chmod(0664); err != nil {
+    log.Print(err)
+    err
+}`),
+	=>,
+	parsed("(let [err (file/Chmod 436)] (when (not= err nil) (do (log/Print err) err)))")
+)
+
 //test.fact("",
 //      parse(``), =>, parsed(``),
 //)

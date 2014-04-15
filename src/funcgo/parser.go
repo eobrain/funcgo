@@ -35,7 +35,7 @@ sourcefile = NL? packageclause expressions _
        importspec = ( Identifier _ )?  <'"'> imported <'"'>
          imported = Identifier {<'/'> Identifier}
  expressions = expr | expressions NL expr
-   <expr>  = precedence0 | Vars | shortvardecl | ifelseexpr | tryexpr | forrange |
+   <expr>  = precedence0 | Vars | shortvardecl | ifelseexpr | letifelseexpr | tryexpr | forrange |
                    forlazy | fortimes | Blocky
      <Blocky> = block | withconst | loop
        loop = <'loop'> _  <'('> _ {consts} _ <')'> _ ImpliedDo
@@ -90,10 +90,11 @@ sourcefile = NL? packageclause expressions _
 	     mutidentifier = <'mutate'> #'\p{L}' identifier
 	     escapedidentifier = <'\\'> #'\b[\p{L}_][\p{L}_\p{Digit}]*\b'
      shortvardecl = Identifier _ <':='> _ expr
-                  | Identifier _ ',' _ shortvardecl _ ',' _ expr
+               (*   | Identifier _ ',' _ shortvardecl _ ',' _ expr *)
      <Vars> = <'var'> _ ( <'('> _ vardecl {NL vardecl} _ <')'> | vardecl )
      vardecl = Identifier ( _ type )? _ <'='> _ expr
      ifelseexpr = <'if'> _ expr _ Blocky ( _ <'else'> _ Blocky )?
+     letifelseexpr = <'if'> _ Destruct _ <':='> _ expr _ <';'>_ expr _ Blocky ( _ <'else'> _ Blocky )?
      forrange = <'for'> <__> Destruct _ <':='> _ <'range'> <_> expr _  Blocky
      forlazy = <'for'> <__> Destruct _ <':='> _ <'lazy'> <_> expr
                ( <__> <'if'> <__> expr )? _ Blocky
@@ -149,8 +150,10 @@ sourcefile = NL? packageclause expressions _
                  decimals  = #'[0-9]+'
                  exponent  = ( 'e' | 'E' ) ( '+' | '-' )? decimals
                bigfloatlit = (floatlit | int_lit) 'M'
-               <int_lit> = decimallit                                (*| octal_lit | hex_lit .*)
+               <int_lit> = decimallit | octal_lit | hex_lit
 		 decimallit = #'[1-9][0-9]*' | #'[0-9]'
+		 <octal_lit>  = #'0[0-7]+'
+		 <hex_lit>    = #'0x[0-9a-fA-F]+'
                bigintlit = int_lit 'N'
 	       regex = <'/'> ( #'[^/\n]' | escapedslash )+ <'/'>
                  escapedslash = <'\\/'>

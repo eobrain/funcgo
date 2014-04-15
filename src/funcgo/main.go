@@ -36,8 +36,7 @@ func prettyPrint(obj, writer) {
         const origDispatch = \`pprint/*print-pprint-dispatch*`
         pprint.withPprintDispatch(
                 func(o) {
-			const met = meta(o)
-                        if met {
+                        if met := meta(o); met {
 				print("^")
 				if count(met) == 1 {
 					if met(TAG) {
@@ -184,8 +183,7 @@ func Compile(args...) {
 		} else {
 			// file arguments
 			for arg := range otherArgs {
-				const file = io.file(arg)
-				if file->isDirectory {
+				if file := io.file(arg); file->isDirectory {
 					compileTree(file, opts)
 				} else {
 					try {
