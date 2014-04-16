@@ -45,8 +45,8 @@ sourcefile = NL? packageclause expressions _
          consts = ( const {NL const} )?
            const = Destruct _ <'='> _ expr
 	     <Destruct> = Identifier | typedidentifier | vecdestruct | dictdestruct
-	       typedidentifier = Identifier _ type
-		 type = JavaIdentifier {<'.'>  JavaIdentifier}
+	       typedidentifier = Identifier _ typename
+		 typename = JavaIdentifier {<'.'>  JavaIdentifier}
 	       vecdestruct = <'['> _ VecDestructElem _ {<','> _ VecDestructElem _ } <']'>
 		 <VecDestructElem> = Destruct | variadicdestruct | label
 		   variadicdestruct = Destruct <'...'>
@@ -77,7 +77,7 @@ sourcefile = NL? packageclause expressions _
                    shiftleft = <'<<'>
                    shiftright = <'>>'>
                    mod = <'%'>
-	   javastatic = type _ <'::'> _ JavaIdentifier
+	   javastatic = typename _ <'::'> _ JavaIdentifier
 	     <JavaIdentifier> = #'\b[\p{L}_][\p{L}_\p{Digit}]*\b'
                               | underscorejavaidentifier
                underscorejavaidentifier = <'_'> JavaIdentifier
@@ -92,7 +92,7 @@ sourcefile = NL? packageclause expressions _
      shortvardecl = Identifier _ <':='> _ expr
                (*   | Identifier _ ',' _ shortvardecl _ ',' _ expr *)
      <Vars> = <'var'> _ ( <'('> _ vardecl {NL vardecl} _ <')'> | vardecl )
-     vardecl = Identifier ( _ type )? _ <'='> _ expr
+     vardecl = Identifier ( _ typename )? _ <'='> _ expr
      ifelseexpr = <'if'> _ expr _ Blocky ( _ <'else'> _ Blocky )?
      letifelseexpr = <'if'> _ Destruct _ <':='> _ expr _ <';'>_ expr _ Blocky ( _ <'else'> _ Blocky )?
      forrange = <'for'> <__> Destruct _ <':='> _ <'range'> <_> expr _  Blocky
@@ -114,27 +114,42 @@ sourcefile = NL? packageclause expressions _
        unquote         = <'unquote'>         _ UnaryExpr
        unquotesplicing = <'unquotes'> _ UnaryExpr
        javafield  = UnaryExpr _ <'->'> _ JavaIdentifier
-       <PrimaryExpr> = functioncall | javamethodcall | Operand | functiondecl | funclikedecl |  indexed
-                                                                (*Conversion |
+       <PrimaryExpr> = functioncall
+                     | javamethodcall
+                     | Operand
+                     | functiondecl
+                     | TypeDecl
+                     | funclikedecl
+                     | indexed
+                                                                (* Conversion |
                                                                 BuiltinCall |
                                                                 PrimaryExpr Selector |
                                                                 PrimaryExpr Slice |
-                                                                PrimaryExpr TypeAssertion |*)
+                                                                PrimaryExpr TypeAssertion | *)
          indexed = PrimaryExpr _ <'['> _ expr _ <']'>
          functioncall = PrimaryExpr Call
          javamethodcall = UnaryExpr _ <'->'> _ JavaIdentifier _ Call
            <Call> = <'('> _ ( ArgumentList _ )? <')'>
              <ArgumentList> = expressionlist                                         (* [ _ '...' ] *)
                expressionlist = expr {_ <','> _ expr}
+         <TypeDecl> = <'type'> _ ( TypeSpec | <'('> _ ( TypeSpec _ NL )* _ <')'> )
+	   <TypeSpec> = interfacespec
+	     interfacespec = JavaIdentifier _ <'interface'> _ <'{'> _ ( MethodSpec NL )* <'}'>
+	       <MethodSpec> = <'func'> _ (voidmethodspec | typedmethodspec)
+	       voidmethodspec = JavaIdentifier _ <'('> _ methodparameters? _ <')'>
+	       typedmethodspec = JavaIdentifier _ <'('> _ methodparameters? _ <')'> _ typename
+		 methodparameters = methodparam
+				  | methodparameters _ <','> _ methodparam
+		   methodparam = symbol _ JavaIdentifier
          functiondecl = <'func'> _ Identifier _ Function
          funclikedecl = <'func'> _ <'<'> _ symbol _ <'>'> _ Identifier _ Function
            <Function> = FunctionPart | functionparts
              functionparts = FunctionPart _ FunctionPart {_ FunctionPart}
                <FunctionPart> = functionpart0 | functionpartn | vfunctionpart0 | vfunctionpartn
-                 functionpart0 = <'('> _ <')'>  ( _ type )? _ Blocky
-		 vfunctionpart0 = <'('> _ variadic _ <')'> ( _ type )? _ Blocky
-		 functionpartn  = <'('> _ parameters _ <')'> ( _ type )? _ Blocky
-		 vfunctionpartn = <'('> _ parameters _  <','> _ variadic _ <')'> ( _ type )? _
+                 functionpart0 = <'('> _ <')'>  ( _ typename )? _ Blocky
+		 vfunctionpart0 = <'('> _ variadic _ <')'> ( _ typename )? _ Blocky
+		 functionpartn  = <'('> _ parameters _ <')'> ( _ typename )? _ Blocky
+		 vfunctionpartn = <'('> _ parameters _  <','> _ variadic _ <')'> ( _ typename )? _
                                  Blocky
                    parameters = Destruct {<','> _ Destruct}
                    variadic = Identifier <'...'>
@@ -183,7 +198,7 @@ sourcefile = NL? packageclause expressions _
 	     dictlit = '{' _ ( dictelement _ {<','> _ dictelement} )? _ '}'
                dictelement = expr _ <':'> _ expr
              setlit = <'set'> _ <'{'> ( _ expr _ {<','> _ expr} )? _ <'}'>
-           new = <'new'> <__> type
+           new = <'new'> <__> typename
            <OperandName> = symbol | NonAlphaSymbol                           (*| QualifiedIdent*)
              <NonAlphaSymbol> = '=>' | '->>' | relop | addop | mulop | unary_op
                               | percent| percentnum | percentvaradic

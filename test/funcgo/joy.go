@@ -199,3 +199,25 @@ test.fact("using alter to update a Ref",
 	*numMoves,
 	=>, 1
 )
+
+
+test.fact("An interface defining a sliceable object",
+	{
+		type ISliceable interface{
+			func slice(s int, e int)
+			func sliceCount() int
+		}
+
+		var dumb = reify(
+			\`funcgo.joy.ISliceable`,
+			slice([_, s, e], [EMPTY]),
+			\`sliceCount`([_], 42)
+		)
+
+		dumb->slice(1, 2)
+	},
+	=>, [EMPTY],
+
+	dumb->sliceCount(),
+	=>, 42
+)

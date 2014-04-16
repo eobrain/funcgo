@@ -209,6 +209,19 @@ var codeGenerator =  {
 			listStr("fn", "[]", expr)
 		}
 	},
+	INTERFACESPEC: func(javaIdentifier, methodspec...){
+		listStr apply ("definterface" cons (javaIdentifier cons methodspec))
+	},
+	VOIDMETHODSPEC: func(javaIdentifier, methodparams) {
+		str("(", javaIdentifier, " [", methodparams, "])")
+	},
+	TYPEDMETHODSPEC: func(javaIdentifier, typ) {
+		str("(^", typ, " ", javaIdentifier, " [])")
+	} (javaIdentifier, methodparams, typ) {
+		str("(^", typ, " ", javaIdentifier, " [", methodparams, "])")
+	},
+	METHODPARAMETERS: blankJoin,
+	METHODPARAM: func(symbol, typ) { str("^", typ, " ", symbol) },
 	PERCENT: constantFunc("%"),
 	PERCENTNUM: func{"%" str ..},
 	PERCENTVARADIC: constantFunc("%&"),
@@ -302,7 +315,7 @@ var codeGenerator =  {
 		listStr(".", expression, identifier)
 	},
 	JAVASTATIC:      func{"/" s.join ...},
-	TYPE:            func{"." s.join ...},
+	TYPENAME:        func{"." s.join ...},
 	UNDERSCOREJAVAIDENTIFIER: func{ "-" str ..},
 	JAVAMETHODCALL: func(expression, identifier) {
 		str("(. ", expression, " (", identifier, "))")

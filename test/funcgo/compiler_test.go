@@ -545,6 +545,14 @@ test.fact("Effective Go",
 	parsed("(let [err (file/Chmod 436)] (when (not= err nil) (do (log/Print err) err)))")
 )
 
+test.fact("An interface defining a sliceable object",
+	parse(`type ISliceable interface{
+		func slice(s int, e int)
+		func sliceCount() int
+	}`),
+	=>, parsed(`(definterface ISliceable (slice [^int s ^int e]) (^int sliceCount []))`)
+)
+
 //test.fact("",
 //      parse(``), =>, parsed(``),
 //)
