@@ -204,11 +204,11 @@ test.fact("using alter to update a Ref",
 test.fact("An interface defining a sliceable object",
 	{
 		type ISliceable interface{
-			func slice(s int, e int)
-			func sliceCount() int
+			slice(s int, e int)
+			sliceCount() int
 		}
 
-		var dumb = reify(
+		dumb := reify(
 			\`funcgo.joy.ISliceable`,
 			slice([_, s, e], [EMPTY]),
 			\`sliceCount`([_], 42)
@@ -218,6 +218,114 @@ test.fact("An interface defining a sliceable object",
 	},
 	=>, [EMPTY],
 
+	//{
+	//	dumb := new implements funcgo.joy.ISliceable func (
+	//		slice(s, e) { [EMPTY] },
+	//		sliceCount() {42}
+	//	)
+
+	//	dumb->slice(1, 2)
+	//},
+	//=>, [EMPTY],
+
 	dumb->sliceCount(),
 	=>, 42
 )
+
+test.fact("Persistent binary tree built of records",
+	{
+		//Define recored type
+		type TreeNode struct{val; l; r}
+		
+		// Add to tree
+		func xconj(t, v) {
+			switch {
+			case isNil(t):
+				new funcgo.joy.TreeNode(v, nil, nil)
+			case v < VAL(t):
+				new funcgo.joy.TreeNode( VAL(t), xconj(L(t), v), R(t))
+			default:
+				new funcgo.joy.TreeNode( VAL(t), L(t), xconj(R(t), v))
+			}
+		}
+		
+		// conver trees to seq
+		func xseq(t) {
+			if t {
+				concat(xseq(L(t)), [VAL(t)], xseq(R(t)))
+			}
+		}
+		
+		var sampleTree = reduce(xconj, nil, [3, 5, 2, 4, 6])
+		
+		xseq(sampleTree)
+	},
+
+	=>, [2, 3, 4, 5, 6]
+)
+
+
+// test.fact("Protocols",
+// 	{
+// 		type FIXO interface{
+// 			fixoPush(value)
+// 			fixoPop()
+// 			fixoPeek()
+// 		}
+		
+// 		implements FIXO
+// 		func (funcgo.joy.TreeNode) fixoPush(value) { xconj(this, value) }
+
+// 		xseq(sampleTree->fixoPush(5/2))
+// 		//xseq(\`fixoPush`(sampleTree, 5/2))
+// 	},
+// 	=>, [2, 5/2, 3, 4, 5, 6]
+// )
+
+// test.fact("Method implementations in defrecord",
+// 	{
+// 		type NodeDArbre struct {val; l; r}
+
+// 		implements FIXO
+// 		func (funcgo.joy.NodeDArbre) (
+// 			fixoPush(v) {
+// 				if v < this->val {
+// 					new funcgo.joy.NodeDArbre(
+// 						this->val,
+// 						this->l->fixoPush(v),
+// 						this->r)
+// 				}else{
+// 					new funcgo.joy.NodeDArbre(
+// 						this->val,
+// 						this->l,
+// 						this->r->fixoPush(v))
+// 				}
+// 			}
+// 			fixoPeek(){
+// 				if this->l {
+// 					this->l->fixoPeek()
+// 				} else {
+// 					this->val
+// 				}
+// 			}
+// 			fixoPop(){
+// 				if this->l {
+// 					new funcgo.joy.NodeDArbre(
+// 						this->val,
+// 						this->l->fixoPop(this->l),
+// 						this->r)
+// 				} else {
+// 					this->r
+// 				}
+// 			}
+// 		)
+		
+// 		var sampleTree2 = reduce(
+// 			\`fixoPush`,
+// 			new funcgo.joy.NodeDArbre(3, nil, nil),
+// 			[5, 2, 4, 6])
+// 		xseq(sampleTree2)
+// 	},
+// 	=>, [2, 3, 4, 5, 6]
+// )
+

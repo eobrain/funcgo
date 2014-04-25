@@ -545,14 +545,113 @@ test.fact("Effective Go",
 	parsed("(let [err (file/Chmod 436)] (when (not= err nil) (do (log/Print err) err)))")
 )
 
-test.fact("An interface defining a sliceable object",
-	parse(`type ISliceable interface{
-		func slice(s int, e int)
-		func sliceCount() int
+test.fact("interface",
+	parse(`type Ia interface{
+		f(a, b)
+		g()
 	}`),
-	=>, parsed(`(definterface ISliceable (slice [^int s ^int e]) (^int sliceCount []))`)
+	=>, parsed(`(defprotocol Ia (f [this a b]) (g [this]))`)
 )
 
+test.fact("An interface defining a sliceable object",
+	parse(`type ISliceable interface{
+		slice(s int, e int)
+		sliceCount() int
+	}`),
+	=>, parsed(`(defprotocol ISliceable (slice [this ^int s ^int e]) (^long sliceCount [this]))`)
+)
+
+test.fact("interface with three methods",
+      parse(`
+
+type Interface interface {
+        // Len is the number of elements in the collection.
+        Len() int
+        // Less reports whether the element with
+        // index i should sort before the element with index j.
+        Less(i, j int) bool
+        // Swap swaps the elements with indexes i and j.
+        Swap(i, j int)
+}
+`), =>, parsed(str(
+	`(defprotocol Interface`,
+	` (^long Len [this])`,
+	` (^bool Less [this i ^int j])`,
+	` (Swap [this i ^int j]))`))
+)
+
+//test.fact("",
+//      parse(`
+//type Sequence []int
+//`), =>, parsed(`(defrecord Sequence [??]`)
+//)
+
+test.fact("implements",
+
+	parse(`implements Ia func (Ty) f(a) {b}`),
+	=>, parsed(`(extend-type Ty Ia (f [this a] b))`),
+		
+	parse(`implements Ia func(Ty)(f(a) {b}; g() {c})`),
+	=>, parsed(`(extend-type Ty Ia (f [this a] b) (g [this] c))`)
+)
+
+test.fact("Methods required by sort.Interface",
+      parse(`
+implements sort.Interface 
+func (Sequence) (
+  Len() int {
+      len(this)
+  }
+  Less(i, j int) bool {
+      this[i] < this[j]
+  }
+  Swap(i, j int) {
+      // this[i], this[j] = this[j], this[i]
+      assoc(this, i, this[j], j, this[i])    
+  }
+)
+`), =>, parsed(str(
+	`(extend-type Sequence sort.Interface`,
+	` (^long Len [this] (len this))`,
+	` (^bool Less [this i ^long j] (< (nth this i) (nth this j)))`,
+	` (Swap [this i ^long j] (assoc this i (nth this j) j (nth this i))))`))
+)
+
+test.fact("Method for printing - sorts the elements before printing.",
+	parse(`
+implements fmt.Stringer
+func (Sequence) String() string {
+    str("[",  " " join sort.Sort(this),  "]")
+}
+
+`), =>, parsed(str(
+	`(extend-type Sequence fmt.Stringer`,
+	` (^string String [this]`,
+	` (str "[" (join " " (sort/Sort this)) "]")))`
+)))
+
+test.fact("struct",
+	parse(`type TreeNode struct{val; l; r}`), 
+	=>,
+	parsed(`(defrecord TreeNode [val l r])`)
+)
+
+test.fact("typed struct",
+	parse(`type TreeNode struct{val; l TreeNode; r TreeNode}`), 
+	=>,
+	parsed(`(defrecord TreeNode [val ^TreeNode l ^TreeNode r])`)
+)
+
+test.fact("switch",
+	parse(`switch {case a: b; case c: d; default: e}`),
+	=>, parsed(`(cond a b c d :else e)`),
+
+	parse(`switch x {case A: b; case C: d; default: e}`),
+	=>, parsed(`(case x :a b :c d e)`),
+
+	parse(`switch x {case P, Q, R: b; case S, T, U: d; default: e}`),
+	=>, parsed(`(case x (:p :q :r) b (:s :t :u) d e)`)
+)
 //test.fact("",
 //      parse(``), =>, parsed(``),
 //)

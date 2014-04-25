@@ -36,7 +36,16 @@ sourcefile = NL? packageclause expressions _
          imported = Identifier {<'/'> Identifier}
  expressions = expr | expressions NL expr
    <expr>  = precedence0 | Vars | shortvardecl | ifelseexpr | letifelseexpr | tryexpr | forrange |
-                   forlazy | fortimes | Blocky
+                   forlazy | fortimes | Blocky | ExprSwitchStmt
+     <ExprSwitchStmt> = boolswitch | constswitch
+       boolswitch = <'switch'> _ <'{'>  _ boolcaseclause { NL boolcaseclause } _ <'}'>
+       constswitch = <'switch'> _ expr _ <'{'> _ constcaseclause { NL constcaseclause } _ <'}'>
+	 boolcaseclause = boolswitchcase _ <':'> _ expressions
+	 constcaseclause = constswitchcase _ <':'> _ expressions
+	   boolswitchcase = <'case'> _ expressionlist | <'default'>
+	   constswitchcase = <'case'> _ constantlist | <'default'>
+	     constantlist = expr {_ <','> _ expr}
+	       <Constant> = label | BasicLit | veclit | dictlit | setlit
      <Blocky> = block | withconst | loop
        loop = <'loop'> _  <'('> _ {consts} _ <')'> _ ImpliedDo
        <ImpliedDo> =  <'{'> _ expressions _ <'}'> | withconst
@@ -46,7 +55,10 @@ sourcefile = NL? packageclause expressions _
            const = Destruct _ <'='> _ expr
 	     <Destruct> = Identifier | typedidentifier | vecdestruct | dictdestruct
 	       typedidentifier = Identifier _ typename
-		 typename = JavaIdentifier {<'.'>  JavaIdentifier}
+		 typename = JavaIdentifier {<'.'>  JavaIdentifier} | primitivetype
+                   <primitivetype> = long | double
+                     long = <'int'>
+                     double = <'float'>
 	       vecdestruct = <'['> _ VecDestructElem _ {<','> _ VecDestructElem _ } <']'>
 		 <VecDestructElem> = Destruct | variadicdestruct | label
 		   variadicdestruct = Destruct <'...'>
@@ -119,6 +131,7 @@ sourcefile = NL? packageclause expressions _
                      | Operand
                      | functiondecl
                      | TypeDecl
+                     | implements
                      | funclikedecl
                      | indexed
                                                                 (* Conversion |
@@ -132,15 +145,26 @@ sourcefile = NL? packageclause expressions _
            <Call> = <'('> _ ( ArgumentList _ )? <')'>
              <ArgumentList> = expressionlist                                         (* [ _ '...' ] *)
                expressionlist = expr {_ <','> _ expr}
-         <TypeDecl> = <'type'> _ ( TypeSpec | <'('> _ ( TypeSpec _ NL )* _ <')'> )
-	   <TypeSpec> = interfacespec
+         <TypeDecl> = <'type'> _ ( TypeSpec | <'('> _ ( TypeSpec NL )* <')'> )
+	   <TypeSpec> = interfacespec | structspec
+             structspec = JavaIdentifier _ <'struct'> _ <'{'>  _ (fields _)? <'}'>
+               fields = Field
+                        | fields NL Field
+                 <Field> = Identifier | typedidentifier
 	     interfacespec = JavaIdentifier _ <'interface'> _ <'{'> _ ( MethodSpec NL )* <'}'>
-	       <MethodSpec> = <'func'> _ (voidmethodspec | typedmethodspec)
+	       <MethodSpec> = voidmethodspec | typedmethodspec
 	       voidmethodspec = JavaIdentifier _ <'('> _ methodparameters? _ <')'>
 	       typedmethodspec = JavaIdentifier _ <'('> _ methodparameters? _ <')'> _ typename
 		 methodparameters = methodparam
 				  | methodparameters _ <','> _ methodparam
-		   methodparam = symbol _ JavaIdentifier
+		   methodparam = symbol (_ JavaIdentifier)?
+         implements = <'implements'> _ typename _ 
+                        <'func'> _ <'('> _ typename <')'> _ (
+                          MethodImpl | <'('> _ MethodImpl ( NL MethodImpl )* _ <')'>
+                        )
+           <MethodImpl> = typedmethodimpl | untypedmethodimpl
+             untypedmethodimpl = JavaIdentifier _ <'('>  _ parameters? _ <')'> _ Blocky
+             typedmethodimpl = JavaIdentifier _ <'('>  _ parameters? _ <')'> _ typename _ Blocky
          functiondecl = <'func'> _ Identifier _ Function
          funclikedecl = <'func'> _ <'<'> _ symbol _ <'>'> _ Identifier _ Function
            <Function> = FunctionPart | functionparts

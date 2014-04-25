@@ -26,6 +26,7 @@ import (
 var commandLineOptions = [
         ["-r", "--repl",  "start a Funcgo interactive console"],
         ["-n", "--nodes", "print out the parse tree that the parser produces"],
+        ["-u", "--ugly",  "do not pretty-print the Clojure"],
         ["-f", "--force", "Force compiling even if not out-of-date"],
         ["-h", "--help",  "print help"]
 ]
@@ -122,12 +123,18 @@ func compileFile(inFile java.io.File, root java.io.File, opts) {
                 print("  ", relative)
 		{
 			const(
-				cljText = core.Parse(relative, slurp(inFile), SOURCEFILE, opts(NODES))
+				cljText String 
+				    = core.Parse(relative, slurp(inFile), SOURCEFILE, opts(NODES))
 				// TODO(eob) open using with-open
 				writer = io.writer(outFile)
 			)
 			writer->write(str(";; Compiled from ", inFile, "\n"))
-			cljText writePrettyTo writer
+			if opts(UGLY) {
+				writer->write(cljText)
+				writer->close()
+			} else {
+				cljText writePrettyTo writer
+			}
 			println("\t\t-->", outFile->getPath())
 			if (outFile->length) / (inFile->length) < 0.5 {
 				println("WARNING: Output file is only",

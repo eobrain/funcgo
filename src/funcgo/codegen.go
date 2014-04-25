@@ -113,6 +113,29 @@ var codeGenerator =  {
 			")"
 		)
 	},
+        BOOLSWITCH: func(clauses...) {
+		listStr apply ("cond" cons clauses)
+	},
+        BOOLCASECLAUSE: blankJoin,
+        BOOLSWITCHCASE: func(){
+		":else"
+	} (cond) {
+		cond
+	},
+        CONSTSWITCH: func(expr, clauses...) {
+		listStr apply ("case" cons (expr cons clauses))
+	},
+        CONSTCASECLAUSE: blankJoin,
+	CONSTANTLIST: func(c) {
+		c
+	}(c0, c...){
+		listStr apply (c0 cons c)
+	},
+        CONSTSWITCHCASE: func(){
+		""
+	} (cond) {
+		cond
+	},
 	FORRANGE: func(identifier, seq, expressions) {
 		str("(doseq [", identifier, " ", seq, "] ", expressions, ")")
 	},
@@ -209,19 +232,35 @@ var codeGenerator =  {
 			listStr("fn", "[]", expr)
 		}
 	},
-	INTERFACESPEC: func(javaIdentifier, methodspec...){
-		listStr apply ("definterface" cons (javaIdentifier cons methodspec))
+	STRUCTSPEC: func(javaIdentifier, fields...) {
+		listStr("defrecord", javaIdentifier, str("[", blankJoin apply fields, "]"))
 	},
-	VOIDMETHODSPEC: func(javaIdentifier, methodparams) {
-		str("(", javaIdentifier, " [", methodparams, "])")
+	FIELDS: blankJoin,
+	INTERFACESPEC: func(args...){
+		listStr apply ("defprotocol" cons args)
+	},
+	VOIDMETHODSPEC: func(javaIdentifier) {
+		listStr(javaIdentifier, "[this]")
+	}(javaIdentifier, methodparams) {
+		listStr(javaIdentifier, str("[this ", methodparams, "]"))
 	},
 	TYPEDMETHODSPEC: func(javaIdentifier, typ) {
-		str("(^", typ, " ", javaIdentifier, " [])")
+		listStr("^" str typ, javaIdentifier, "[this]")
 	} (javaIdentifier, methodparams, typ) {
-		str("(^", typ, " ", javaIdentifier, " [", methodparams, "])")
+		listStr("^" str typ, javaIdentifier, str("[this ", methodparams, "]"))
+	},
+	IMPLEMENTS: func(protocol, concrete, methodimpls...) {
+		listStr apply concat(list("extend-type", concrete, protocol), methodimpls)
+	},
+	METHODIMPL: func(javaIdentifier, function) {
+		listStr(javaIdentifier, function)
 	},
 	METHODPARAMETERS: blankJoin,
-	METHODPARAM: func(symbol, typ) { str("^", typ, " ", symbol) },
+	METHODPARAM: func(symbol) {
+		symbol
+	} (symbol, typ) {
+		str("^", typ, " ", symbol)
+	},
 	PERCENT: constantFunc("%"),
 	PERCENTNUM: func{"%" str ..},
 	PERCENTVARADIC: constantFunc("%&"),
@@ -245,6 +284,16 @@ var codeGenerator =  {
 		str("[", parameters, " ", variadic, "] ", expression)
 	} (parameters, variadic, typ, expression) {
 		str("^", typ, " [", parameters, " ", variadic, "] ", expression)
+	},
+	UNTYPEDMETHODIMPL: func(name, block) {
+		listStr(name, str("[this]"), block)
+	} (name, params, block) {
+		listStr(name, str("[this ", params, "]"), block)
+	},
+	TYPEDMETHODIMPL: func(name, typ, block) {
+		listStr("^" str typ, name, str("[this]"), block)
+	} (name, params, typ, block) {
+		listStr("^" str typ, name, str("[this ", params, "]"), block)
 	},
 	PARAMETERS:     blankJoin,
 	VARIADIC:       func{"& " str ..},
@@ -321,7 +370,9 @@ var codeGenerator =  {
 		str("(. ", expression, " (", identifier, "))")
 	} (expression, identifier, call) {
 		str("(. ", expression, " (", identifier, " ", call, "))")
-	}
+	},
+	LONG: constantFunc("long"),
+	DOUBLE: constantFunc("double")
 }
 
 func packageclauseFunc(path String) {
