@@ -104,6 +104,21 @@ func codeGenerator(symbolTable) {
 		},
 		IMPORTSPEC: importSpec,
 		EXTERNIMPORTSPEC: externImportSpec,
+	        TYPEIMPORTDECL: func() {
+			""
+		} (importSpecs...) {
+			listStr apply (":import" cons importSpecs)
+		},
+	        TYPEIMPORTSPEC: func(typepackage, typeclasses...) {
+			for typeclass := range typeclasses {
+				symbolTable symbols.AddType str(typepackage, ".", typeclass)
+			}
+			listStr apply (typepackage cons typeclasses)
+		},
+		TYPEPACKAGEIMPORTSPEC: func{
+			"." s.join ...
+		},
+		TYPECLASSESIMPORTSPEC: blankJoin,
 		PRECEDENCE0: infix,
 		PRECEDENCE1: infix,
 		PRECEDENCE2: infix,

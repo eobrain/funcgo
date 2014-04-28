@@ -734,6 +734,22 @@ test.fact("Error if external package not imported",
 	parse("huh.bar", "aaa", "bbb"),
 	=>, test.throws(Exception, `package "huh" in huh.bar does not appear in imports [bbb, aaa]`)
 )
+
+test.fact("import type",
+	compileString("joy/java.go", `
+package java
+import type (
+  java.util.{HashMap, List}
+  java.util.concurrent.atomic.AtomicLong
+)
+
+new HashMap({"happy?": true})
+new AtomicLong(42)
+
+`),
+	=>,
+	`(ns joy.java (:gen-class) (:import (java.util HashMap List) (java.util.concurrent.atomic AtomicLong))) (set! *warn-on-reflection* true) (HashMap. {"happy?" true}) (AtomicLong. 42)`
+)
 	
 //test.fact("",
 //      parse(``), =>, parsed(``),

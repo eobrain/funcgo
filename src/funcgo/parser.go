@@ -26,7 +26,8 @@ sourcefile = NL? packageclause expressions _
    <comment> = <#'[;\s]*//[^\n]*\n\s*'>
  packageclause = <'package'> <__> imported NL importdecls
    __ =  #'[ \t\x0B\f\r\n]+' | comment+     (* whitespace *)
-   importdecls = (importdecl NL)? (macroimportdecl NL)? (externimportdecl NL)?
+   importdecls = (AnyImportDecl NL)*
+     <AnyImportDecl> = importdecl | macroimportdecl | externimportdecl | typeimportdecl
      importdecl = <'import'> _ <'('>  _ {ImportSpec _} <')'>
                 | <'import'>  _ ImportSpec
      macroimportdecl = <'import'> _ <'macros'> _ <'('>  _ {ImportSpec _} <')'>
@@ -34,6 +35,13 @@ sourcefile = NL? packageclause expressions _
      <externimportdecl> = <'import'> _ <'extern'> _ <'('>  _ {externimportspec _} <')'>
                      | <'import'> _ <'extern'> _ externimportspec
        externimportspec = identifier
+     typeimportdecl = <'import'> _ <'type'> _ <'('>  _ {typeimportspec _} <')'>
+                     | <'import'> _ <'type'> _ typeimportspec
+       typeimportspec = typepackageimportspec <'.'> _ (
+                                          JavaIdentifier
+                                        | <'{'> _ JavaIdentifier _ (<','> _ JavaIdentifier)* _ <'}'>
+                         )
+         typepackageimportspec = JavaIdentifier {<'.'>  JavaIdentifier} 
      <ImportSpec> = importspec
        importspec = ( Identifier _ )?  <'"'> imported <'"'>
          imported = Identifier {<'/'> Identifier}

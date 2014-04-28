@@ -28,14 +28,29 @@ func AddPackage(st, pkg) {
 	dosync(alter(st, assoc, pkg, PACKAGE))
 }
 
+// Add a package symbol to the table.
+func AddType(st, pkg) {
+	dosync(alter(st, assoc, pkg, TYPE))
+}
+
 // Has this package been previously been added to the table?
 func HasPackage(st, pkg) {
 	(*st)(pkg) != PACKAGE
 }
 
+// Has this type been previously been added to the table?
+func HasType(st, pkg) {
+	(*st)(pkg) != TYPE
+}
+
 // Return a string representation of packages in the table.
 func Packages(st) {
 	const packages = for [symbol, key] := lazy *st if key == PACKAGE { symbol }
-	//const packages = for [symbol, key] := lazy *st { symbol }
+	str("[", ", " string.join packages, "]")
+}
+
+// Return a string representation of types in the table.
+func Types(st) {
+	const packages = for [symbol, key] := lazy *st if key == TYPE { symbol }
 	str("[", ", " string.join packages, "]")
 }
