@@ -16,6 +16,7 @@ func compileString(path, fgoText) {
 	)
 }
 
+
 test.fact("smallest complete program has no import and a single expression",
         compileString("foo.go", "package foo;12345"),
         =>,
@@ -51,13 +52,85 @@ import(
         `(ns foo (:gen-class) (:require [bar :as b])) (set! *warn-on-reflection* true) 12345`
 )
 
-func parse(expr) {
-	compileString("foo.go", "package foo;" str expr)
+
+func parse(expr, pkgs...) {
+	const imports = func{str(`"`, .., `"`)} map pkgs
+	compileString("foo.go", 
+		if count(pkgs) == 0 {
+			str("package foo;", expr)
+		}else {
+			str("package foo\nimport(\n", "\n" string.join imports, "\n)\n", expr)
+		}
+	)
 }
 
-func parsed(expr) {
-        str("(ns foo (:gen-class)) (set! *warn-on-reflection* true) ", expr)
+func parseJs(expr, pkgs...) {
+	compileString("foo.gos", 
+		if count(pkgs) == 0 {
+			str("package foo;", expr)
+		}else {
+			const imports = func{str(`"`, .., `"`)} map pkgs
+			str("package foo; import(", "\n" string.join imports, ");", expr)
+		}
+	)
 }
+
+// func parse(expr) {
+// 	compileString("foo.go", "package foo;" str expr)
+// } (pkg, expr) {
+// 	compileString("foo.go", format(`
+// package foo
+// import(
+//  "%s"
+// )
+// %s`, pkg, expr))
+// } (pkg1, pkg2, expr) {
+// 	compileString("foo.go", format(`
+// package foo
+// import(
+//  "%s"
+//  "%s"
+// )
+// %s`, pkg1, pkg2, expr))
+// }
+
+func parsed(expr, pkgs...) {
+	if count(pkgs) == 0 {
+		str("(ns foo (:gen-class))",
+			" (set! *warn-on-reflection* true) ",
+			expr
+		)
+	}else{
+		const imports = func{str(" [", .., " :as ", .., "]")} map pkgs
+		str("(ns foo (:gen-class) (:require", (str apply imports), "))",
+			" (set! *warn-on-reflection* true) ",
+			expr
+		)
+	}
+}
+
+func parsedJs(expr, pkgs...) {
+	if count(pkgs) == 0 {
+		str("(ns foo) ", expr)
+	}else{
+		const imports = func{str(" [", .., " :as ", .., "]")} map pkgs
+		str("(ns foo (:require", (str apply imports), ")) ", expr)
+	}
+}
+
+// func parsed(expr) {
+//         str("(ns foo (:gen-class)) (set! *warn-on-reflection* true) ", expr)
+// } (pkg, expr){
+//         str("(ns foo (:gen-class) (:require [", pkg, " :as ", pkg, "]))",
+// 		" (set! *warn-on-reflection* true) ",
+// 		expr)
+// } (pkg1, pkg2, expr){
+//         str("(ns foo (:gen-class)",
+// 		" (:require [", pkg1, " :as ", pkg1, "])",
+// 		" (:require [", pkg2, " :as ", pkg2, "]))",
+// 		" (set! *warn-on-reflection* true) ",
+// 		expr)
+// }
 
 func parseNoPretty(expr) {
 	fgo.Parse("foo.go", "package foo;" str expr)
@@ -79,7 +152,7 @@ test.fact("can refer to numbers",
 )
 
 test.fact("outside symbols",
-	parse("other.foo"), =>, parsed("other/foo")
+	parse("other.foo", "other"), =>, parsed("other/foo", "other")
 )
 
 test.fact("can define things",
@@ -214,7 +287,8 @@ test.fact("quoteing",
 test.fact("symbol beginning with underscore",
 	parse(`_main`), =>, parsed(`-main`),
 	parse(`_foo`),  =>, parsed(`-foo`),
-	parse(`mutateSet( js.window->_onload, start)`), =>, parsed(`(set! (. js/window -onload) start)`)
+	parseJs(`mutateSet( js.window->_onload, start)`), 
+	=>, parsedJs(`(set! (. js/window -onload) start)`)
 )
 
 
@@ -225,8 +299,8 @@ test.fact("can call function",
 	//parse("x->f(y,z)")      ,=>, parsed("(f x y z)"),
 	parse("f(x,y,z)")       ,=>, parsed("(f x y z)"))
 
-test.fact("can outside functions",
-      parse("o.f(x)")         ,=>, parsed("(o/f x)")
+test.fact("can call outside functions",
+	parse("o.f(x)", "o")         ,=>, parsed("(o/f x)", "o")
 )
 test.fact("labels have no lower case",
 	parse("FOO")            ,=>, parsed(":foo"),
@@ -396,9 +470,9 @@ test.fact("java method calls",
 )
 test.fact("there are some non-alphanumeric symbols",
 	parse("foo(a,=>,b)") ,=>, parsed("(foo a => b)"),
-	parse(`test.fact("interesting", parse("a"), =>, parsed("a"))`),
+	parse(`test.fact("interesting", parse("a"), =>, parsed("a"))`, "test"),
 	=>,
-	parsed(`(test/fact "interesting" (parse "a") => (parsed "a"))`)
+	parsed(`(test/fact "interesting" (parse "a") => (parsed "a"))`, "test")
 )
 test.fact("infix",
 	parse("a b c")        ,=>, parsed("(b a c)"),
@@ -540,9 +614,10 @@ test.fact("Effective Go",
 	parse(`if err := file.Chmod(0664); err != nil {
     log.Print(err)
     err
-}`),
+}`, "file", "log"),
 	=>,
-	parsed("(let [err (file/Chmod 436)] (when (not= err nil) (do (log/Print err) err)))")
+	parsed("(let [err (file/Chmod 436)] (when (not= err nil) (do (log/Print err) err)))",
+	"file", "log")
 )
 
 test.fact("interface",
@@ -624,11 +699,11 @@ func (Sequence) String() string {
     str("[",  " " join sort.Sort(this),  "]")
 }
 
-`), =>, parsed(str(
+`, "sort"), =>, parsed(str(
 	`(extend-type Sequence fmt.Stringer`,
 	` (^string String [this]`,
 	` (str "[" (join " " (sort/Sort this)) "]")))`
-)))
+), "sort"))
 
 test.fact("struct",
 	parse(`type TreeNode struct{val; l; r}`), 
@@ -652,6 +727,14 @@ test.fact("switch",
 	parse(`switch x {case P, Q, R: b; case S, T, U: d; default: e}`),
 	=>, parsed(`(case x (:p :q :r) b (:s :t :u) d e)`)
 )
+test.fact("Error if external package not imported",
+	parse("huh.bar"),
+	=>, test.throws(Exception, `package "huh" in huh.bar does not appear in imports []`),
+
+	parse("huh.bar", "aaa", "bbb"),
+	=>, test.throws(Exception, `package "huh" in huh.bar does not appear in imports [bbb, aaa]`)
+)
+	
 //test.fact("",
 //      parse(``), =>, parsed(``),
 //)

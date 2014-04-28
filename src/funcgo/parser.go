@@ -26,11 +26,14 @@ sourcefile = NL? packageclause expressions _
    <comment> = <#'[;\s]*//[^\n]*\n\s*'>
  packageclause = <'package'> <__> imported NL importdecls
    __ =  #'[ \t\x0B\f\r\n]+' | comment+     (* whitespace *)
-   importdecls = (importdecl NL)? (macroimportdecl NL)?
+   importdecls = (importdecl NL)? (macroimportdecl NL)? (externimportdecl NL)?
      importdecl = <'import'> _ <'('>  _ {ImportSpec _} <')'>
                 | <'import'>  _ ImportSpec
      macroimportdecl = <'import'> _ <'macros'> _ <'('>  _ {ImportSpec _} <')'>
                      | <'import'> _ <'macros'> _ ImportSpec
+     <externimportdecl> = <'import'> _ <'extern'> _ <'('>  _ {externimportspec _} <')'>
+                     | <'import'> _ <'extern'> _ externimportspec
+       externimportspec = identifier
      <ImportSpec> = importspec
        importspec = ( Identifier _ )?  <'"'> imported <'"'>
          imported = Identifier {<'/'> Identifier}

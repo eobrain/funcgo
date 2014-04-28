@@ -157,7 +157,7 @@ func compileTree(root java.io.File, opts) {
 				compileFile(ff, root, opts)
 			}
 		} catch Exception e {
-			println("\n", e->getMessage())
+			println("\n    Compile failed: ", e->getMessage())
 		}
 	}
 }

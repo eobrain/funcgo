@@ -5,6 +5,10 @@ import(
         "clojure/string"
 	inf "inflections/core"
 )
+import extern(
+	produce
+	bakery
+)	
 
 test.fact("Simple example",
 	{
