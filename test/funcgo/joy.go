@@ -2,6 +2,9 @@ package joy
 import(
         test "midje/sweet"
 )
+import type (
+	java.util.concurrent.{ExecutorService, Executors}
+)
 
 matrix := [
 	[1,2,3],
@@ -54,7 +57,7 @@ test.fact("neighbors works",
 )
 	
 
-var pool java.util.concurrent.ExecutorService = java.util.concurrent.Executors::newFixedThreadPool(
+var pool ExecutorService = Executors::newFixedThreadPool(
 	2 + Runtime::getRuntime()->availableProcessors()
 )
 
@@ -232,20 +235,20 @@ test.fact("An interface defining a sliceable object",
 	=>, 42
 )
 
+//Define recored type
+type TreeNode struct{val; l; r}
+		
 test.fact("Persistent binary tree built of records",
 	{
-		//Define recored type
-		type TreeNode struct{val; l; r}
-		
 		// Add to tree
 		func xconj(t, v) {
 			switch {
 			case isNil(t):
-				new funcgo.joy.TreeNode(v, nil, nil)
+				new TreeNode(v, nil, nil)
 			case v < VAL(t):
-				new funcgo.joy.TreeNode( VAL(t), xconj(L(t), v), R(t))
+				new TreeNode( VAL(t), xconj(L(t), v), R(t))
 			default:
-				new funcgo.joy.TreeNode( VAL(t), L(t), xconj(R(t), v))
+				new TreeNode( VAL(t), L(t), xconj(R(t), v))
 			}
 		}
 		
@@ -274,7 +277,7 @@ test.fact("Persistent binary tree built of records",
 // 		}
 		
 // 		implements FIXO
-// 		func (funcgo.joy.TreeNode) fixoPush(value) { xconj(this, value) }
+// 		func (TreeNode) fixoPush(value) { xconj(this, value) }
 
 // 		xseq(sampleTree->fixoPush(5/2))
 // 		//xseq(\`fixoPush`(sampleTree, 5/2))

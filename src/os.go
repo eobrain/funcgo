@@ -1,5 +1,8 @@
 package os
+import type (
+	java.io.FileInputStream
+)
 
 func Open(path String){
-	new java.io.FileInputStream(path)
+	new FileInputStream(path)
 }

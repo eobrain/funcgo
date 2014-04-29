@@ -17,10 +17,31 @@ import (
         insta "instaparse/core"
 	symbols "funcgo/symboltable"
 )
+//import type(
+//	java.lang.{String, Exception, Class, ClassNotFoundException}
+//)
 
 // Returns a map of parser targets to functions that generate the
 // corresponding Clojure code.
 func codeGenerator(symbolTable) {
+
+	func noDot(s String) {
+		//s->indexOf(".") == -1
+		!(/\./ reFind s)
+	}
+
+	func isJavaClass(clazz) {
+		try{
+			Class::forName(clazz)
+			true
+		}catch Exception e { //ClassNotFoundException e {
+			false
+		}
+	}
+
+	func hasType(typ) {
+		(symbolTable symbols.HasType typ) || (noDot(typ) && isJavaClass("java.lang." str typ))
+	}
 
 	func listStr(item...) {
 		str("(", s.join(" ", item), ")")
@@ -111,7 +132,7 @@ func codeGenerator(symbolTable) {
 		},
 	        TYPEIMPORTSPEC: func(typepackage, typeclasses...) {
 			for typeclass := range typeclasses {
-				symbolTable symbols.AddType str(typepackage, ".", typeclass)
+				symbolTable symbols.AddType typeclass
 			}
 			listStr apply (typepackage cons typeclasses)
 		},
@@ -239,7 +260,7 @@ func codeGenerator(symbolTable) {
 		SYMBOL: func(identifier){
 			identifier
 		} (pkg, identifier) {
-			if symbolTable symbols.HasPackage pkg {
+			if !(symbolTable symbols.HasPackage pkg) {
 				throw(new Exception(format(
 					`package "%s" in %s.%s does not appear in imports %s`,
 					pkg, pkg, identifier, symbols.Packages(symbolTable))))
@@ -266,10 +287,12 @@ func codeGenerator(symbolTable) {
 		}
 		},
 		STRUCTSPEC: func(javaIdentifier, fields...) {
-			listStr("defrecord", javaIdentifier, str("[", blankJoin apply fields, "]"))
+			symbolTable symbols.AddType javaIdentifier
+		listStr("defrecord", javaIdentifier, str("[", blankJoin apply fields, "]"))
 		},
 		FIELDS: blankJoin,
 		INTERFACESPEC: func(args...){
+			symbolTable symbols.AddType first(args)
 			listStr apply ("defprotocol" cons args)
 		},
 		VOIDMETHODSPEC: func(javaIdentifier) {
@@ -283,6 +306,7 @@ func codeGenerator(symbolTable) {
 			listStr("^" str typ, javaIdentifier, str("[this ", methodparams, "]"))
 		},
 		IMPLEMENTS: func(protocol, concrete, methodimpls...) {
+			symbolTable symbols.AddType concrete
 			listStr apply concat(list("extend-type", concrete, protocol), methodimpls)
 		},
 		METHODIMPL: func(javaIdentifier, function) {
@@ -397,7 +421,15 @@ func codeGenerator(symbolTable) {
 			listStr(".", expression, identifier)
 		},
 		JAVASTATIC:      func{"/" s.join ...},
-		TYPENAME:        func{"." s.join ...},
+		TYPENAME:        func(segments...){
+			const typ = "." s.join segments
+			if !hasType(typ) {
+				throw(new Exception(format(
+					`type "%s" does not appear in type imports %s`,
+					typ, symbols.Types(symbolTable))))
+			}
+			typ
+		},
 		UNDERSCOREJAVAIDENTIFIER: func{ "-" str ..},
 		JAVAMETHODCALL: func(expression, identifier) {
 			str("(. ", expression, " (", identifier, "))")
@@ -420,7 +452,7 @@ func packageclauseFunc(symbolTable, path String) {
 	func(imported, importDecls) {
 		const fullImported = parent str imported
 		if imported != name {
-			throw(new java.lang.Exception(str(
+			throw(new Exception(str(
 				`Got package "`, imported, `" instead of expected "`,
 				name, `" in "`, path, `"`
 			)))

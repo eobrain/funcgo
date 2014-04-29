@@ -22,6 +22,10 @@ import (
         "clojure/tools/cli"
         "funcgo/core"
 )
+import type (
+	java.io.{BufferedWriter, File, StringWriter}
+	jline.console.ConsoleReader
+)
 
 var commandLineOptions = [
         ["-r", "--repl",  "start a Funcgo interactive console"],
@@ -61,7 +65,7 @@ func prettyPrint(obj, writer) {
         )
 }
 
-func writePrettyTo(cljText, writer java.io.BufferedWriter) {
+func writePrettyTo(cljText, writer BufferedWriter) {
 	for expr := range readString( str("[", cljText, "]")) {
 		prettyPrint(expr, writer)
 		writer->newLine()
@@ -73,21 +77,21 @@ func writePrettyTo(cljText, writer java.io.BufferedWriter) {
 func compileExpression(inPath, fgoText) {
 	const (
 		cljText = core.Parse(inPath, fgoText, EXPR)
-		strWriter = new java.io.StringWriter()
-		writer = new java.io.BufferedWriter(strWriter)
+		strWriter = new StringWriter()
+		writer = new BufferedWriter(strWriter)
 	)
 	cljText writePrettyTo writer
 	strWriter->toString()
 }
 
 func newConsoleReader() {
-	const consoleReader = new jline.console.ConsoleReader()
+	const consoleReader = new ConsoleReader()
 	consoleReader->setPrompt("fgo=>     ")
 	consoleReader
 }
 
 func repl(){
-	const consoleReader jline.console.ConsoleReader = newConsoleReader()
+	const consoleReader ConsoleReader = newConsoleReader()
 	loop(){
 		const cljText = first(core.Parse(
 			"repl.go",
@@ -103,14 +107,14 @@ func repl(){
 func CompileString(inPath, fgoText) {
 	const (
 		cljText = core.Parse(inPath, fgoText)
-		strWriter = new java.io.StringWriter()
-		writer = new java.io.BufferedWriter(strWriter)
+		strWriter = new StringWriter()
+		writer = new BufferedWriter(strWriter)
 	)
 	cljText writePrettyTo writer
 	strWriter->toString()
 }
 
-func compileFile(inFile java.io.File, root java.io.File, opts) {
+func compileFile(inFile File, root File, opts) {
         const(
                 inPath = inFile->getPath()
                 outFile = io.file(string.replace(inPath, /\.go(s?)$/, ".clj$1"))
@@ -120,7 +124,7 @@ func compileFile(inFile java.io.File, root java.io.File, opts) {
 			prefixLen = root->getAbsolutePath()->length()
 			relative = subs(inFile->getAbsolutePath(), prefixLen + 1)
 		)
-                print("  ", relative)
+                print("  ", relative, " ")
 		{
 			const(
 				cljText String 
@@ -145,11 +149,11 @@ func compileFile(inFile java.io.File, root java.io.File, opts) {
         }
 }
 
-func compileTree(root java.io.File, opts) {
+func compileTree(root File, opts) {
 	println(root->getName())
 	for f := range fileSeq(root) {
 		const (
-			ff java.io.File = f
+			ff File = f
 			name = ff->getName
 		)
 		try {

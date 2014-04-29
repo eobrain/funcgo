@@ -124,7 +124,7 @@ sourcefile = NL? packageclause expressions _
      fortimes = <'for'> <__> Identifier _ <':='> _ <'times'> <_> expr _ Blocky
      tryexpr = <'try'> _ ImpliedDo _ catches ( _ finally )?
        catches = ( catch {_ catch} )?
-         catch = <'catch'> _ Identifier _ Identifier _ ImpliedDo
+         catch = <'catch'> _ typename _ Identifier _ ImpliedDo
        finally = <'finally'> _ Blocky
      <UnaryExpr> = PrimaryExpr | javafield | ReaderMacro | unaryexpr
        unaryexpr = unary_op _ UnaryExpr
@@ -170,7 +170,7 @@ sourcefile = NL? packageclause expressions _
 				  | methodparameters _ <','> _ methodparam
 		   methodparam = symbol (_ JavaIdentifier)?
          implements = <'implements'> _ typename _ 
-                        <'func'> _ <'('> _ typename <')'> _ (
+                        <'func'> _ <'('> _ JavaIdentifier <')'> _ (
                           MethodImpl | <'('> _ MethodImpl ( NL MethodImpl )* _ <')'>
                         )
            <MethodImpl> = typedmethodimpl | untypedmethodimpl

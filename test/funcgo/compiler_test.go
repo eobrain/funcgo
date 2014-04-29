@@ -53,14 +53,26 @@ import(
 )
 
 
-func parse(expr, pkgs...) {
-	const imports = func{str(`"`, .., `"`)} map pkgs
-	compileString("foo.go", 
-		if count(pkgs) == 0 {
-			str("package foo;", expr)
-		}else {
-			str("package foo\nimport(\n", "\n" string.join imports, "\n)\n", expr)
+func parse(expr) {
+	parse(expr, [], [])
+} (expr, pkgs) {
+	parse(expr, list(pkgs), [])
+} (expr, pkgs, types) {
+	const(
+		imports = if count(pkgs) == 0 {
+			""
+		} else {
+			const lines = for p := lazy pkgs {str(`"`, p, `"`)}
+			str("import(\n", "\n" string.join lines, "\n)\n")
 		}
+		importtypes = if count(types) == 0 {
+			""
+		} else {
+			str("import type(\n", "\n" string.join types, "\n)\n")
+		}
+	)
+	compileString("foo.go", 
+		str("package foo\n", imports, importtypes, expr)
 	)
 }
 
@@ -75,38 +87,31 @@ func parseJs(expr, pkgs...) {
 	)
 }
 
-// func parse(expr) {
-// 	compileString("foo.go", "package foo;" str expr)
-// } (pkg, expr) {
-// 	compileString("foo.go", format(`
-// package foo
-// import(
-//  "%s"
-// )
-// %s`, pkg, expr))
-// } (pkg1, pkg2, expr) {
-// 	compileString("foo.go", format(`
-// package foo
-// import(
-//  "%s"
-//  "%s"
-// )
-// %s`, pkg1, pkg2, expr))
-// }
-
-func parsed(expr, pkgs...) {
-	if count(pkgs) == 0 {
-		str("(ns foo (:gen-class))",
-			" (set! *warn-on-reflection* true) ",
-			expr
-		)
-	}else{
-		const imports = func{str(" [", .., " :as ", .., "]")} map pkgs
-		str("(ns foo (:gen-class) (:require", (str apply imports), "))",
-			" (set! *warn-on-reflection* true) ",
-			expr
-		)
-	}
+func parsed(expr) {
+	parsed(expr, [], [])
+} (expr, pkgs) {
+	parsed(expr, list(pkgs), [])
+} (expr, pkgs, types) {
+	const(
+		imports = if count(pkgs) == 0 {
+			""
+		} else {
+			const lines = for p := lazy pkgs {str("[", p, " :as ", p, "]")}
+			str(" (:require ", " " string.join lines, ")")
+		}
+		importtypes = if count(types) == 0 {
+			""
+		} else {
+			const lines = for t := lazy types {str("(", t, ")")}
+			str(" (:import ", " " string.join lines, ")")
+		}
+	)
+	str("(ns foo (:gen-class)",
+		imports,
+		importtypes,
+		") (set! *warn-on-reflection* true) ",
+		expr
+	)
 }
 
 func parsedJs(expr, pkgs...) {
@@ -117,20 +122,6 @@ func parsedJs(expr, pkgs...) {
 		str("(ns foo (:require", (str apply imports), ")) ", expr)
 	}
 }
-
-// func parsed(expr) {
-//         str("(ns foo (:gen-class)) (set! *warn-on-reflection* true) ", expr)
-// } (pkg, expr){
-//         str("(ns foo (:gen-class) (:require [", pkg, " :as ", pkg, "]))",
-// 		" (set! *warn-on-reflection* true) ",
-// 		expr)
-// } (pkg1, pkg2, expr){
-//         str("(ns foo (:gen-class)",
-// 		" (:require [", pkg1, " :as ", pkg1, "])",
-// 		" (:require [", pkg2, " :as ", pkg2, "]))",
-// 		" (set! *warn-on-reflection* true) ",
-// 		expr)
-// }
 
 func parseNoPretty(expr) {
 	fgo.Parse("foo.go", "package foo;" str expr)
@@ -158,10 +149,12 @@ test.fact("outside symbols",
 test.fact("can define things",
 	parse("a := 12345"), =>, parsed("(def ^:private a 12345)"),
 	parse("var a = 12345"), =>, parsed("(def ^:private a 12345)"),
-	parse("var a FooType = 12345"), =>, parsed("(def ^{:private true, :tag FooType} a 12345)"),
+	parse("var a FooType = 12345", [], ["foo.FooType"]),
+		=>, parsed("(def ^{:private true, :tag FooType} a 12345)", [], ["foo FooType"]),
 	parse("Foo := 12345"), =>, parsed("(def Foo 12345)"),
 	parse("var Foo = 12345"), =>, parsed("(def Foo 12345)"),
-	parse("var Foo FooType = 12345"), =>, parsed("(def ^FooType Foo 12345)")
+	parse("var Foo FooType = 12345", [], ["foo.FooType"]),
+	=>, parsed("(def ^FooType Foo 12345)", [], ["foo FooType"])
 )
 
 
@@ -255,15 +248,28 @@ test.fact("Map Destructuring",
 )
 
 test.fact("type hints",
-        parse(`{const(a FooType = 3) f(a)}`), =>, parsed(`(let [^FooType a 3] (f a))`),
-        parse(`{const a FooType = 3; f(a)}`), =>, parsed(`(let [^FooType a 3] (f a))`),
-        parse(`func g(a FooType) { f(a) }`),  =>, parsed(`(defn- g [^FooType a] (f a))`),
-        parse(`func(a FooType) { f(a) }`),  =>, parsed(`(fn [^FooType a] (f a))`),
-        parse(`func g(a) FooType { f(a) }`),  =>, parsed(`(defn- g ^FooType [a] (f a))`),
-        parse(`func(a) FooType { f(a) }`),  =>, parsed(`(fn ^FooType [a] (f a))`),
+        parse(`{const(a FooType = 3) f(a)}`, [], ["foo.FooType"]),
+	=>, parsed(`(let [^FooType a 3] (f a))`, [], ["foo FooType"]),
+
+        parse(`{const a FooType = 3; f(a)}`, [], ["foo.FooType"]),
+	=>, parsed(`(let [^FooType a 3] (f a))`, [], ["foo FooType"]),
+
+        parse(`func g(a FooType) { f(a) }`, [], ["foo.FooType"]),
+	=>, parsed(`(defn- g [^FooType a] (f a))`, [], ["foo FooType"]),
+
+        parse(`func(a FooType) { f(a) }`, [], ["foo.FooType"]),
+	=>, parsed(`(fn [^FooType a] (f a))`, [], ["foo FooType"]),
+
+        parse(`func g(a) FooType { f(a) }`, [], ["foo.FooType"]),
+	=>, parsed(`(defn- g ^FooType [a] (f a))`, [], ["foo FooType"]),
+
+        parse(`func(a) FooType { f(a) }`, [], ["foo.FooType"]),
+	=>, parsed(`(fn ^FooType [a] (f a))`, [], ["foo FooType"]),
+
         parse(`func f(a) long {a/3} (a, b) double {a+b}`),
 	=>,
 	parsed(`(defn- f (^long [a] (/ a 3)) (^double [a b] (+ a b)))`),
+
         parse(`func(a) long {a/3} (a, b) double {a+b}`),
 	=>,
 	parsed(`(fn (^long [a] (/ a 3)) (^double [a b] (+ a b)))`)
@@ -274,7 +280,7 @@ test.fact("expression",
 	parse(`var a = 1<<64 - 1`), =>, parsed(`(def ^:private a (- (bit-shift-left 1 64) 1))`)
 )
 
-test.fact("quoteing",
+test.fact("quoting",
 	parse("quote(foo(a))"),           =>, parsed("'(foo a)"),
 	parseNoPretty("syntax foo(a)"),     =>, parsedNoPretty("`(foo a)"),
 	parseNoPretty("syntax \\`(foo a)`"), =>, parsedNoPretty("`(foo a)"),
@@ -412,17 +418,25 @@ test.fact("if",
 	parse("if a {b;c} else {d;e}") ,=>, parsed("(if a (do b c) (do d e))")
 )
 test.fact("new",
-	parse("new Foo()") ,=>, parsed("(Foo.)"),
-	parse("new Foo(a)") ,=>, parsed("(Foo. a)"),
-	parse("new Foo(a,b,c)") ,=>, parsed("(Foo. a b c)")
+	parse("new Foo()", [], ["foo.Foo"]) ,=>, parsed("(Foo.)", [], ["foo Foo"]),
+	parse("new Foo(a)", [], ["foo.Foo"]) ,=>, parsed("(Foo. a)", [], ["foo Foo"]),
+	parse("new Foo(a,b,c)", [], ["foo.Foo"]) ,=>, parsed("(Foo. a b c)", [], ["foo Foo"])
 )
 test.fact("try catch",
-	parse("try{a}catch T e{b}") ,=>, parsed("(try a (catch T e b))"),
-	parse("try{a}catch T1 e1{b} catch T2 e2{c}")
-	,=>, parsed("(try a (catch T1 e1 b) (catch T2 e2 c))"),
-	parse("try{a;b}catch T e{c;d}") ,=>, parsed("(try a b (catch T e c d))"),
-	parse("try{a}catch T e{b}finally{c}") ,=>, parsed("(try a (catch T e b) (finally c))"),
-	parse("try { a } catch T e{ b } ") ,=>, parsed("(try a (catch T e b))")
+	parse("try{a}catch T e{b}", [], ["a.T"]),
+	=>, parsed("(try a (catch T e b))", [], ["a T"]),
+
+	parse("try{a}catch T1 e1{b} catch T2 e2{c}", [], ["a.{T1,T2}"]),
+	=>, parsed("(try a (catch T1 e1 b) (catch T2 e2 c))", [], ["a T1 T2"]),
+
+	parse("try{a;b}catch T e{c;d}", [], ["a.T"]),
+	=>, parsed("(try a b (catch T e c d))", [], ["a T"]),
+
+	parse("try{a}catch T e{b}finally{c}", [], ["a.T"]),
+	=>, parsed("(try a (catch T e b) (finally c))", [], ["a T"]),
+
+	parse("try { a } catch T e{ b }", [], ["a.T"]),
+	=>, parsed("(try a (catch T e b))", [], ["a T"])
 )
 test.fact("for",
 	parse("for x:=range xs{f(x)}")    ,=>, parsed("(doseq [x xs] (f x))"),
@@ -614,10 +628,10 @@ test.fact("Effective Go",
 	parse(`if err := file.Chmod(0664); err != nil {
     log.Print(err)
     err
-}`, "file", "log"),
+}`, ["file", "log"], []),
 	=>,
 	parsed("(let [err (file/Chmod 436)] (when (not= err nil) (do (log/Print err) err)))",
-	"file", "log")
+		["file", "log"],[])
 )
 
 test.fact("interface",
@@ -644,14 +658,14 @@ type Interface interface {
         Len() int
         // Less reports whether the element with
         // index i should sort before the element with index j.
-        Less(i, j int) bool
+        Less(i, j int) boolean
         // Swap swaps the elements with indexes i and j.
         Swap(i, j int)
 }
 `), =>, parsed(str(
 	`(defprotocol Interface`,
 	` (^long Len [this])`,
-	` (^bool Less [this i ^int j])`,
+	` (^boolean Less [this i ^int j])`,
 	` (Swap [this i ^int j]))`))
 )
 
@@ -663,21 +677,21 @@ type Interface interface {
 
 test.fact("implements",
 
-	parse(`implements Ia func (Ty) f(a) {b}`),
-	=>, parsed(`(extend-type Ty Ia (f [this a] b))`),
+	parse(`implements Ia func (Ty) f(a) {b}`, [], ["a.Ia"]),
+	=>, parsed(`(extend-type Ty Ia (f [this a] b))`, [], ["a Ia"]),
 		
-	parse(`implements Ia func(Ty)(f(a) {b}; g() {c})`),
-	=>, parsed(`(extend-type Ty Ia (f [this a] b) (g [this] c))`)
+	parse(`implements Ia func(Ty)(f(a) {b}; g() {c})`, [], ["a.Ia"]),
+	=>, parsed(`(extend-type Ty Ia (f [this a] b) (g [this] c))`, [], ["a Ia"])
 )
 
 test.fact("Methods required by sort.Interface",
       parse(`
-implements sort.Interface 
+implements Interface 
 func (Sequence) (
   Len() int {
       len(this)
   }
-  Less(i, j int) bool {
+  Less(i, j int) boolean {
       this[i] < this[j]
   }
   Swap(i, j int) {
@@ -685,25 +699,27 @@ func (Sequence) (
       assoc(this, i, this[j], j, this[i])    
   }
 )
-`), =>, parsed(str(
-	`(extend-type Sequence sort.Interface`,
-	` (^long Len [this] (len this))`,
-	` (^bool Less [this i ^long j] (< (nth this i) (nth this j)))`,
-	` (Swap [this i ^long j] (assoc this i (nth this j) j (nth this i))))`))
+`, [], ["sort.Interface"]),
+	=>, parsed(str(
+		`(extend-type Sequence Interface`,
+		` (^long Len [this] (len this))`,
+		` (^boolean Less [this i ^long j] (< (nth this i) (nth this j)))`,
+		` (Swap [this i ^long j] (assoc this i (nth this j) j (nth this i))))`),
+		[], ["sort Interface"])
 )
 
 test.fact("Method for printing - sorts the elements before printing.",
 	parse(`
-implements fmt.Stringer
-func (Sequence) String() string {
+implements Stringer
+func (Sequence) String() String {
     str("[",  " " join sort.Sort(this),  "]")
 }
 
-`, "sort"), =>, parsed(str(
-	`(extend-type Sequence fmt.Stringer`,
-	` (^string String [this]`,
+`, ["sort"], ["fmt.Stringer"]), =>, parsed(str(
+	`(extend-type Sequence Stringer`,
+	` (^String String [this]`,
 	` (str "[" (join " " (sort/Sort this)) "]")))`
-), "sort"))
+), ["sort"], ["fmt Stringer"]))
 
 test.fact("struct",
 	parse(`type TreeNode struct{val; l; r}`), 
@@ -712,9 +728,9 @@ test.fact("struct",
 )
 
 test.fact("typed struct",
-	parse(`type TreeNode struct{val; l TreeNode; r TreeNode}`), 
+	parse(`type TreeNode struct{}; type TreeNode struct{val; l TreeNode; r TreeNode}`), 
 	=>,
-	parsed(`(defrecord TreeNode [val ^TreeNode l ^TreeNode r])`)
+	parsed(`(defrecord TreeNode []) (defrecord TreeNode [val ^TreeNode l ^TreeNode r])`)
 )
 
 test.fact("switch",
@@ -731,7 +747,7 @@ test.fact("Error if external package not imported",
 	parse("huh.bar"),
 	=>, test.throws(Exception, `package "huh" in huh.bar does not appear in imports []`),
 
-	parse("huh.bar", "aaa", "bbb"),
+	parse("huh.bar", ["aaa", "bbb"], []),
 	=>, test.throws(Exception, `package "huh" in huh.bar does not appear in imports [bbb, aaa]`)
 )
 

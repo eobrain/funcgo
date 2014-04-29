@@ -1,5 +1,8 @@
 package time
+import type (
+	java.util.Date
+)
 
 func Now() {
-	new java.util.Date()
+	new Date()
 }

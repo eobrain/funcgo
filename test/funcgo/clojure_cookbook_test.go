@@ -526,8 +526,7 @@ test.fact("Funcgo has numbers",
 	// Size-bounded integers can overflow
 	try {
 		9999 * 9999 * 9999 * 9999 * 9999
-
-	} catch \ArithmeticException e {
+	} catch ArithmeticException e {
 		e->getMessage
 	},
 	=>, "integer overflow",

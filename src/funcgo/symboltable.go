@@ -20,7 +20,11 @@ import "clojure/string"
 
 // Return a new symbol table.
 func New() {
-	ref({})
+	ref({
+		"long": TYPE,
+		"double": TYPE,
+		"boolean": TYPE
+	})
 }
 
 // Add a package symbol to the table.
@@ -35,12 +39,12 @@ func AddType(st, pkg) {
 
 // Has this package been previously been added to the table?
 func HasPackage(st, pkg) {
-	(*st)(pkg) != PACKAGE
+	(*st)(pkg) == PACKAGE
 }
 
 // Has this type been previously been added to the table?
-func HasType(st, pkg) {
-	(*st)(pkg) != TYPE
+func HasType(st, typ) {
+	(*st)(typ) == TYPE
 }
 
 // Return a string representation of packages in the table.
