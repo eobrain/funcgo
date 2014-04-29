@@ -140,7 +140,7 @@ func compileFile(inFile File, root File, opts) {
 				cljText writePrettyTo writer
 			}
 			println("\t\t-->", outFile->getPath())
-			if (outFile->length) / (inFile->length) < 0.5 {
+			if (outFile->length) / (inFile->length) < 0.4 {
 				println("WARNING: Output file is only",
 					int(100 * (outFile->length) / (inFile->length)),
 					"% the size of the input file")
