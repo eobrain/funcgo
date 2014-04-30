@@ -47,7 +47,12 @@ sourcefile = NL? packageclause expressions _
          imported = Identifier {<'/'> Identifier}
  expressions = expr | expressions NL expr
    <expr>  = precedence0 | Vars | shortvardecl | ifelseexpr | letifelseexpr | tryexpr | forrange |
-                   forlazy | fortimes | Blocky | ExprSwitchStmt
+                   forlazy | fortimes | Blocky | ExprSwitchStmt | assoc | associn
+     assoc = expr _ <'+='> _ <'{'> _ associtem _ { <','> _ associtem _ } <'}'>
+     dissoc = expr _ <'-='> _ <'{'> _ associtem _ { <','> _ associtem _ } <'}'>
+       associtem = expr _ <':'> _ expr 
+     associn = expr _ <'+='> _ <'{'> _ associnpath _ <':'> _ expr _ <'}'>
+       associnpath = expr _ expr {_ expr}
      <ExprSwitchStmt> = boolswitch | constswitch
        boolswitch = <'switch'> _ <'{'>  _ boolcaseclause { NL boolcaseclause } _ <'}'>
        constswitch = <'switch'> _ expr _ <'{'> _ constcaseclause { NL constcaseclause } _ <'}'>

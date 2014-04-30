@@ -31,17 +31,26 @@ func New() {
 
 // Add a package symbol to the table.
 func PackageImported(st, pkg) {
-	dosync(alter(st, assoc,
-		pkg, PACKAGE,
-		UNUSED_PACKAGES, (*st)(UNUSED_PACKAGES) conj pkg
-	))
+	//dosync(alter(st, assoc,
+	//	pkg, PACKAGE,
+	//	UNUSED_PACKAGES, (*st)(UNUSED_PACKAGES) conj pkg
+	//))
+	dosync(alter(st, func{
+		.. += {
+			pkg: PACKAGE,
+			UNUSED_PACKAGES: (*st)(UNUSED_PACKAGES) conj pkg
+		}
+	}))
 }
 
 // Add a package symbol to the table, but don't require it to be used.
 func PackageCreated(st, pkg) {
-	dosync(alter(st, assoc,
-		pkg, PACKAGE
-	))
+	//dosync(alter(st, assoc,
+	//	pkg, PACKAGE
+	//))
+	dosync(alter(st, func{
+		.. += {pkg: PACKAGE}
+	}))
 }
 
 // Add a package symbol to the table.

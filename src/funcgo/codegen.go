@@ -102,7 +102,7 @@ func codeGenerator(symbolTable) {
 		importSpec(last(imported s.split /\./), imported)
 	} (identifier, imported) {
 		symbolTable symbols.PackageImported identifier
-		str("[", imported, " :as ", identifier, "]")
+		vecStr(imported, ":as", identifier)
 	}
 	func externImportSpec(identifier) {
 		symbolTable symbols.PackageImported identifier
@@ -162,6 +162,17 @@ func codeGenerator(symbolTable) {
 			")"
 			)
 		},
+		ASSOC: func(symbol, items...) {
+			listStr apply ("assoc" cons (symbol cons items))
+		},
+		DISSOC: func(symbol, items...) {
+			listStr apply ("dissoc" cons (symbol cons items))
+		},
+		ASSOCIN: func(symbol, path, value) {
+			listStr("assoc-in", symbol, path, value)
+		},
+		ASSOCITEM: blankJoin,
+		ASSOCINPATH: vecStr,
 		BOOLSWITCH: func(clauses...) {
 			listStr apply ("cond" cons clauses)
 		},
@@ -288,7 +299,7 @@ func codeGenerator(symbolTable) {
 		},
 		STRUCTSPEC: func(javaIdentifier, fields...) {
 			symbolTable symbols.TypeCreated javaIdentifier
-		listStr("defrecord", javaIdentifier, str("[", blankJoin apply fields, "]"))
+		listStr("defrecord", javaIdentifier, vecStr apply fields)
 		},
 		FIELDS: blankJoin,
 		INTERFACESPEC: func(args...){
@@ -354,7 +365,7 @@ func codeGenerator(symbolTable) {
 		},
 		PARAMETERS:     blankJoin,
 		VARIADIC:       func{"& " str ..},
-		VECLIT:         func{str("[",  " " s.join ...,	"]")},
+		VECLIT:         vecStr,
 		DICTLIT:        func{str apply ...},
 		DICTELEMENT:    func(key, value) {str(key, " ", value, " ")},
 		SETLIT:         func{str("#{",  " " s.join ...,  "}")},
@@ -481,6 +492,9 @@ func Generate(path String, parsed) {
 			PACKAGECLAUSE,
 			packageclauseFunc(symbolTable, path)
 		)
+		//codeGen = codeGenerator(symbolTable) + {
+		//	PACKAGECLAUSE: packageclauseFunc(symbolTable, path)
+		//}
 		clj = insta.transform(codeGen, parsed)
 	)
 	symbols.CheckAllUsed(symbolTable)

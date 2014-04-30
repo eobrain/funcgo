@@ -17,8 +17,20 @@ test.fact("getIn",
 	=>,  6
 )
 
-test.fact("assocIn",
-	assocIn(matrix, [1,2], X),
+test.fact("assoc assoc",
+	{
+		const row = matrix[1] += {2: X}
+		matrix += {1: row}
+	},
+	=>, [
+		[1,2,3],
+		[4,5,X],
+		[7,8,9]
+	]
+)
+
+test.fact("assoc-in",
+	matrix += {1 2: X},
 	=>, [
 		[1,2,3],
 		[4,5,X],

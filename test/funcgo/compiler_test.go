@@ -695,8 +695,7 @@ func (Sequence) (
       this[i] < this[j]
   }
   Swap(i, j int) {
-      // this[i], this[j] = this[j], this[i]
-      assoc(this, i, this[j], j, this[i])    
+      this += {i: this[j], j: this[i]}
   }
 )
 `, [], ["sort.Interface"]),
@@ -784,6 +783,18 @@ new List()
 	`(ns joy.java (:gen-class) (:import (java.util HashMap List) (java.util.concurrent.atomic AtomicLong))) (set! *warn-on-reflection* true) (HashMap. {"happy?" true}) (AtomicLong. 42) (List.)`
 )
 	
+test.fact("assoc",
+	parse(`x += {AA: aaa, BB: bbb}`), =>, parsed(`(assoc x :aa aaa :bb bbb)`)
+)
+
+//test.fact("dissoc",
+//	parse(`x -= {AA: aaa, BB: bbb}`), =>, parsed(`(dissoc x :aa aaa :bb bbb)`)
+//)
+
+test.fact("assoc-in",
+	parse(`x += {4 AAA 6 8: aaa }`), =>, parsed(`(assoc-in x [4 :aaa 6 8] aaa)`)
+)
+
 //test.fact("",
 //      parse(``), =>, parsed(``),
 //)
