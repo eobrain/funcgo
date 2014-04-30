@@ -751,6 +751,23 @@ test.fact("Error if external package not imported",
 	=>, test.throws(Exception, `package "huh" in huh.bar does not appear in imports [bbb, aaa]`)
 )
 
+test.fact("Error if import not used",
+	parse("1234", "aaa"),
+	=>, test.throws(Exception, `Packages imported but never used: [aaa]`),
+
+	parse("1234", ["aaa", "bbb"], []),
+	=>, test.throws(Exception, `Packages imported but never used: [aaa, bbb]`),
+
+	parse("aaa.xxx", ["aaa", "bbb"], []),
+	=>, test.throws(Exception, `Packages imported but never used: [bbb]`),
+
+	parse("1234", [], ["a.Aaa", "b.Bbb"]),
+	=>, test.throws(Exception, `Types imported but never used: [Aaa, Bbb]`),
+
+	parse("Aaa::xxx", [], ["a.Aaa", "b.Bbb"]),
+	=>, test.throws(Exception, `Types imported but never used: [Bbb]`)
+)
+
 test.fact("import type",
 	compileString("joy/java.go", `
 package java

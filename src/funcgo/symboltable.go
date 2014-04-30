@@ -93,10 +93,12 @@ func CheckAllUsed(st) {
 		typs = (*st)(UNUSED_TYPES)
 	)
 	if notEmpty(pkgs) {
-		throw(new Exception(str("Packages imported but never used: ", pkgs)))
+		const pkgsS = ", " string.join pkgs
+		throw(new Exception(str("Packages imported but never used: [", pkgsS, "]")))
 	}
 	if notEmpty(typs) {
-		throw(new Exception(str("Types imported but never used: ", typs)))
+		const typsS = ", " string.join typs
+		throw(new Exception(str("Types imported but never used: [", typsS, "]")))
 	}
 
 }
