@@ -1,8 +1,5 @@
 ;; Compiled from tasks/leiningen/fgoc.go
-(ns
- leiningen.fgoc
- (:gen-class)
- (:require [clojure.java.shell :as sh] [clojure.java.io :as io]))
+(ns leiningen.fgoc (:gen-class) (:require [clojure.java.shell :as sh]))
 
 (set! *warn-on-reflection* true)
 

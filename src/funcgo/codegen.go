@@ -101,11 +101,11 @@ func codeGenerator(symbolTable) {
 	func importSpec(imported) {
 		importSpec(last(imported s.split /\./), imported)
 	} (identifier, imported) {
-		symbolTable symbols.AddPackage identifier
+		symbolTable symbols.PackageImported identifier
 		str("[", imported, " :as ", identifier, "]")
 	}
 	func externImportSpec(identifier) {
-		symbolTable symbols.AddPackage identifier
+		symbolTable symbols.PackageImported identifier
 		""
 	}
 
@@ -132,7 +132,7 @@ func codeGenerator(symbolTable) {
 		},
 	        TYPEIMPORTSPEC: func(typepackage, typeclasses...) {
 			for typeclass := range typeclasses {
-				symbolTable symbols.AddType typeclass
+				symbolTable symbols.TypeImported typeclass
 			}
 			listStr apply (typepackage cons typeclasses)
 		},
@@ -287,12 +287,12 @@ func codeGenerator(symbolTable) {
 		}
 		},
 		STRUCTSPEC: func(javaIdentifier, fields...) {
-			symbolTable symbols.AddType javaIdentifier
+			symbolTable symbols.TypeCreated javaIdentifier
 		listStr("defrecord", javaIdentifier, str("[", blankJoin apply fields, "]"))
 		},
 		FIELDS: blankJoin,
 		INTERFACESPEC: func(args...){
-			symbolTable symbols.AddType first(args)
+			symbolTable symbols.TypeCreated first(args)
 			listStr apply ("defprotocol" cons args)
 		},
 		VOIDMETHODSPEC: func(javaIdentifier) {
@@ -306,7 +306,7 @@ func codeGenerator(symbolTable) {
 			listStr("^" str typ, javaIdentifier, str("[this ", methodparams, "]"))
 		},
 		IMPLEMENTS: func(protocol, concrete, methodimpls...) {
-			symbolTable symbols.AddType concrete
+			symbolTable symbols.TypeCreated concrete
 			listStr apply concat(list("extend-type", concrete, protocol), methodimpls)
 		},
 		METHODIMPL: func(javaIdentifier, function) {
@@ -447,7 +447,7 @@ func packageclauseFunc(symbolTable, path String) {
 		[parent, name] = splitPath(path)
 	)
 	if isGoscript {
-		symbolTable symbols.AddPackage "js"
+		symbolTable symbols.PackageCreated "js"
 	}
 	func(imported, importDecls) {
 		const fullImported = parent str imported
@@ -481,7 +481,9 @@ func Generate(path String, parsed) {
 			PACKAGECLAUSE,
 			packageclauseFunc(symbolTable, path)
 		)
+		clj = insta.transform(codeGen, parsed)
 	)
-	insta.transform(codeGen, parsed)
+	symbols.CheckAllUsed(symbolTable)
+	clj
 }
 	

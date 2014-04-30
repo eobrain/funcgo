@@ -1,7 +1,6 @@
 package fgoc
 import(
         sh "clojure/java/shell"
-        "clojure/java/io"
 )
 
 func fgoc(project, args...) {

@@ -23,27 +23,55 @@ func New() {
 	ref({
 		"long": TYPE,
 		"double": TYPE,
-		"boolean": TYPE
+		"boolean": TYPE,
+		UNUSED_PACKAGES: set{},
+		UNUSED_TYPES: set{}
 	})
 }
 
 // Add a package symbol to the table.
-func AddPackage(st, pkg) {
-	dosync(alter(st, assoc, pkg, PACKAGE))
+func PackageImported(st, pkg) {
+	dosync(alter(st, assoc,
+		pkg, PACKAGE,
+		UNUSED_PACKAGES, (*st)(UNUSED_PACKAGES) conj pkg
+	))
+}
+
+// Add a package symbol to the table, but don't require it to be used.
+func PackageCreated(st, pkg) {
+	dosync(alter(st, assoc,
+		pkg, PACKAGE
+	))
 }
 
 // Add a package symbol to the table.
-func AddType(st, pkg) {
-	dosync(alter(st, assoc, pkg, TYPE))
+func TypeImported(st, typ) {
+	dosync(alter(st, assoc,
+		typ, TYPE,
+		UNUSED_TYPES, (*st)(UNUSED_TYPES) conj typ
+	))
+}
+
+// Add a package symbol to the table.
+func TypeCreated(st, typ) {
+	dosync(alter(st, assoc,
+		typ, TYPE
+	))
 }
 
 // Has this package been previously been added to the table?
 func HasPackage(st, pkg) {
+	dosync(alter(st, assoc,
+		UNUSED_PACKAGES, (*st)(UNUSED_PACKAGES) disj pkg
+	))
 	(*st)(pkg) == PACKAGE
 }
 
 // Has this type been previously been added to the table?
 func HasType(st, typ) {
+	dosync(alter(st, assoc,
+		UNUSED_TYPES, (*st)(UNUSED_TYPES) disj typ
+	))
 	(*st)(typ) == TYPE
 }
 
@@ -57,4 +85,18 @@ func Packages(st) {
 func Types(st) {
 	const packages = for [symbol, key] := lazy *st if key == TYPE { symbol }
 	str("[", ", " string.join packages, "]")
+}
+
+func CheckAllUsed(st) {
+	const (
+		pkgs = (*st)(UNUSED_PACKAGES)
+		typs = (*st)(UNUSED_TYPES)
+	)
+	if notEmpty(pkgs) {
+		throw(new Exception(str("Packages imported but never used: ", pkgs)))
+	}
+	if notEmpty(typs) {
+		throw(new Exception(str("Types imported but never used: ", typs)))
+	}
+
 }

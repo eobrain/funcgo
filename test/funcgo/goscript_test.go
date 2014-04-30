@@ -15,10 +15,15 @@ import macros(
   em "enfocus/macros"
 )
 
-12345
+ef.someFunction
+em.someMacro
 `),
         =>,
-        `(ns p (:require [enfocus.core :as ef]) (:require-macros [enfocus.macros :as em])) 12345`)
+        str(
+		`(ns p (:require [enfocus.core :as ef]) (:require-macros [enfocus.macros :as em]))`,
+		` ef/some-function em/some-macro`
+	)
+)
 
 func parse(expr) {
 	fgo.Parse("foo.gos", "package foo;" str expr)
@@ -45,8 +50,19 @@ import (
 import macros(
 	"enfocus/macros"
 )
-aaa
+ef.a
+effects.b
+events.c
+repl.d
+macros.e
 `
-	), =>,
-	`(ns fgosite.client (:require [enfocus.core :as ef] [enfocus.effects :as effects] [enfocus.events :as events] [clojure.browser.repl :as repl]) (:require-macros [enfocus.macros :as macros])) aaa`
+	), =>, str(
+		`(ns fgosite.client`,
+		` (:require [enfocus.core :as ef]`,
+		` [enfocus.effects :as effects]`,
+		` [enfocus.events :as events]`,
+		` [clojure.browser.repl :as repl])`,
+		` (:require-macros [enfocus.macros :as macros]))`,
+		` ef/a effects/b events/c repl/d macros/e`
+	)
 )

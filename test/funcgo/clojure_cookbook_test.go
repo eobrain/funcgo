@@ -1,7 +1,6 @@
 package clojure_cookbook_test
 import(
         test "midje/sweet"
-        fgo "funcgo/core"
         "clojure/string"
 	inf "inflections/core"
 )

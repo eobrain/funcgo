@@ -46,10 +46,10 @@ package foo
 import(
   b "bar"
 )
-12345
+b.xxx
 `),
         =>,
-        `(ns foo (:gen-class) (:require [bar :as b])) (set! *warn-on-reflection* true) 12345`
+        `(ns foo (:gen-class) (:require [bar :as b])) (set! *warn-on-reflection* true) b/xxx`
 )
 
 
@@ -761,10 +761,10 @@ import type (
 
 new HashMap({"happy?": true})
 new AtomicLong(42)
-
+new List()
 `),
 	=>,
-	`(ns joy.java (:gen-class) (:import (java.util HashMap List) (java.util.concurrent.atomic AtomicLong))) (set! *warn-on-reflection* true) (HashMap. {"happy?" true}) (AtomicLong. 42)`
+	`(ns joy.java (:gen-class) (:import (java.util HashMap List) (java.util.concurrent.atomic AtomicLong))) (set! *warn-on-reflection* true) (HashMap. {"happy?" true}) (AtomicLong. 42) (List.)`
 )
 	
 //test.fact("",
