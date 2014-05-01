@@ -787,9 +787,9 @@ test.fact("assoc",
 	parse(`x += {AA: aaa, BB: bbb}`), =>, parsed(`(assoc x :aa aaa :bb bbb)`)
 )
 
-//test.fact("dissoc",
-//	parse(`x -= {AA: aaa, BB: bbb}`), =>, parsed(`(dissoc x :aa aaa :bb bbb)`)
-//)
+test.fact("dissoc",
+	parse(`x -= {AA: aaa, BB: bbb}`), =>, parsed(`(dissoc x :aa aaa :bb bbb)`)
+)
 
 test.fact("assoc-in",
 	parse(`x += {4 AAA 6 8: aaa }`), =>, parsed(`(assoc-in x [4 :aaa 6 8] aaa)`)

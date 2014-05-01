@@ -47,12 +47,7 @@ sourcefile = NL? packageclause expressions _
          imported = Identifier {<'/'> Identifier}
  expressions = expr | expressions NL expr
    <expr>  = precedence0 | Vars | shortvardecl | ifelseexpr | letifelseexpr | tryexpr | forrange |
-                   forlazy | fortimes | Blocky | ExprSwitchStmt | assoc | associn
-     assoc = expr _ <'+='> _ <'{'> _ associtem _ { <','> _ associtem _ } <'}'>
-     dissoc = expr _ <'-='> _ <'{'> _ associtem _ { <','> _ associtem _ } <'}'>
-       associtem = expr _ <':'> _ expr 
-     associn = expr _ <'+='> _ <'{'> _ associnpath _ <':'> _ expr _ <'}'>
-       associnpath = expr _ expr {_ expr}
+                   forlazy | fortimes | Blocky | ExprSwitchStmt
      <ExprSwitchStmt> = boolswitch | constswitch
        boolswitch = <'switch'> _ <'{'>  _ boolcaseclause { NL boolcaseclause } _ <'}'>
        constswitch = <'switch'> _ expr _ <'{'> _ constcaseclause { NL constcaseclause } _ <'}'>
@@ -131,7 +126,12 @@ sourcefile = NL? packageclause expressions _
        catches = ( catch {_ catch} )?
          catch = <'catch'> _ typename _ Identifier _ ImpliedDo
        finally = <'finally'> _ Blocky
-     <UnaryExpr> = PrimaryExpr | javafield | ReaderMacro | unaryexpr
+     <UnaryExpr> = PrimaryExpr | javafield | ReaderMacro | assoc | dissoc | associn | unaryexpr
+       assoc = expr _ <'+='> _ <'{'> _ associtem _ { <','> _ associtem _ } <'}'>
+       dissoc = expr _ <'-='> _ <'{'> _ associtem _ { <','> _ associtem _ } <'}'>
+	 associtem = expr _ <':'> _ expr 
+       associn = expr _ <'+='> _ <'{'> _ associnpath _ <':'> _ expr _ <'}'>
+	 associnpath = expr _ expr {_ expr}
        unaryexpr = unary_op _ UnaryExpr
 	 <unary_op> = '+' | '-' | '!' | not | (!and '&') | bitnot
 	   bitnot = <'^'>
