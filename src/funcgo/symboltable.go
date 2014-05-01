@@ -59,6 +59,12 @@ func TypeImported(st, typ) {
 		typ: TYPE,
 		UNUSED_TYPES: (*st)(UNUSED_TYPES) conj typ
 	}})
+	//dosync{
+	//	st := .. += {
+	//		typ: TYPE,
+	//		UNUSED_TYPES: (*st)(UNUSED_TYPES) conj typ
+	//	}
+	//}
 }
 
 // Add a package symbol to the table.
@@ -66,6 +72,9 @@ func TypeCreated(st, typ) {
 	dosync(st alter func{.. += {
 		typ: TYPE
 	}})
+	//dosync{
+	//	st := .. += {typ: TYPE}
+	//}
 }
 
 // Has this package been previously been added to the table?

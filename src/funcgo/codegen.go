@@ -64,7 +64,7 @@ func codeGenerator(symbolTable) {
 	// Capitalized
 	func isPublic(identifier) {
 		// TODO(eob) handle general Unicode
-		/^[A-Z]/ reFind identifier
+		(/^[A-Z]/ reFind identifier) || identifier == "main"
 	}
 	
 	// Return a function that always returns the given constant string.
@@ -107,6 +107,25 @@ func codeGenerator(symbolTable) {
 	func externImportSpec(identifier) {
 		symbolTable symbols.PackageImported identifier
 		""
+	}
+
+	func vardecl(identifier, expression) {
+		if isPublic(identifier) {
+			listStr("def", identifier, expression)
+		} else {
+			listStr("def", "^:private", identifier, expression)
+		}
+	} (identifier, typ, expression) {
+		if isPublic(identifier) {
+			listStr("def", "^" str typ, identifier, expression)
+		} else {
+			listStr("def",
+				"^:private",
+				"^" str typ,
+				identifier,
+				expression
+			)
+		}
 	}
 
 	// Mapping from parse tree to generators of CLJ code.
@@ -225,23 +244,17 @@ func codeGenerator(symbolTable) {
 				listStr("def", "^:private", identifier, expression)
 			}
 		},
-		VARDECL:   func(identifier, expression) {
-			if isPublic(identifier) {
-				listStr("def", identifier, expression)
-			} else {
-				listStr("def", "^:private", identifier, expression)
-			}
-		} (identifier, typ, expression) {
-		if isPublic(identifier) {
-			listStr("def", "^" str typ, identifier, expression)
-		} else {
-			listStr("def",
-				"^:private",
-				"^" str typ,
-				identifier,
-				expression
+		VARDECL1: vardecl,
+		VARDECL2: func(identifier1, identifier2, expression1, expression2) {
+			blankJoin(
+				vardecl(identifier1, expression1),
+				vardecl(identifier2, expression2)
 			)
-		}
+		} (identifier1, identifier2, typ, expression1, expression2) {
+			blankJoin(
+				vardecl(identifier1, typ, expression1),
+				vardecl(identifier2, typ, expression2)
+			)
 		},
 		FUNCTIONCALL:    func(function) {
 			listStr(function)
@@ -256,6 +269,7 @@ func codeGenerator(symbolTable) {
 		} (expr0, exprRest...) {
 			str("(do ",  " " s.join (expr0 cons exprRest),  ")")
 		},
+		TYPECONVERSION: listStr,
 		INDEXED: func(xs, i){ listStr("nth", xs, i) },
 		WITHCONST: declBlockFunc("let"),
 		LOOP:      declBlockFunc("loop"),

@@ -69,7 +69,7 @@ sourcefile = NL? packageclause expressions _
 		 typename = JavaIdentifier {<'.'>  JavaIdentifier} | primitivetype
                    <primitivetype> = long | double
                      long = <'int'>
-                     double = <'float'>
+                     double = <'float'> | <'float64'> 
 	       vecdestruct = <'['> _ VecDestructElem _ {<','> _ VecDestructElem _ } <']'>
 		 <VecDestructElem> = Destruct | variadicdestruct | label
 		   variadicdestruct = Destruct <'...'>
@@ -114,8 +114,10 @@ sourcefile = NL? packageclause expressions _
 	     escapedidentifier = <'\\'> #'\b[\p{L}_][\p{L}_\p{Digit}]*\b'
      shortvardecl = Identifier _ <':='> _ expr
                (*   | Identifier _ ',' _ shortvardecl _ ',' _ expr *)
-     <Vars> = <'var'> _ ( <'('> _ vardecl {NL vardecl} _ <')'> | vardecl )
-     vardecl = Identifier ( _ typename )? _ <'='> _ expr
+     <Vars> = <'var'> _ ( <'('> _ VarDecl {NL VarDecl} _ <')'> | VarDecl )
+     <VarDecl> = vardecl1 | vardecl2
+     vardecl1 = Identifier ( _ typename )? _ <'='> _ expr
+     vardecl2 = Identifier  _ <','> _ Identifier ( _ typename )? _ <'='> _ expr _ <','> _ expr
      ifelseexpr = <'if'> _ expr _ Blocky ( _ <'else'> _ Blocky )?
      letifelseexpr = <'if'> _ Destruct _ <':='> _ expr _ <';'>_ expr _ Blocky ( _ <'else'> _ Blocky )?
      forrange = <'for'> <__> Destruct _ <':='> _ <'range'> <_> expr _  Blocky
@@ -143,6 +145,7 @@ sourcefile = NL? packageclause expressions _
        unquotesplicing = <'unquotes'> _ UnaryExpr
        javafield  = UnaryExpr _ <'->'> _ JavaIdentifier
        <PrimaryExpr> = functioncall
+                     | typeconversion
                      | javamethodcall
                      | Operand
                      | functiondecl
@@ -155,6 +158,7 @@ sourcefile = NL? packageclause expressions _
                                                                 PrimaryExpr Selector |
                                                                 PrimaryExpr Slice |
                                                                 PrimaryExpr TypeAssertion | *)
+         typeconversion = primitivetype _ <'('> _ expr _ <')'>
          indexed = PrimaryExpr _ <'['> _ expr _ <']'>
          functioncall = PrimaryExpr Call
          javamethodcall = UnaryExpr _ <'->'> _ JavaIdentifier _ Call
