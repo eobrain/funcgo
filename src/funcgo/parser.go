@@ -18,7 +18,7 @@ import (
 )
 
 var Parse = insta.parser(`
-sourcefile = NL? packageclause expressions _
+sourcefile = NL? packageclause (expressions|topwithconst) _
  <_> =      <#'[ \t\x0B\f\r\n]*'> | comment+                                 (* optional whitespace *)
  <_nonNL> = <#'[ \t\x0B\f\r]*'>                                  (* optional non-newline whitespace *)
  <NL> = nl | comment+
@@ -61,6 +61,7 @@ sourcefile = NL? packageclause expressions _
        loop = <'loop'> _  <'('> _ {consts} _ <')'> _ ImpliedDo
        <ImpliedDo> =  <'{'> _ expressions _ <'}'> | withconst
        block = <'{'> _ expr {NL expr} _ <'}'>
+       topwithconst =  <'const'> _ ( const NL | <'('> _ consts _ <')'> )  _ expressions
        withconst = <'{'> _ <'const'> _ ( const NL | <'('> _ consts _ <')'> )  _ expressions _ <'}'>
          consts = ( const {NL const} )?
            const = Destruct _ <'='> _ expr
@@ -164,7 +165,7 @@ sourcefile = NL? packageclause expressions _
          javamethodcall = UnaryExpr _ <'->'> _ JavaIdentifier _ Call
            <Call> = <'('> _ ( ArgumentList _ )? <')'>
              <ArgumentList> = expressionlist                                         (* [ _ '...' ] *)
-               expressionlist = expr {_ <','> _ expr}
+               expressionlist = expr {_ <','> _ expr} (_ <','>)?
          <TypeDecl> = <'type'> _ ( TypeSpec | <'('> _ ( TypeSpec NL )* <')'> )
 	   <TypeSpec> = interfacespec | structspec
              structspec = JavaIdentifier _ <'struct'> _ <'{'>  _ (fields _)? <'}'>
@@ -183,20 +184,23 @@ sourcefile = NL? packageclause expressions _
                           MethodImpl | <'('> _ MethodImpl ( NL MethodImpl )* _ <')'>
                         )
            <MethodImpl> = typedmethodimpl | untypedmethodimpl
-             untypedmethodimpl = JavaIdentifier _ <'('>  _ parameters? _ <')'> _ Blocky
-             typedmethodimpl = JavaIdentifier _ <'('>  _ parameters? _ <')'> _ typename _ Blocky
+             untypedmethodimpl = JavaIdentifier _ <'('>  _ parameters? _ <')'> _
+                                   (ReturnBlock|Blocky)
+             typedmethodimpl = JavaIdentifier _ <'('>  _ parameters? _ <')'> _ typename _
+                                   (ReturnBlock|Blocky)
          functiondecl = <'func'> _ Identifier _ Function
          funclikedecl = <'func'> _ <'<'> _ symbol _ <'>'> _ Identifier _ Function
            <Function> = FunctionPart | functionparts
              functionparts = FunctionPart _ FunctionPart {_ FunctionPart}
                <FunctionPart> = functionpart0 | functionpartn | vfunctionpart0 | vfunctionpartn
-                 functionpart0 = <'('> _ <')'>  ( _ typename )? _ Blocky
-		 vfunctionpart0 = <'('> _ variadic _ <')'> ( _ typename )? _ Blocky
-		 functionpartn  = <'('> _ parameters _ <')'> ( _ typename )? _ Blocky
+                 functionpart0 = <'('> _ <')'>  ( _ typename )? _ (ReturnBlock|Blocky)
+		 vfunctionpart0 = <'('> _ variadic _ <')'> ( _ typename )? _ (ReturnBlock|Blocky)
+		 functionpartn  = <'('> _ parameters _ <')'> ( _ typename )? _ (ReturnBlock|Blocky)
 		 vfunctionpartn = <'('> _ parameters _  <','> _ variadic _ <')'> ( _ typename )? _
-                                 Blocky
+                                 (ReturnBlock|Blocky)
                    parameters = Destruct {<','> _ Destruct}
                    variadic = Identifier <'...'>
+                   <ReturnBlock> = <'{'> _ <'return'> _ expr _ <'}'>
          <Operand> = Literal | OperandName | label | new  | <'('> expr <')'>       (*|MethodExpr*)
            label = #'\b\p{Lu}[\p{Lu}_0-9]*\b'
            <Literal> = BasicLit | veclit | dictlit | setlit | functionlit | shortfunctionlit

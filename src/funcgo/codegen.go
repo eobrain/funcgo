@@ -271,6 +271,7 @@ func codeGenerator(symbolTable) {
 		},
 		TYPECONVERSION: listStr,
 		INDEXED: func(xs, i){ listStr("nth", xs, i) },
+		TOPWITHCONST: declBlockFunc("let"),
 		WITHCONST: declBlockFunc("let"),
 		LOOP:      declBlockFunc("loop"),
 		CONST: func(identifier, expression) {
