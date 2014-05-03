@@ -139,11 +139,16 @@ func compileFile(inFile File, root File, opts) {
 			} else {
 				cljText writePrettyTo writer
 			}
-			println("\t\t-->", outFile->getPath())
-			if (outFile->length) / (inFile->length) < 0.4 {
-				println("WARNING: Output file is only",
-					int(100 * (outFile->length) / (inFile->length)),
-					"% the size of the input file")
+			if outFile->length() == 0 {
+				outFile->delete()
+				println("\t\tERROR: No output created.")
+			} else {
+				println("\t\t-->", outFile->getPath())
+				if (outFile->length) / (inFile->length) < 0.4 {
+					println("WARNING: Output file is only",
+						int(100 * (outFile->length) / (inFile->length)),
+						"% the size of the input file")
+				}
 			}
 		}
         }
@@ -156,13 +161,13 @@ func compileTree(root File, opts) {
 			ff File = f
 			name = ff->getName
 		)
-		try {
+		//try {
 			if name->endsWith(".go") || name->endsWith(".gos") { 
 				compileFile(ff, root, opts)
 			}
-		} catch Exception e {
-			println("\n    Compile failed: ", e->getMessage())
-		}
+		//} catch Exception e {
+		//	println("\n    Compile failed: ", e->getMessage())
+		//}
 	}
 }
 

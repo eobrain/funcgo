@@ -314,7 +314,23 @@ func codeGenerator(symbolTable) {
 		},
 		STRUCTSPEC: func(javaIdentifier, fields...) {
 			symbolTable symbols.TypeCreated javaIdentifier
-		listStr("defrecord", javaIdentifier, vecStr apply fields)
+			listStr("defrecord",
+				javaIdentifier,
+				vecStr apply fields,
+				if isEmpty(fields) {
+					""
+				} else {
+					const(
+						fs = fields[0] s.split / +/
+						fsOnly = func(s String){!s->startsWith("^")} filter fs
+					)
+					str(
+						"Object (toString [this] ",
+						listStr("str", `"{"`, ` " " ` s.join fsOnly, `"}"`),
+						")"
+					)
+				}
+			)
 		},
 		FIELDS: blankJoin,
 		INTERFACESPEC: func(args...){
@@ -384,6 +400,9 @@ func codeGenerator(symbolTable) {
 		DICTLIT:        func{str apply ...},
 		DICTELEMENT:    func(key, value) {str(key, " ", value, " ")},
 		SETLIT:         func{str("#{",  " " s.join ...,  "}")},
+		STRUCTLIT:      func(typ, exprs...) {
+			listStr apply ((typ str ".") cons exprs)
+		},
 		LABEL:          func{str(":", s.replace(s.lowerCase(..), /_/, "-"))},
 		IDENTIFIER:     func(string) {
 			s.replace(

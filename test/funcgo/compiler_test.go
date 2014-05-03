@@ -723,13 +723,15 @@ func (Sequence) String() String {
 test.fact("struct",
 	parse(`type TreeNode struct{val; l; r}`), 
 	=>,
-	parsed(`(defrecord TreeNode [val l r])`)
+	parsed(str(`(defrecord TreeNode [val l r]`,
+		` Object (toString [this] (str "{" val " " l " " r "}")))`))
 )
 
 test.fact("typed struct",
 	parse(`type TreeNode struct{}; type TreeNode struct{val; l TreeNode; r TreeNode}`), 
 	=>,
-	parsed(`(defrecord TreeNode []) (defrecord TreeNode [val ^TreeNode l ^TreeNode r])`)
+	parsed(str(`(defrecord TreeNode []) (defrecord TreeNode [val ^TreeNode l ^TreeNode r]`,
+		` Object (toString [this] (str "{" val " " l " " r "}")))`))
 )
 
 test.fact("switch",
