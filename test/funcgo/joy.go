@@ -215,7 +215,6 @@ test.fact("using alter to update a Ref",
 	=>, 1
 )
 
-
 test.fact("An interface defining a sliceable object",
 	{
 		type ISliceable interface{

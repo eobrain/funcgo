@@ -161,13 +161,13 @@ func compileTree(root File, opts) {
 			ff File = f
 			name = ff->getName
 		)
-		//try {
+		try {
 			if name->endsWith(".go") || name->endsWith(".gos") { 
 				compileFile(ff, root, opts)
 			}
-		//} catch Exception e {
-		//	println("\n    Compile failed: ", e->getMessage())
-		//}
+		} catch Exception e {
+			println("\n    Compile failed: ", e->getMessage())
+		}
 	}
 }
 

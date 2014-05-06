@@ -23,7 +23,7 @@ import (
 
 // Returns a map of parser targets to functions that generate the
 // corresponding Clojure code.
-func codeGenerator(symbolTable) {
+func codeGenerator(symbolTable, isGoscript) {
 
 	func noDot(s String) {
 		//s->indexOf(".") == -1
@@ -39,8 +39,10 @@ func codeGenerator(symbolTable) {
 		}
 	}
 
-	func hasType(typ) {
-		(symbolTable symbols.HasType typ) || (noDot(typ) && isJavaClass("java.lang." str typ))
+	func hasType(typ String) {
+		(symbolTable symbols.HasType typ)
+		|| isGoscript && typ->startsWith("js.")
+		|| !isGoscript && noDot(typ) && isJavaClass("java.lang." str typ)
 	}
 
 	func listStr(item...) {
@@ -486,11 +488,8 @@ func codeGenerator(symbolTable) {
 	}
 }
 
-func packageclauseFunc(symbolTable, path String) {
-	const (
-		isGoscript    = path->endsWith(".gos")
-		[parent, name] = splitPath(path)
-	)
+func packageclauseFunc(symbolTable, path String, isGoscript) {
+	const [parent, name] = splitPath(path)
 	if isGoscript {
 		symbolTable symbols.PackageCreated "js"
 	}
@@ -521,10 +520,11 @@ func packageclauseFunc(symbolTable, path String) {
 func Generate(path String, parsed) {
 	const (
 		symbolTable = symbols.New()
+		isGoscript  = path->endsWith(".gos")
 		codeGen = assoc(
-			codeGenerator(symbolTable),
+			codeGenerator(symbolTable, isGoscript),
 			PACKAGECLAUSE,
-			packageclauseFunc(symbolTable, path)
+			packageclauseFunc(symbolTable, path, isGoscript)
 		)
 		//codeGen = codeGenerator(symbolTable) + {
 		//	PACKAGECLAUSE: packageclauseFunc(symbolTable, path)

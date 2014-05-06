@@ -76,16 +76,38 @@ func parse(expr) {
 	)
 }
 
-func parseJs(expr, pkgs...) {
-	compileString("foo.gos", 
-		if count(pkgs) == 0 {
-			str("package foo;", expr)
-		}else {
-			const imports = func{str(`"`, .., `"`)} map pkgs
-			str("package foo; import(", "\n" string.join imports, ");", expr)
+func parseJs(expr) {
+	parseJs(expr, [], [])
+} (expr, pkgs) {
+	parseJs(expr, list(pkgs), [])
+} (expr, pkgs, types) {
+	const(
+		imports = if count(pkgs) == 0 {
+			""
+		} else {
+			const lines = for p := lazy pkgs {str(`"`, p, `"`)}
+			str("import(\n", "\n" string.join lines, "\n)\n")
+		}
+		importtypes = if count(types) == 0 {
+			""
+		} else {
+			str("import type(\n", "\n" string.join types, "\n)\n")
 		}
 	)
+	compileString("foo.gos", 
+		str("package foo\n", imports, importtypes, expr)
+	)
 }
+//func parseJs(expr, pkgs...) {
+//	compileString("foo.gos", 
+//		if count(pkgs) == 0 {
+//			str("package foo;", expr)
+//		}else {
+//			const imports = func{str(`"`, .., `"`)} map pkgs
+//			str("package foo; import(", "\n" string.join imports, ");", expr)
+//		}
+//	)
+//}
 
 func parsed(expr) {
 	parsed(expr, [], [])
@@ -114,14 +136,41 @@ func parsed(expr) {
 	)
 }
 
-func parsedJs(expr, pkgs...) {
-	if count(pkgs) == 0 {
-		str("(ns foo) ", expr)
-	}else{
-		const imports = func{str(" [", .., " :as ", .., "]")} map pkgs
-		str("(ns foo (:require", (str apply imports), ")) ", expr)
-	}
+func parsedJs(expr) {
+	parsedJs(expr, [], [])
+} (expr, pkgs) {
+	parsedJs(expr, list(pkgs), [])
+} (expr, pkgs, types) {
+	const(
+		imports = if count(pkgs) == 0 {
+			""
+		} else {
+			const lines = for p := lazy pkgs {str("[", p, " :as ", p, "]")}
+			str(" (:require ", " " string.join lines, ")")
+		}
+		importtypes = if count(types) == 0 {
+			""
+		} else {
+			const lines = for t := lazy types {str("(", t, ")")}
+			str(" (:import ", " " string.join lines, ")")
+		}
+	)
+	str("(ns foo",
+		imports,
+		importtypes,
+		") ",
+		expr
+	)
 }
+
+//func parsedJs(expr, pkgs...) {
+//	if count(pkgs) == 0 {
+//		str("(ns foo) ", expr)
+//	}else{
+//		const imports = func{str(" [", .., " :as ", .., "]")} map pkgs
+//		str("(ns foo (:require", (str apply imports), ")) ", expr)
+//	}
+//}
 
 func parseNoPretty(expr) {
 	fgo.Parse("foo.go", "package foo;" str expr)
@@ -295,6 +344,11 @@ test.fact("symbol beginning with underscore",
 	parse(`_foo`),  =>, parsed(`-foo`),
 	parseJs(`mutateSet( js.window->_onload, start)`), 
 	=>, parsedJs(`(set! (. js/window -onload) start)`)
+)
+
+test.fact("Javascript",
+	parseJs(`new js.Date()->toISOString`), 
+	=>, parsedJs(`(. (js.Date.) toISOString)`)
 )
 
 
