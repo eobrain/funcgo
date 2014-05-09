@@ -1,8 +1,22 @@
 # funcgo
 
-Funcgo is a compiler that converts Functional Go into Clojure.
+Funcgo is a compiler that converts Functional Go into Clojure, to run
+on the JVM or as JavaScript.
 
-The compiler itself is written in Functional Go. (Turtles all the way down!)
+(Go-like Functional Go converts to Clojure just as Ruby-like Coffeescript
+converts to JavaScript.)
+
+## Status
+
+The compiler and language is still in alpha. You are welcome to try
+it, and any feedback would be more than welcome, but be aware that the
+language is not yet stable and it is likely there will be
+non-backward-compatible changes before the 1.0 release.
+
+The compiler itself is written in Functional Go. (Turtles all the way
+down!)
+
+Coming soon is an easy-to-use Leiningen plugin, and a REPL.
 
 ## Introduction to the Funcgo Language
 
@@ -14,8 +28,8 @@ with the semantics of Clojure.
 1. Go is a language that has been well designed to be very
 readable. However it is best as a low-level system programming
 language (replacing C) and it is missing many of the higher-level
-features that programmers expect for working further up the stack, for
-example in web applications.
+features that programmers expect for working further up the stack, in
+for example in web applications.
 
 2. Clojure is a variety of Lisp that inter-operates with Java or
 JavaScript.  It encourages a functional programming style with
@@ -24,7 +38,7 @@ mutable state called software transactional memory. However, for
 programmers unfamiliar with Lisp syntax Clojure is very difficult to
 read.
 
-### Examples
+### Examples for Clojure Programmers
 
 In this section are Funcgo versions of some of the Clojure examples
 from the [Clojure Cookbook][cookbook].
@@ -244,6 +258,128 @@ or an upper-case letter.
 The [`isEvery`][isevery] function tests whether this predicate is true
 for every character in the string.
 
+### Examples for Go Programmers
+
+In this section are Funcgo versions of some of the Go examples
+from the [A Tour of Go][tour].
+
+#### Placement of `const`
+```go
+package main
+
+import "fmt"
+
+const Pi = 3.14
+
+func main() {
+	const World = "世界"
+	fmt.Println("Hello", World)
+	fmt.Println("Happy", Pi, "Day")
+	{
+		const Truth = true
+		fmt.Println("Go rules?", Truth)
+	}
+}
+
+
+    => Hello 世界
+Happy 3.14 Day
+Go rules? true
+```
+
+One constraint on `const` expression is that, except for at the to
+level, they have to be at the beginning of a curly-brace block. So
+above we had to add an extra level of curlies to allow `Truth` to be
+defined at the bottom of the function.
+
+
+#### Go primitive types
+```go
+package main
+
+import (
+	"fmt"
+	"math"
+)
+
+func pow(x, n, lim float64) float64 {
+	if v := math.Pow(x, n); v < lim {
+		v
+	} else {
+		lim
+	}
+}
+
+func main() {
+	fmt.Println(
+		pow(3, 2, 10),
+		pow(3, 3, 20),
+	)
+}
+
+
+    => 9 20
+```
+
+For compatibility with Go, you can use Go-style primitive types, but they are mapped to JVM
+primitive types that may have different bit sizes.
+
+#### Optional `return`
+
+```go
+package main
+
+import (
+	"fmt"
+)
+
+func newton(n int, x, z float64) float64 {
+	if n == 0 {
+		z
+	} else {
+		newton(n-1, x, z-(z*z-x)/(2*x))
+	}
+}
+
+func Sqrt(x float64) float64 {
+	return newton(500, x, x/2)
+}
+
+func main() {
+	fmt.Println(Sqrt(100))
+}
+
+        
+    => 10.000000000000007
+```
+
+For compatibility with Go, you can add an optional `return` to a
+function, but only in the special case of returning the top level
+expression of a function.
+
+#### Data structures
+
+```go
+package main
+
+import "fmt"
+
+type Vertex struct {
+	X int
+	Y int
+}
+
+func main() {
+	fmt.Println(Vertex{1, 2})
+}
+
+    => {1 2}
+```
+
+You can go a long way in Functional Go just using the built in
+dictionary and vector types, but you can also create data structures
+that are implemented as Java classes.
+
 
 ## Building and Development
 
@@ -270,6 +406,14 @@ You can run the unit tests by doing
 lein midje
 ```
 
+## Thanks
+
+Funcgo is built on the folder of giants.
+
+Thanks to Rich Hickey and the Clojure contributors, to Thompson, Pike,
+and Griesemer and the Go contributors, and to Mark Engelberg for the
+instaparse parsing library.
+
 ## License
 
 The Funcgo code is distributed under the Eclipse Public License either
@@ -279,6 +423,7 @@ version 1.0 or (at your option) any later version.
 
 
 [cookbook]: http://clojure-cookbook.com/
+[tour] http://tour.golang.org
 [string]: http://clojure.github.io/clojure/clojure.string-api.html
 [isblank]: http://clojure.github.io/clojure/clojure.string-api.html#clojure.string/blank?
 [apidoc]: http://clojure.github.io/clojure/index.html

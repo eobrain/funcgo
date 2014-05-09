@@ -792,6 +792,9 @@ test.fact("switch",
 	parse(`switch {case a: b; case c: d; default: e}`),
 	=>, parsed(`(cond a b c d :else e)`),
 
+	parse(`switch x.(type) {case String: x; case Integer: str(x*x); default: str(x)}`),
+	=>, parsed(`(cond (instance? String x) x (instance? Integer x) (str (* x x)) :else (str x))`),
+
 	parse(`switch x {case A: b; case C: d; default: e}`),
 	=>, parsed(`(case x :a b :c d e)`),
 
@@ -850,6 +853,10 @@ test.fact("dissoc",
 test.fact("assoc-in",
 	parse(`x += {4 AAA 6 8: aaa }`), =>, parsed(`(assoc-in x [4 :aaa 6 8] aaa)`)
 )
+
+//test.fact("type assertion",
+//	parse(`a.(string)`), =>, parsed(`[x (instance? String x)]`)
+//)
 
 //test.fact("",
 //      parse(``), =>, parsed(``),

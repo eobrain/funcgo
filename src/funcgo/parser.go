@@ -48,7 +48,12 @@ sourcefile = NL? packageclause (expressions|topwithconst) _
  expressions = expr | expressions NL expr
    <expr>  = precedence0 | Vars | shortvardecl | ifelseexpr | letifelseexpr | tryexpr | forrange |
                    forlazy | fortimes | Blocky | ExprSwitchStmt
-     <ExprSwitchStmt> = boolswitch | constswitch
+     <ExprSwitchStmt> = boolswitch | constswitch | typeswitch
+       typeswitch = <'switch'> _ PrimaryExpr _ <'.'> _ <'('> _ <'type'> _ <')'> _  <'{'>
+                         _   <'case'> _ typename _ <':'> _ expressions
+                         {NL <'case'> _ typename _ <':'> _ expressions}
+                         (NL <'default'>         _ <':'> _ expressions )?
+                    _ <'}'>
        boolswitch = <'switch'> _ <'{'>  _ boolcaseclause { NL boolcaseclause } _ <'}'>
        constswitch = <'switch'> _ expr _ <'{'> _ constcaseclause { NL constcaseclause } _ <'}'>
 	 boolcaseclause = boolswitchcase _ <':'> _ expressions
@@ -67,10 +72,11 @@ sourcefile = NL? packageclause (expressions|topwithconst) _
            const = Destruct _ <'='> _ expr
 	     <Destruct> = Identifier | typedidentifier | vecdestruct | dictdestruct
 	       typedidentifier = Identifier _ typename
-		 typename = JavaIdentifier {<'.'>  JavaIdentifier} | primitivetype
-                   <primitivetype> = long | double
-                     long = <'int'>
+		 typename = JavaIdentifier {<'.'>  JavaIdentifier} | primitivetype | string
+                   <primitivetype> = long | double | 'byte' | 'short' | 'char' | 'boolean'
+                     long = <'int'> | <'long'>
                      double = <'float'> | <'float64'> 
+                   string = <'string'>
 	       vecdestruct = <'['> _ VecDestructElem _ {<','> _ VecDestructElem _ } <']'>
 		 <VecDestructElem> = Destruct | variadicdestruct | label
 		   variadicdestruct = Destruct <'...'>
@@ -116,9 +122,11 @@ sourcefile = NL? packageclause (expressions|topwithconst) _
      shortvardecl = Identifier _ <':='> _ expr
                (*   | Identifier _ ',' _ shortvardecl _ ',' _ expr *)
      <Vars> = <'var'> _ ( <'('> _ VarDecl {NL VarDecl} _ <')'> | VarDecl )
-     <VarDecl> = vardecl1 | vardecl2
-     vardecl1 = Identifier ( _ typename )? _ <'='> _ expr
-     vardecl2 = Identifier  _ <','> _ Identifier ( _ typename )? _ <'='> _ expr _ <','> _ expr
+     <VarDecl> = primarrayvardecl | arrayvardecl | vardecl1 | vardecl2
+       primarrayvardecl = Identifier _ <'['> _ int_lit  _ <']'> _ primitivetype
+       arrayvardecl = Identifier _ <'['> _ int_lit  _ <']'> _ typename
+       vardecl1 = Identifier ( _ typename )? _ <'='> _ expr
+       vardecl2 = Identifier  _ <','> _ Identifier ( _ typename )? _ <'='> _ expr _ <','> _ expr
      ifelseexpr = <'if'> _ expr _ Blocky ( _ <'else'> _ Blocky )?
      letifelseexpr = <'if'> _ Destruct _ <':='> _ expr _ <';'>_ expr _ Blocky ( _ <'else'> _ Blocky )?
      forrange = <'for'> <__> Destruct _ <':='> _ <'range'> <_> expr _  Blocky

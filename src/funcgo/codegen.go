@@ -17,9 +17,6 @@ import (
         insta "instaparse/core"
 	symbols "funcgo/symboltable"
 )
-//import type(
-//	java.lang.{String, Exception, Class, ClassNotFoundException}
-//)
 
 // Returns a map of parser targets to functions that generate the
 // corresponding Clojure code.
@@ -203,6 +200,30 @@ func codeGenerator(symbolTable, isGoscript) {
 		} (cond) {
 			cond
 		},
+		TYPESWITCH: func(x, args...) {
+			func recursing(acc, remaining) {
+				func typeCase() {
+					const (
+						typ = first(remaining)
+						expr = second(remaining)
+					)
+					str(acc, " ", listStr("instance?", typ, x), " ", expr)
+				}
+				switch count(remaining) {
+				case 1: {
+					const [expr] = remaining
+					str(acc, " :else ", expr, ")")
+				}
+				case 2: {
+					typeCase() str ")"
+				}
+				default: {
+					recur(typeCase(), 2 drop remaining)
+				}
+				}
+			}
+			recursing("(cond", args)
+		},
 		CONSTSWITCH: func(expr, clauses...) {
 			listStr apply ("case" cons (expr cons clauses))
 		},
@@ -245,6 +266,14 @@ func codeGenerator(symbolTable, isGoscript) {
 			} else {
 				listStr("def", "^:private", identifier, expression)
 			}
+		},
+		PRIMARRAYVARDECL: func(identifier, number, primtype) {
+			const elements = blankJoin apply (for _ := times readString(number) {"0"})
+			listStr("def", identifier, listStr("vector-of", ":" str primtype, elements))
+		},
+		ARRAYVARDECL: func(identifier, number, typ) {
+			const elements = blankJoin apply (for _ := times readString(number) {"nil"})
+			listStr("def", identifier, listStr("vector", elements))
 		},
 		VARDECL1: vardecl,
 		VARDECL2: func(identifier1, identifier2, expression1, expression2) {
@@ -423,7 +452,7 @@ func codeGenerator(symbolTable, isGoscript) {
 		FLOATLIT:      str,
 		DECIMALS:      identity,
 		EXPONENT:      str,
-		REGEX:         func{str(`#"`,  str apply ...,  `"`)},
+		REGEX:         func{str(`#"`,  s.escape(str apply ..., {'"':`\"`}),  `"`)},
 		ESCAPEDSLASH: constantFunc(`/`),
 		INTERPRETEDSTRINGLIT: func{str(`"`,  str apply ...,  `"`)},
 		CLOJUREESCAPE: identity,
@@ -484,7 +513,8 @@ func codeGenerator(symbolTable, isGoscript) {
 			str("(. ", expression, " (", identifier, " ", call, "))")
 		},
 		LONG: constantFunc("long"),
-		DOUBLE: constantFunc("double")
+		DOUBLE: constantFunc("double"),
+		STRING: constantFunc("String")
 	}
 }
 
