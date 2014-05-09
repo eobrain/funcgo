@@ -60,7 +60,7 @@ Funcgo does not require types, though as we will see later, in certain
 cases when performance is important you can specify types at a few
 strategic locations.
 
-Funcgo does not have a `return` statement, rather a function simply
+Funcgo does not need a `return` statement, rather a function simply
 returns the value of its last expression (often its only expression).
 
 #### Adding a file header
@@ -353,7 +353,7 @@ func main() {
     => 10.000000000000007
 ```
 
-For compatibility with Go, you can add an optional `return` to a
+For compatibility with Go, you can add a cosmetic `return` to a
 function, but only in the special case of returning the top level
 expression of a function.
 
@@ -423,7 +423,7 @@ version 1.0 or (at your option) any later version.
 
 
 [cookbook]: http://clojure-cookbook.com/
-[tour] http://tour.golang.org
+[tour]: http://tour.golang.org
 [string]: http://clojure.github.io/clojure/clojure.string-api.html
 [isblank]: http://clojure.github.io/clojure/clojure.string-api.html#clojure.string/blank?
 [apidoc]: http://clojure.github.io/clojure/index.html
