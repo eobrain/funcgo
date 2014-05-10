@@ -1,6 +1,6 @@
-(defproject funcgo "0.2.0"
-  :description "Compiler from Functional Go into Clojure"
-  :url "http://funcgo.com"
+(defproject org.eamonn.funcgo/funcgo-compiler "0.2.1"
+  :description "Compile Functional Go into Clojure"
+  :url "http://funcgo.org"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.5.1"]
