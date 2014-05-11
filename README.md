@@ -73,10 +73,9 @@ Functional Go program!
 
 You can get a better feel for the language by reading the Introduction
 to the Funcgo Language section below.
-page.
 
 To browse some actual working code, the biggest and most complex
-program so far written in Functional Go is its own compiler (Turtles
+program so far written in Functional Go is its own compiler. (Turtles
 all the way down!)  You might start at the `main.go` file in
 [the source directory][src].
 
@@ -123,9 +122,8 @@ for example in web applications.
 2. Clojure is a variety of Lisp that inter-operates with Java or
 JavaScript.  It encourages a functional programming style with
 efficient immutable containers, combined with a thread-safe model for
-mutable state called software transactional memory. However, for
-programmers unfamiliar with Lisp syntax Clojure is very difficult to
-read.
+mutable state called software transactional memory. However, Clojure
+is difficult to read for programmers unfamiliar with Lisp syntax.
 
 ### Examples for Clojure Programmers
 
