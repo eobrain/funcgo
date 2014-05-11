@@ -12,23 +12,35 @@ non-backward-compatible changes before the 1.0 release.
 
 ## Quick Start
 
-1. Follow the [install instructions for Leiningen][lein] 2. On the
-command line, go to an empty directory and type ...  ```sh lein new
-app hello cd hello lein run ``` This should print out `Hello, World!`,
-which shows that your Clojure environment is configured correctly.
+1. Follow the [install instructions for Leiningen][lein]
+2. On the command line, go to an empty directory and type ...
+```sh
+lein new app hello
+cd hello
+lein run
+```
+This should print out `Hello, World!`, which shows that your Clojure
+environment is configured correctly.
 3. In your favorite text editor, edit the file `project.clj` and
 insert `[org.eamonn.funcgo/funcgo-lein-plugin "0.2.1"]` in *both* the
 dependencies section *and* the plugins section. You should end up with
-something like ...  ```clj (defproject hello "0.1.0-SNAPSHOT"
-:description "FIXME: write description" :url
-"http://example.com/FIXME" :license {:name "Eclipse Public License"
-:url "http://www.eclipse.org/legal/epl-v10.html"} :dependencies
-[[org.clojure/clojure "1.5.1"]
-[org.eamonn.funcgo/funcgo-lein-plugin "0.2.1"]] :plugins
-[ [org.eamonn.funcgo/funcgo-lein-plugin "0.2.1"]] :main ^:skip-aot
-hello.core :target-path "target/%s" :profiles {:uberjar {:aot :all}})
-``` 4. Delete the existing Clojure file `src/hello/core.clj` 5. Create
-a new Functional Go file `src/hello/core.go` containing ...  ```go
+something like ...
+```clj
+(defproject hello "0.1.0-SNAPSHOT"
+  :description "FIXME: write description"
+  :url "http://example.com/FIXME"
+  :license {:name "Eclipse Public License"
+            :url "http://www.eclipse.org/legal/epl-v10.html"}
+  :dependencies [[org.clojure/clojure "1.5.1"]
+                 [org.eamonn.funcgo/funcgo-lein-plugin "0.2.1"]]
+  :plugins [ [org.eamonn.funcgo/funcgo-lein-plugin "0.2.1"]]
+  :main ^:skip-aot hello.core
+  :target-path "target/%s"
+  :profiles {:uberjar {:aot :all}})
+```
+4. Delete the existing Clojure file `src/hello/core.clj`
+5. Create a new Functional Go file `src/hello/core.go` containing ...
+```go
 package core
 
 func _main(args...) {
@@ -47,7 +59,8 @@ Functional Go program!
 
 ## Next Steps
 
-You can get a better feel for the language by reading the rest of this
+You can get a better feel for the language by reading the Introduction
+to the Funcgo Language section below.
 page.
 
 To browse some actual working code, the biggest and most complex
@@ -56,7 +69,7 @@ all the way down!)  You might start at the `main.go` file in
 [the source directory][src].
 
 There is also do `lein fgoc --repl` to bring up the beginnings of a
-REPL that you can use to explore.
+REPL that you can use to explore...
 ```
 $ lein fgoc --repl
 test
@@ -74,7 +87,7 @@ fgo=>
 ```
 (Warning, the REPL still has poor error handling.)
 
-## Usage
+### Not Using Leiningen?
 
 The preferred way to use this compiler is via the
 [Leiningen Plugin][plugin] as described in the Quick Start section.
