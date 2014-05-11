@@ -12,8 +12,11 @@ non-backward-compatible changes before the 1.0 release.
 
 ## Quick Start
 
-1. Follow the [install instructions for Leiningen][lein]
-2. On the command line, go to an empty directory and type ...
+#### 1. Set up Clojure development environment.
+
+Follow the [install instructions for Leiningen][lein]
+
+On the command line, go to an empty directory and type ...
 ```sh
 lein new app hello
 cd hello
@@ -21,7 +24,10 @@ lein run
 ```
 This should print out `Hello, World!`, which shows that your Clojure
 environment is configured correctly.
-3. In your favorite text editor, edit the file `project.clj` and
+
+#### 2. Convert your project into a Functional Go project.
+
+In your favorite text editor, edit the file `project.clj` and
 insert `[org.eamonn.funcgo/funcgo-lein-plugin "0.2.1"]` in *both* the
 dependencies section *and* the plugins section. You should end up with
 something like ...
@@ -38,8 +44,12 @@ something like ...
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
 ```
-4. Delete the existing Clojure file `src/hello/core.clj`
-5. Create a new Functional Go file `src/hello/core.go` containing ...
+
+Delete the existing Clojure file `src/hello/core.clj`
+
+#### 3. Write Functional Go
+
+Create a new Functional Go file `src/hello/core.go` containing ...
 ```go
 package core
 
@@ -47,13 +57,15 @@ func _main(args...) {
 	println("Hello, World from Functional Go")
 }
 ```
-6. On the command line (in the same directory as the `project.clj`
+
+On the command line (in the same directory as the `project.clj`
 file) do ...
 ```sh
 lein fgoc
 lein run
 ```
 This should print out `Hello, World from Functional Go`.
+
 Congratulations, you have just written and executed your first
 Functional Go program!
 
