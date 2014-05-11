@@ -16,7 +16,13 @@ non-backward-compatible changes before the 1.0 release.
 The compiler itself is written in Functional Go. (Turtles all the way
 down!)
 
-Coming soon is an easy-to-use Leiningen plugin, and a REPL.
+## Usage
+
+The preferred way to use this compiler is via the
+[Leiningen Plugin][plugin].
+
+If you are not using Leiningen you can use `java -jar
+bin/funcgo-*-standalone.jar directory ...` to compile.
 
 ## Introduction to the Funcgo Language
 
@@ -434,3 +440,4 @@ version 1.0 or (at your option) any later version.
 [apply]: http://clojuredocs.org/clojure_core/clojure.core/apply
 [interpose]: http://clojuredocs.org/clojure_core/clojure.core/interpose
 [isevery]: http://clojuredocs.org/clojure_core/clojure.core/every_q
+[plugin]: https://github.com/eobrain/funcgo-lein
