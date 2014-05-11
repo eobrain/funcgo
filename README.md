@@ -22,7 +22,7 @@ The preferred way to use this compiler is via the
 [Leiningen Plugin][plugin].
 
 If you are not using Leiningen you can use `java -jar
-bin/funcgo-*-standalone.jar directory ...` to compile.
+bin/funcgo-compiler-*-standalone.jar directory ...` to compile.
 
 ## Introduction to the Funcgo Language
 

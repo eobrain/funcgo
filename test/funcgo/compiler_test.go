@@ -373,6 +373,12 @@ test.fact("dictionary literals",
 	parse("{A:1, B:2}")     ,=>, parsed("{:a 1, :b 2}"),
 	parse("{A:1, B:2, C:3}"),=>, parsed("{:a 1, :b 2, :c 3}")
 )
+test.fact("dictionary literals with trailing comma",
+	parse("{}")             ,=>, parsed("{}"),
+	parse("{A:1,}")          ,=>, parsed("{:a 1}"),
+	parse("{A:1, B:2,}")     ,=>, parsed("{:a 1, :b 2}"),
+	parse("{A:1, B:2, C:3,}"),=>, parsed("{:a 1, :b 2, :c 3}")
+)
 test.fact("set literals",
 	parse("set{}")                 ,=>, parsed("#{}"),
 	parse("set{A}")                ,=>, parsed("#{:a}"),
