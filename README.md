@@ -3,9 +3,6 @@
 Funcgo is a compiler that converts Functional Go into Clojure, to run
 on the JVM or as JavaScript.
 
-(Go-like Functional Go converts to Clojure just as Ruby-like Coffeescript
-converts to JavaScript.)
-
 ## Status
 
 The compiler and language is still in alpha. You are welcome to try
@@ -13,51 +10,31 @@ it, and any feedback would be more than welcome, but be aware that the
 language is not yet stable and it is likely there will be
 non-backward-compatible changes before the 1.0 release.
 
-The compiler itself is written in Functional Go. (Turtles all the way
-down!)
-
 ## Quick Start
 
-1. Follow the [install instructions for Leiningen][lein]
-
-2. On the command line, go to an empty directory and type ...
-```sh
-lein new app hello
-cd hello
-lein run
-```
-This should print out `Hello, World!`, which shows that your Clojure
-environment is configured correctly.
-
+1. Follow the [install instructions for Leiningen][lein] 2. On the
+command line, go to an empty directory and type ...  ```sh lein new
+app hello cd hello lein run ``` This should print out `Hello, World!`,
+which shows that your Clojure environment is configured correctly.
 3. In your favorite text editor, edit the file `project.clj` and
 insert `[org.eamonn.funcgo/funcgo-lein-plugin "0.2.1"]` in *both* the
 dependencies section *and* the plugins section. You should end up with
-something like ...
-```clj
-(defproject hello "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
-  :url "http://example.com/FIXME"
-  :license {:name "Eclipse Public License"
-            :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.eamonn.funcgo/funcgo-lein-plugin "0.2.1"]]
-  :plugins [ [org.eamonn.funcgo/funcgo-lein-plugin "0.2.1"]]
-  :main ^:skip-aot hello.core
-  :target-path "target/%s"
-  :profiles {:uberjar {:aot :all}})
-```
-
-4. Delete the existing Clojure file `src/hello/core.clj`
-
-5. Create a new Functional Go file `src/hello/core.go` containing ...
-```go
+something like ...  ```clj (defproject hello "0.1.0-SNAPSHOT"
+:description "FIXME: write description" :url
+"http://example.com/FIXME" :license {:name "Eclipse Public License"
+:url "http://www.eclipse.org/legal/epl-v10.html"} :dependencies
+[[org.clojure/clojure "1.5.1"]
+[org.eamonn.funcgo/funcgo-lein-plugin "0.2.1"]] :plugins
+[ [org.eamonn.funcgo/funcgo-lein-plugin "0.2.1"]] :main ^:skip-aot
+hello.core :target-path "target/%s" :profiles {:uberjar {:aot :all}})
+``` 4. Delete the existing Clojure file `src/hello/core.clj` 5. Create
+a new Functional Go file `src/hello/core.go` containing ...  ```go
 package core
 
 func _main(args...) {
 	println("Hello, World from Functional Go")
 }
 ```
-
 6. On the command line (in the same directory as the `project.clj`
 file) do ...
 ```sh
@@ -68,10 +45,39 @@ This should print out `Hello, World from Functional Go`.
 Congratulations, you have just written and executed your first
 Functional Go program!
 
+## Next Steps
+
+You can get a better feel for the language by reading the rest of this
+page.
+
+To browse some actual working code, the biggest and most complex
+program so far written in Functional Go is its own compiler (Turtles
+all the way down!)  You might start at the `main.go` file in
+[the source directory][src].
+
+There is also do `lein fgoc --repl` to bring up the beginnings of a
+REPL that you can use to explore.
+```
+$ lein fgoc --repl
+test
+src
+
+fgo=>     2+3
+Clojure:  (+ 2 3)
+Result:   5
+
+fgo=>     func{10 * ..} map [1,2,3,4,5,6]
+Clojure:  (map #(* 10 %) [1 2 3 4 5 6])
+Result:   (10 20 30 40 50 60)
+
+fgo=>     
+```
+(Warning, the REPL still has poor error handling.)
+
 ## Usage
 
 The preferred way to use this compiler is via the
-[Leiningen Plugin][plugin].
+[Leiningen Plugin][plugin] as described in the Quick Start section.
 
 If you are not using Leiningen you can use `java -jar
 bin/funcgo-compiler-*-standalone.jar directory ...` to compile.
@@ -493,3 +499,4 @@ version 1.0 or (at your option) any later version.
 [interpose]: http://clojuredocs.org/clojure_core/clojure.core/interpose
 [isevery]: http://clojuredocs.org/clojure_core/clojure.core/every_q
 [plugin]: https://github.com/eobrain/funcgo-lein
+[src]: https://github.com/eobrain/funcgo/tree/master/src/funcgo
