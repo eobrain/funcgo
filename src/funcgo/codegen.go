@@ -1,7 +1,7 @@
 //////
 // This file is part of the Funcgo compiler.
 //
-// Copyright (c) 2012,2013 Eamonn O'Brien-Strain All rights
+// Copyright (c) 2014 Eamonn O'Brien-Strain All rights
 // reserved. This program and the accompanying materials are made
 // available under the terms of the Eclipse Public License v1.0 which
 // accompanies this distribution, and is available at
@@ -444,6 +444,16 @@ func codeGenerator(symbolTable, isGoscript) {
 		},
 		TYPEDIDENTIFIER: func(identifier, typ) {
 			str(`^`, typ, " ", identifier)
+		},
+		TYPEDIDENTIFIERS: func(args...) {
+			const(
+				typ = last(args)
+				identifiers = butlast(args)
+				decls = for identifier := lazy identifiers {
+					str(`^`, typ, " ", identifier)
+				}
+			)
+			blankJoin apply decls
 		},
 		IMPORTED:         func{"." s.join ...},
 		DECIMALLIT:    identity,

@@ -854,6 +854,26 @@ test.fact("assoc-in",
 	parse(`x += {4 AAA 6 8: aaa }`), =>, parsed(`(assoc-in x [4 :aaa 6 8] aaa)`)
 )
 
+test.fact("Vertex struct",
+	parse(`type Vertex struct {
+	Lat, Long float64
+}
+`), =>, parsed(str(`(defrecord Vertex [^double Lat ^double Long]`,
+		` Object (toString [this] (str "{" Lat " " Long "}")))`))
+)
+
+test.fact("struct literal",
+      parse(`Vertex{
+		40.68433, -74.39967
+	}`,[],["a.Vertex"]), =>, parsed(`(Vertex. 40.68433 (- 74.39967))`,[],["a Vertex"])
+)
+
+test.fact("struct literal with trailing comma",
+      parse(`Vertex{
+		40.68433, -74.39967,
+	}`,[],["a.Vertex"]), =>, parsed(`(Vertex. 40.68433 (- 74.39967))`,[],["a Vertex"])
+)
+
 //test.fact("type assertion",
 //	parse(`a.(string)`), =>, parsed(`[x (instance? String x)]`)
 //)

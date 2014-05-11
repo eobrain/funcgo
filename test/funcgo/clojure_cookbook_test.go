@@ -267,21 +267,27 @@ var employees = [
         ["Luke", "Vanderhart", 1]
 ]
 
-println mapv (tableify map ([header] concat employees))
-// *out*
-// First Name           | Last Name            | Employee ID
-// Ryan                 | Neufeld              | 2
-// Luke                 | Vanderhart           | 1
+test.fact("formatting",
+	withOutStr(
+		println mapv (tableify map ([header] concat employees))
+	),
+	=>, `First Name           | Last Name            | Employee ID         
+Ryan                 | Neufeld              | 2                   
+Luke                 | Vanderhart           | 1                   
+`,
 
-->>(
-        [header] concat employees,
-        map(tableify),
-        mapv(println)
+	withOutStr(
+		->>(
+			[header] concat employees,
+			map(tableify),
+			mapv(println)
+		)
+	),
+	=>, `First Name           | Last Name            | Employee ID         
+Ryan                 | Neufeld              | 2                   
+Luke                 | Vanderhart           | 1                   
+`
 )
-// *out*
-// First Name           | Last Name            | Employee ID
-// Ryan                 | Neufeld              | 2
-// Luke                 | Vanderhart           | 1
 
 test.fact("Regular expressions, using reFind",
 

@@ -1,7 +1,7 @@
 //////
 // This file is part of the Funcgo compiler.
 //
-// Copyright (c) 2012,2013 Eamonn O'Brien-Strain All rights
+// Copyright (c) 2014 Eamonn O'Brien-Strain All rights
 // reserved. This program and the accompanying materials are made
 // available under the terms of the Eclipse Public License v1.0 which
 // accompanies this distribution, and is available at
@@ -71,6 +71,7 @@ sourcefile = NL? packageclause (expressions|topwithconst) _
          consts = ( const {NL const} )?
            const = Destruct _ <'='> _ expr
 	     <Destruct> = Identifier | typedidentifier | vecdestruct | dictdestruct
+	       typedidentifiers = Identifier ({_ <','> _ Identifier })? _ typename
 	       typedidentifier = Identifier _ typename
 		 typename = JavaIdentifier {<'.'>  JavaIdentifier} | primitivetype | string
                    <primitivetype> = long | double | 'byte' | 'short' | 'char' | 'boolean'
@@ -179,7 +180,7 @@ sourcefile = NL? packageclause (expressions|topwithconst) _
              structspec = JavaIdentifier _ <'struct'> _ <'{'>  _ (fields _)? <'}'>
                fields = Field
                         | fields NL Field
-                 <Field> = Identifier | typedidentifier
+                 <Field> = Identifier | typedidentifiers
 	     interfacespec = JavaIdentifier _ <'interface'> _ <'{'> _ ( MethodSpec NL )* <'}'>
 	       <MethodSpec> = voidmethodspec | typedmethodspec
 	       voidmethodspec = JavaIdentifier _ <'('> _ methodparameters? _ <')'>
@@ -254,7 +255,7 @@ sourcefile = NL? packageclause (expressions|topwithconst) _
 	     dictlit = '{' _ ( dictelement _ {<','> _ dictelement} )? _ '}'
                dictelement = expr _ <':'> _ expr
              NotType = 'func' | 'set'
-             structlit = !NotType typename _ <'{'> ( _ expr _ {<','> _ expr} )? _ <'}'> 
+             structlit = !NotType typename _ <'{'> ( _ expr _ {<','> _ expr} )? _ (<','> _)? <'}'> 
              setlit = <'set'> _ <'{'> ( _ expr _ {<','> _ expr} )? _ <'}'>
            new = <'new'> <__> typename
            <OperandName> = symbol | NonAlphaSymbol                           (*| QualifiedIdent*)
