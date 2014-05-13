@@ -79,6 +79,11 @@ program so far written in Functional Go is its own compiler. (Turtles
 all the way down!)  You might start at the `main.go` file in
 [the source directory][src].
 
+A smaller set of working code is [fgolib][fgolib].  In addition to
+looking at the Functional Go code there, you can also examine the
+`project.clj` file which is a working example of using the Leiningen
+plugin.
+
 There is also do `lein fgoc --repl` to bring up the beginnings of a
 REPL that you can use to explore...
 ```
@@ -523,3 +528,4 @@ version 1.0 or (at your option) any later version.
 [isevery]: http://clojuredocs.org/clojure_core/clojure.core/every_q
 [plugin]: https://github.com/eobrain/funcgo-lein
 [src]: https://github.com/eobrain/funcgo/tree/master/src/funcgo
+[fgolib]: https://github.com/eobrain/fgolib
