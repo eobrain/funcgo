@@ -93,14 +93,20 @@ func newConsoleReader() {
 func repl(){
 	const consoleReader ConsoleReader = newConsoleReader()
 	loop(){
-		const cljText = first(core.Parse(
-			"repl.go",
-			consoleReader->readLine(),
-			EXPR
-		))
-		println("Clojure: ", cljText)
-		println("Result:  ", eval(readString(cljText)))
-		recur()
+		const fgoText = consoleReader->readLine()
+		if !string.isBlank(fgoText) {
+			try{
+				const cljText = first(core.Parse("repl.go", fgoText, EXPR))
+				println("Clojure: ", cljText)
+				println("Result:  ", eval(readString(cljText)))
+				println()
+			} catch Exception e {
+				println(e)
+			}
+		}
+		if fgoText != nil {
+			recur()
+		}
 	}
 }
 
