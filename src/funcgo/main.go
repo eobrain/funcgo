@@ -99,10 +99,10 @@ func repl(){
 				const cljText = first(core.Parse("repl.go", fgoText, EXPR))
 				println("Clojure: ", cljText)
 				println("Result:  ", eval(readString(cljText)))
-				println()
 			} catch Exception e {
 				println(e)
 			}
+			println()
 		}
 		if fgoText != nil {
 			recur()
