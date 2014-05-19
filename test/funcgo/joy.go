@@ -215,36 +215,40 @@ test.fact("using alter to update a Ref",
 	=>, 1
 )
 
-test.fact("An interface defining a sliceable object",
-	{
-		type ISliceable interface{
-			slice(s int, e int)
-			sliceCount() int
-		}
+// test.fact("An interface defining a sliceable object",
+// 	// {
+// 	// 	type ISliceable interface{
+// 	// 		slice(s int, e int)
+// 	// 		sliceCount() int
+// 	// 	}
 
-		dumb := reify(
-			\`funcgo.joy.ISliceable`,
-			slice([_, s, e], [EMPTY]),
-			\`sliceCount`([_], 42)
-		)
+// 	// 	dumb := reify(
+// 	// 		\`ISliceable`,
+// 	// 		slice([_, s, e], [EMPTY]),
+// 	// 		sliceCount([_], 42)
+// 	// 	)
 
-		dumb->slice(1, 2)
-	},
-	=>, [EMPTY],
+// 	// 	dumb->slice(1, 2)
+// 	// },
+// 	// =>, [EMPTY],
 
-	//{
-	//	dumb := new implements funcgo.joy.ISliceable func (
-	//		slice(s, e) { [EMPTY] },
-	//		sliceCount() {42}
-	//	)
+// 	{
+// 	 	type ISliceable interface{
+// 	 		slice(s int, e int)
+// 	 		sliceCount() int
+// 	 	}
+// 		dumb := new implements ISliceable func (
+// 			slice(s, e) { [EMPTY] },
+// 			sliceCount() {42}
+// 		)
 
-	//	dumb->slice(1, 2)
-	//},
-	//=>, [EMPTY],
+// 		dumb->slice(1, 2)
+// 	},
+// 	=>, [EMPTY],
 
-	dumb->sliceCount(),
-	=>, 42
-)
+// 	dumb->sliceCount(),
+// 	=>, 42
+// )
 
 //Define recored type
 type TreeNode struct{val; l; r}
@@ -253,6 +257,7 @@ test.fact("Persistent binary tree built of records",
 	{
 		// Add to tree
 		func xconj(t, v) {
+			//println("xconj(", t, ",", v, ")")
 			switch {
 			case isNil(t):
 				new TreeNode(v, nil, nil)
@@ -265,6 +270,7 @@ test.fact("Persistent binary tree built of records",
 		
 		// conver trees to seq
 		func xseq(t) {
+			//println("xseq(", t, ")")
 			if t {
 				concat(xseq(L(t)), [VAL(t)], xseq(R(t)))
 			}
@@ -279,22 +285,19 @@ test.fact("Persistent binary tree built of records",
 )
 
 
-// test.fact("Protocols",
-// 	{
-// 		type FIXO interface{
-// 			fixoPush(value)
-// 			fixoPop()
-// 			fixoPeek()
-// 		}
-		
-// 		implements FIXO
-// 		func (TreeNode) fixoPush(value) { xconj(this, value) }
+type FIXO interface{
+	fixoPush(value)
+	fixoPop()
+	fixoPeek()
+}
 
-// 		xseq(sampleTree->fixoPush(5/2))
-// 		//xseq(\`fixoPush`(sampleTree, 5/2))
-// 	},
-// 	=>, [2, 5/2, 3, 4, 5, 6]
-// )
+implements FIXO
+func (TreeNode) fixoPush(value) { xconj(this, value) }
+
+test.fact("Protocols",
+	xseq(fixoPush(sampleTree, 5/2)),
+	=>, [2, 5/2, 3, 4, 5, 6]
+)
 
 // test.fact("Method implementations in defrecord",
 // 	{

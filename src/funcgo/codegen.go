@@ -227,6 +227,12 @@ func codeGenerator(symbolTable, isGoscript) {
 		CONSTSWITCH: func(expr, clauses...) {
 			listStr apply ("case" cons (expr cons clauses))
 		},
+		LETCONSTSWITCH: func(lhs, rhs, expr, clauses...) {
+			str("(let [", lhs, " ", rhs, "] ",
+				listStr apply ("case" cons (expr cons clauses)),
+				")"
+			)
+		},
 		CONSTCASECLAUSE: blankJoin,
 		CONSTANTLIST: func(c) {
 			c

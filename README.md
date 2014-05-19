@@ -22,7 +22,7 @@ lein new app hello
 cd hello
 lein run
 ```
-This should print out `Hello, World!`, which shows that your Clojure
+This should print out `Hello, World!`, showing that your Clojure
 environment is configured correctly.
 
 #### 2. Convert your project into a Functional Go project.

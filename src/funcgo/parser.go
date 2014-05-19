@@ -43,12 +43,12 @@ sourcefile = NL? packageclause (expressions|topwithconst) _
                          )
          typepackageimportspec = JavaIdentifier {<'.'>  JavaIdentifier} 
      <ImportSpec> = importspec
-       importspec = ( Identifier _ )?  <'"'> imported <'"'>
+       importspec = ( Identifier _ )?  QQ imported QQ
          imported = Identifier {<'/'> Identifier}
  expressions = expr | expressions NL expr
    <expr>  = precedence0 | Vars | shortvardecl | ifelseexpr | letifelseexpr | tryexpr | forrange |
                    forlazy | fortimes | Blocky | ExprSwitchStmt
-     <ExprSwitchStmt> = boolswitch | constswitch | typeswitch
+     <ExprSwitchStmt> = boolswitch | constswitch | letconstswitch | typeswitch
        typeswitch = <'switch'> _ PrimaryExpr _ <'.'> _ <'('> _ <'type'> _ <')'> _  <'{'>
                          _   <'case'> _ typename _ <':'> _ expressions
                          {NL <'case'> _ typename _ <':'> _ expressions}
@@ -56,6 +56,8 @@ sourcefile = NL? packageclause (expressions|topwithconst) _
                     _ <'}'>
        boolswitch = <'switch'> _ <'{'>  _ boolcaseclause { NL boolcaseclause } _ <'}'>
        constswitch = <'switch'> _ expr _ <'{'> _ constcaseclause { NL constcaseclause } _ <'}'>
+       letconstswitch = <'switch'> _ Destruct _ <':='> _ expr _ <';'>
+                                   _ expr _ <'{'> _ constcaseclause { NL constcaseclause } _ <'}'>
 	 boolcaseclause = boolswitchcase _ <':'> _ expressions
 	 constcaseclause = constswitchcase _ <':'> _ expressions
 	   boolswitchcase = <'case'> _ expressionlist | <'default'>
@@ -80,7 +82,7 @@ sourcefile = NL? packageclause (expressions|topwithconst) _
                    string = <'string'>
 	       vecdestruct = <'['> _ VecDestructElem _ {<','> _ VecDestructElem _ } <']'>
 		 <VecDestructElem> = Destruct | variadicdestruct | label
-		   variadicdestruct = Destruct <'...'>
+		   variadicdestruct = Destruct Ellipsis
 	       dictdestruct = <'{'> dictdestructelem { _ <','> _ dictdestructelem} <'}'>
 		 dictdestructelem = Destruct _ <':'> _ expr
      precedence0 = precedence1
@@ -129,7 +131,8 @@ sourcefile = NL? packageclause (expressions|topwithconst) _
        vardecl1 = Identifier ( _ typename )? _ <'='> _ expr
        vardecl2 = Identifier  _ <','> _ Identifier ( _ typename )? _ <'='> _ expr _ <','> _ expr
      ifelseexpr = <'if'> _ expr _ Blocky ( _ <'else'> _ Blocky )?
-     letifelseexpr = <'if'> _ Destruct _ <':='> _ expr _ <';'>_ expr _ Blocky ( _ <'else'> _ Blocky )?
+     letifelseexpr = <'if'> _ Destruct _ <':='> _ expr _ <';'>
+                            _ expr _ Blocky ( _ <'else'> _ Blocky )?
      forrange = <'for'> <__> Destruct _ <':='> _ <'range'> <_> expr _  Blocky
      forlazy = <'for'> <__> Destruct _ <':='> _ <'lazy'> <_> expr
                ( <__> <'if'> <__> expr )? _ Blocky
@@ -173,7 +176,7 @@ sourcefile = NL? packageclause (expressions|topwithconst) _
          functioncall = PrimaryExpr Call
          javamethodcall = UnaryExpr _ <'->'> _ JavaIdentifier _ Call
            <Call> = <'('> _ ( ArgumentList _ )? <')'>
-             <ArgumentList> = expressionlist                                         (* [ _ '...' ] *)
+             <ArgumentList> = expressionlist                                         (* [ _ Ellipsis ] *)
                expressionlist = expr {_ <','> _ expr} (_ <','>)?
          <TypeDecl> = <'type'> _ ( TypeSpec | <'('> _ ( TypeSpec NL )* <')'> )
 	   <TypeSpec> = interfacespec | structspec
@@ -183,19 +186,19 @@ sourcefile = NL? packageclause (expressions|topwithconst) _
                  <Field> = Identifier | typedidentifiers
 	     interfacespec = JavaIdentifier _ <'interface'> _ <'{'> _ ( MethodSpec NL )* <'}'>
 	       <MethodSpec> = voidmethodspec | typedmethodspec
-	       voidmethodspec = JavaIdentifier _ <'('> _ methodparameters? _ <')'>
-	       typedmethodspec = JavaIdentifier _ <'('> _ methodparameters? _ <')'> _ typename
+	       voidmethodspec = Identifier _ <'('> _ methodparameters? _ <')'>
+	       typedmethodspec = Identifier _ <'('> _ methodparameters? _ <')'> _ typename
 		 methodparameters = methodparam
 				  | methodparameters _ <','> _ methodparam
-		   methodparam = symbol (_ JavaIdentifier)?
+		   methodparam = symbol (_ Identifier)?
          implements = <'implements'> _ typename _ 
                         <'func'> _ <'('> _ JavaIdentifier <')'> _ (
                           MethodImpl | <'('> _ MethodImpl ( NL MethodImpl )* _ <')'>
                         )
            <MethodImpl> = typedmethodimpl | untypedmethodimpl
-             untypedmethodimpl = JavaIdentifier _ <'('>  _ parameters? _ <')'> _
+             untypedmethodimpl = Identifier _ <'('>  _ parameters? _ <')'> _
                                    (ReturnBlock|Blocky)
-             typedmethodimpl = JavaIdentifier _ <'('>  _ parameters? _ <')'> _ typename _
+             typedmethodimpl = Identifier _ <'('>  _ parameters? _ <')'> _ typename _
                                    (ReturnBlock|Blocky)
          functiondecl = <'func'> _ Identifier _ Function
          funclikedecl = <'func'> _ <'<'> _ symbol _ <'>'> _ Identifier _ Function
@@ -208,7 +211,7 @@ sourcefile = NL? packageclause (expressions|topwithconst) _
 		 vfunctionpartn = <'('> _ parameters _  <','> _ variadic _ <')'> ( _ typename )? _
                                  (ReturnBlock|Blocky)
                    parameters = Destruct {<','> _ Destruct}
-                   variadic = Identifier <'...'>
+                   variadic = Identifier Ellipsis
                    <ReturnBlock> = <'{'> _ <'return'> _ expr _ <'}'>
          <Operand> = Literal | OperandName | label | new  | <'('> expr <')'>       (*|MethodExpr*)
            label = #'\b\p{Lu}[\p{Lu}_0-9]*\b'
@@ -231,7 +234,7 @@ sourcefile = NL? packageclause (expressions|topwithconst) _
                  escapedslash = <'\\/'>
 	       <string_lit> = rawstringlit | interpretedstringlit | clojureescape
                  rawstringlit = <#'\x60'> #'[^\x60]*' <#'\x60'>     (* \x60 is back quote character *)
-                 interpretedstringlit = <#'\"'> {#'[^\"]' | '\\"'} <#'\"'>
+                 interpretedstringlit = QQ {#'[^\"]' | '\\"'} QQ
                  clojureescape = <'\\'> <#'\x60'> #'[^\x60]*' <#'\x60'>       (* \x60 is back quote *)
 	       <rune_lit> = <'\''> ( unicode_value | byte_value ) <'\''>
 		 <unicode_value> = unicodechar | littleuvalue | escaped_char
@@ -263,5 +266,7 @@ sourcefile = NL? packageclause (expressions|topwithconst) _
                               | percent| percentnum | percentvaradic
                percent        = <'..'>
                percentnum     = <'..'> #'[1-9]'
-               percentvaradic = <'...'>
+               percentvaradic = Ellipsis
+  <Ellipsis> = <'...'> | <'…'>
+  <QQ> = <'"'> | <'“'>  | <'”'>
 `)

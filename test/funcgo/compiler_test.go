@@ -707,7 +707,7 @@ test.fact("An interface defining a sliceable object",
 		slice(s int, e int)
 		sliceCount() int
 	}`),
-	=>, parsed(`(defprotocol ISliceable (slice [this ^int s ^int e]) (^long sliceCount [this]))`)
+	=>, parsed(`(defprotocol ISliceable (slice [this ^int s ^int e]) (^long slice-count [this]))`)
 )
 
 test.fact("interface with three methods",
@@ -734,6 +734,20 @@ type Interface interface {
 //type Sequence []int
 //`), =>, parsed(`(defrecord Sequence [??]`)
 //)
+
+// test.fact("dispatch",
+//  	parse(`func (v Vertex) Manh() float64 { return v->X + v->X }`),
+//  	=>, parsed(str(
+// 		`(defprotocol __ManhProtocol (Manh [v]))`,
+// 		` (extend-type Vertex __ManhProtocol (Manh [v] (+ (. v X) (. v Y))))`
+// 	)),
+	
+//  	parse(`func (v Vertex) plusX(x) float64 { return x + v->X}`),
+//  	=>, parsed(str(
+// 		`(defprotocol __plusXProtocol (PlusX [v x]))`,
+// 		` (extend-type Vertex __plusXProtocol (PlusX [v x] (+ (. v X) x)))`
+// 	))
+// )
 
 test.fact("implements",
 
@@ -807,6 +821,20 @@ test.fact("switch",
 	parse(`switch x {case P, Q, R: b; case S, T, U: d; default: e}`),
 	=>, parsed(`(case x (:p :q :r) b (:s :t :u) d e)`)
 )
+test.fact("switch with pre-expression",
+	parse(`switch {case a: b; case c: d; default: e}`),
+	=>, parsed(`(cond a b c d :else e)`),
+
+	parse(`switch x.(type) {case String: x; case Integer: str(x*x); default: str(x)}`),
+	=>, parsed(`(cond (instance? String x) x (instance? Integer x) (str (* x x)) :else (str x))`),
+
+	parse(`switch x := bar; x {case A: b; case C: d; default: e}`),
+	=>, parsed(`(let [x bar] (case x :a b :c d e))`),
+
+	parse(`switch x := bar(); x {case P, Q, R: b; case S, T, U: d; default: e}`),
+	=>, parsed(`(let [x (bar)] (case x (:p :q :r) b (:s :t :u) d e))`)
+)
+
 test.fact("Error if external package not imported",
 	parse("huh.bar"),
 	=>, test.throws(Exception, `package "huh" in huh.bar does not appear in imports []`),
