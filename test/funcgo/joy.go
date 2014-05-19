@@ -49,7 +49,7 @@ test.fact("updateIn",
 
 func onBoard(size) {
 	func(yx) {
-		func{-1 < .. && .. < size} isEvery yx
+		func{-1 < $1 && $1 < size} isEvery yx
 	}
 }
 
@@ -57,14 +57,14 @@ func neighbors(size, yx) {
 	neighbors([[-1,0], [1,0], [0,-1], [0,1]], size, yx)
 } (deltas, size, yx) {
 	const (
-		addYx = func{map(+, yx, ..)}
+		addYx = func{map(+, yx, $1)}
 		unfiltered = addYx map deltas
 	)
 	onBoard(size) filter unfiltered
 }
 
 test.fact("neighbors works",
-	func{matrix getIn ..} map neighbors(3, [0,0]),
+	func{matrix getIn $1} map neighbors(3, [0,0]),
 	=>, [4,2]
 )
 	
@@ -90,7 +90,7 @@ initialBoard := [
 
 func boardMap(f, bd) {
 	vec(
-		func{vec(for s := lazy .. { f(s) })} map bd
+		func{vec(for s := lazy $1 { f(s) })} map bd
 	)
 }
 
@@ -143,7 +143,7 @@ test.fact("fake shuffle is actually rotate",
 func chooseMove([[mover, mpos], [_, enemyPos]]) {
 	[
 		mover,
-		func{.. isGoodMove enemyPos} some shuffle(kingMoves(mpos))
+		func{$1 isGoodMove enemyPos} some shuffle(kingMoves(mpos))
 	]
 }
 
@@ -179,13 +179,13 @@ test.fact("Coordinated, synchronous change using alter",
 func place(from, to){to}
 
 func movePiece([piece, dest], [[_, src], _]) {
-	getIn(board, dest) alter func{place(.., piece)}
-	getIn(board, src) alter func{place(.., EE)}
+	getIn(board, dest) alter func{place($1, piece)}
+	getIn(board, src) alter func{place($1, EE)}
 	numMoves alter inc
 }
 
 func updateToMove(move) {
-	toMove alter func{vector(second(..), move)}
+	toMove alter func{vector(second($1), move)}
 }
 
 func makeMove() {

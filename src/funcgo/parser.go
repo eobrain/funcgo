@@ -263,10 +263,9 @@ sourcefile = NL? packageclause (expressions|topwithconst) _
            new = <'new'> <__> typename
            <OperandName> = symbol | NonAlphaSymbol                           (*| QualifiedIdent*)
              <NonAlphaSymbol> = '=>' | '->>' | relop | addop | mulop | unary_op
-                              | percent| percentnum | percentvaradic
-               percent        = <'..'>
-               percentnum     = <'..'> #'[1-9]'
-               percentvaradic = Ellipsis
+                              | percentnum | percentvaradic
+               percentnum     = <'$'> #'[1-9]'
+               percentvaradic = <'$*'>
   <Ellipsis> = <'...'> | <'…'>
   <QQ> = <'"'> | <'“'>  | <'”'>
 `)

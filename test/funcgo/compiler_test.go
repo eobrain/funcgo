@@ -103,7 +103,7 @@ func parseJs(expr) {
 //		if count(pkgs) == 0 {
 //			str("package foo;", expr)
 //		}else {
-//			const imports = func{str(`"`, .., `"`)} map pkgs
+//			const imports = func{str(`"`, $1, `"`)} map pkgs
 //			str("package foo; import(", "\n" string.join imports, ");", expr)
 //		}
 //	)
@@ -167,7 +167,7 @@ func parsedJs(expr) {
 //	if count(pkgs) == 0 {
 //		str("(ns foo) ", expr)
 //	}else{
-//		const imports = func{str(" [", .., " :as ", .., "]")} map pkgs
+//		const imports = func{str(" [", $1, " :as ", $1, "]")} map pkgs
 //		str("(ns foo (:require", (str apply imports), ")) ", expr)
 //	}
 //}
@@ -672,11 +672,11 @@ test.fact("tail recursion",
 test.fact("short anonymous functions",
 	parseNoPretty(`func{s}`),             =>, parsedNoPretty(`(fn [] s)`),
 	parseNoPretty(`func{a+1}`),           =>, parsedNoPretty(`#(+ a 1)`),
-	parseNoPretty(`func{..+..}`),         =>, parsedNoPretty(`#(+ % %)`),
-	parseNoPretty(`func{..1+..2}`),       =>, parsedNoPretty(`#(+ %1 %2)`),
-	parseNoPretty(`func{.. + ..}`),       =>, parsedNoPretty(`#(+ % %)`),
-	parseNoPretty(`func{..1 + ..2}`),     =>, parsedNoPretty(`#(+ %1 %2)`),
-	parseNoPretty(`func{str apply ...}`), =>, parsedNoPretty(`#(apply str %&)`)
+	parseNoPretty(`func{$1+$1}`),         =>, parsedNoPretty(`#(+ %1 %1)`),
+	parseNoPretty(`func{$1+$2}`),       =>, parsedNoPretty(`#(+ %1 %2)`),
+	parseNoPretty(`func{$1 + $1}`),       =>, parsedNoPretty(`#(+ %1 %1)`),
+	parseNoPretty(`func{$1 + $2}`),     =>, parsedNoPretty(`#(+ %1 %2)`),
+	parseNoPretty(`func{str apply $*}`), =>, parsedNoPretty(`#(apply str %&)`)
 
 )
 
