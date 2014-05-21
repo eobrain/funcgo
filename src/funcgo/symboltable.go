@@ -32,7 +32,7 @@ func New() {
 // Add a package symbol to the table.
 func PackageImported(st, pkg) {
 	dosync(st alter func{
-		.. += {
+		$1 += {
 			pkg: PACKAGE,
 			UNUSED_PACKAGES: (*st)(UNUSED_PACKAGES) conj pkg
 		}
@@ -41,19 +41,19 @@ func PackageImported(st, pkg) {
 
 // Add a package symbol to the table, but don't require it to be used.
 func PackageCreated(st, pkg) {
-	dosync(st alter func{.. += {
+	dosync(st alter func{$1 += {
 		pkg: PACKAGE
 	}})
 }
 
 // Add a package symbol to the table.
 func TypeImported(st, typ) {
-	dosync(st alter func{.. += {
+	dosync(st alter func{$1 += {
 		typ: TYPE,
 		UNUSED_TYPES: (*st)(UNUSED_TYPES) conj typ
 	}})
 	//dosync{
-	//	st := .. += {
+	//	st := $1 += {
 	//		typ: TYPE,
 	//		UNUSED_TYPES: (*st)(UNUSED_TYPES) conj typ
 	//	}
@@ -62,17 +62,17 @@ func TypeImported(st, typ) {
 
 // Add a package symbol to the table.
 func TypeCreated(st, typ) {
-	dosync(st alter func{.. += {
+	dosync(st alter func{$1 += {
 		typ: TYPE
 	}})
 	//dosync{
-	//	st := .. += {typ: TYPE}
+	//	st := $1 += {typ: TYPE}
 	//}
 }
 
 // Has this package been previously been added to the table?
 func HasPackage(st, pkg) {
-	dosync(st alter func{.. += {
+	dosync(st alter func{$1 += {
 		UNUSED_PACKAGES: (*st)(UNUSED_PACKAGES) disj pkg
 	}})
 	(*st)(pkg) == PACKAGE
@@ -80,7 +80,7 @@ func HasPackage(st, pkg) {
 
 // Has this type been previously been added to the table?
 func HasType(st, typ) {
-	dosync(st alter func{.. += {
+	dosync(st alter func{$1 += {
 		UNUSED_TYPES: (*st)(UNUSED_TYPES) disj typ
 	}})
 	(*st)(typ) == TYPE
