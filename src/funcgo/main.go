@@ -225,5 +225,5 @@ func Compile(args...) {
 // Entry point for stand-alone compiler. Usage is the same as for the
 // Compile function.
 func _main(args...) {
-	Compile apply args
+	Compile(...args)
 }
