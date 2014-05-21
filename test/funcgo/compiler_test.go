@@ -676,7 +676,7 @@ test.fact("short anonymous functions",
 	parseNoPretty(`func{$1+$2}`),       =>, parsedNoPretty(`#(+ %1 %2)`),
 	parseNoPretty(`func{$1 + $1}`),       =>, parsedNoPretty(`#(+ %1 %1)`),
 	parseNoPretty(`func{$1 + $2}`),     =>, parsedNoPretty(`#(+ %1 %2)`),
-	parseNoPretty(`func{str apply $*}`), =>, parsedNoPretty(`#(apply str %&)`)
+	parseNoPretty(`func{str(...$*)}`), =>, parsedNoPretty(`#(apply str %&)`)
 
 )
 
@@ -906,6 +906,11 @@ test.fact("struct literal with trailing comma",
       parse(`Vertex{
 		40.68433, -74.39967,
 	}`,[],["a.Vertex"]), =>, parsed(`(Vertex. 40.68433 (- 74.39967))`,[],["a Vertex"])
+)
+
+test.fact("Calling function variadically",
+	parse(`foo(...args)`), =>, parsed(`(apply foo args)`),
+	parse(`foo(a, b, ...args)`), =>, parsed(`(apply foo a b args)`)
 )
 
 //test.fact("type assertion",

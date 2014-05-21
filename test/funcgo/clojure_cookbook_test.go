@@ -122,7 +122,7 @@ test.fact("make file from lines (with newlines)",
 			"#! /bin/bash\n",
 			"du -a ./ | sort -n -r\n"
 		]
-		str apply lines
+		str(...lines)
 	},
         =>,  "#! /bin/bash\ndu -a ./ | sort -n -r\n"
 )
@@ -136,7 +136,7 @@ test.fact("Making CSV from header vector of rows",
 				"ryan,neufeld,2"
 			]
 		)
-		apply(str, header, ("\n" interpose rows))
+		str(header, ...("\n" interpose rows))
 	},
         =>, `first_name,last_name,employee_number
 luke,vanderhart,1
@@ -186,7 +186,7 @@ test.fact("Function taking a sequence will cooerce a string into a set of chars"
 
 
 test.fact("Can transform characters back into a string",
-        str apply ['H', 'e', 'l', 'l', 'o', ',', ' ', 'w', 'o', 'r', 'l', 'd', '!'],
+        str(...['H', 'e', 'l', 'l', 'o', ',', ' ', 'w', 'o', 'r', 'l', 'd', '!']),
         =>, "Hello, world!"
 )
 
@@ -236,7 +236,7 @@ test.fact("str is the easiest way of formatting values into a string",
 	},
         =>, "My name is Eamonn, and I really like to program in Funcgo",
 
-        str apply (" " interpose [1, 2.000, 3/1, 4/9]),
+        str(...(" " interpose [1, 2.000, 3/1, 4/9])),
         =>, "1 2.0 3 4/9"
 )
 
@@ -258,7 +258,7 @@ test.fact("format is another way of constructing strings",
 
 // Create a table using justification
 func tableify(row) {
-        apply(format, "%-20s | %-20s | %-20s", row)
+        format("%-20s | %-20s | %-20s", ...row)
 }
 
 var header = ["First Name", "Last Name", "Employee ID"]
@@ -735,7 +735,7 @@ test.fact("Doing statistics",
 	{
 		func mean(coll) {
 			const(
-				sum = + apply coll
+				sum = +(...coll)
 				count = count(coll)
 			)
 			if isPos(count) {

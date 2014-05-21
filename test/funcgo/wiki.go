@@ -19,9 +19,9 @@ test.fact("Anonymous Functions",
 	func(x){list(x, inc(x))} map [1, 2, 3],
 	=>, [[1, 2], [2, 3], [3, 4]],
 
-	func{str apply $*}("Hello"),
+	func{str(...$*)}("Hello"),
 	=>, "Hello",
 
-	func{str apply $*}("Hello", ", ", "World!"),
+	func{str(...$*)}("Hello", ", ", "World!"),
 	=>, "Hello, World!"
 )

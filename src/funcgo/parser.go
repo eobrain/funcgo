@@ -158,6 +158,7 @@ sourcefile = NL? packageclause (expressions|topwithconst) _
        unquotesplicing = <'unquotes'> _ UnaryExpr
        javafield  = UnaryExpr _ <'->'> _ JavaIdentifier
        <PrimaryExpr> = functioncall
+                     | variadiccall
                      | typeconversion
                      | javamethodcall
                      | Operand
@@ -173,9 +174,11 @@ sourcefile = NL? packageclause (expressions|topwithconst) _
                                                                 PrimaryExpr TypeAssertion | *)
          typeconversion = primitivetype _ <'('> _ expr _ <')'>
          indexed = PrimaryExpr _ <'['> _ expr _ <']'>
+         variadiccall = PrimaryExpr 
+                           <'('> _ ( ArgumentList _ <','> _ )? _ Ellipsis _ PrimaryExpr _ <')'>
          functioncall = PrimaryExpr Call
          javamethodcall = UnaryExpr _ <'->'> _ JavaIdentifier _ Call
-           <Call> = <'('> _ ( ArgumentList _ )? <')'>
+           <Call> =  <'('> _ ( ArgumentList _ )? <')'>
              <ArgumentList> = expressionlist                                         (* [ _ Ellipsis ] *)
                expressionlist = expr {_ <','> _ expr} (_ <','>)?
          <TypeDecl> = <'type'> _ ( TypeSpec | <'('> _ ( TypeSpec NL )* <')'> )

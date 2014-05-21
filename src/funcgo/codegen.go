@@ -155,7 +155,7 @@ func codeGenerator(symbolTable, isGoscript) {
 			listStr apply (typepackage cons typeclasses)
 		},
 		TYPEPACKAGEIMPORTSPEC: func{
-			"." s.join ...
+			"." s.join $*
 		},
 		TYPECLASSESIMPORTSPEC: blankJoin,
 		PRECEDENCE0: infix,
@@ -264,8 +264,8 @@ func codeGenerator(symbolTable, isGoscript) {
 		CATCH: func(typ, exception, expressions) {
 			listStr("catch", typ, exception, expressions)
 		},
-		FINALLY: func{listStr("finally", ..)},
-		NEW:     func{str(.., ".")},
+		FINALLY: func{listStr("finally", $1)},
+		NEW:     func{str($1, ".")},
 		SHORTVARDECL:   func(identifier, expression) {
 			if isPublic(identifier) {
 				listStr("def", identifier, expression)
@@ -293,6 +293,9 @@ func codeGenerator(symbolTable, isGoscript) {
 				vardecl(identifier2, typ, expression2)
 			)
 		},
+		VARIADICCALL: func(function, params...) {
+			apply(listStr, "apply", function, params)
+		},
 		FUNCTIONCALL:    func(function) {
 			listStr(function)
 		} (function, call) {
@@ -315,11 +318,11 @@ func codeGenerator(symbolTable, isGoscript) {
 			str(identifier, " ", expression)
 		},
 		VECDESTRUCT: vecStr,
-		DICTDESTRUCT: func{str('{', (" " s.join ...), "}")}, 
+		DICTDESTRUCT: func{str('{', (" " s.join $*), "}")}, 
 		DICTDESTRUCTELEM: func(destruct, label) {
 			str(destruct, " ", label)
 		},
-		VARIADICDESTRUCT:  func{str("& ", ..)},
+		VARIADICDESTRUCT:  func{str("& ", $1)},
 		SYMBOL: func(identifier){
 			identifier
 		} (pkg, identifier) {
@@ -341,7 +344,7 @@ func codeGenerator(symbolTable, isGoscript) {
 		FUNCLIKEDECL:   func(funclike, identifier, function) {
 			listStr(funclike, identifier, function)
 		},
-		FUNCTIONLIT:    func{listStr("fn", ..)},
+		FUNCTIONLIT:    func{listStr("fn", $1)},
 		SHORTFUNCTIONLIT:  func(expr) {
 			if first(expr) == '(' && last(expr) == ')' {
 				"#" str expr
@@ -398,9 +401,9 @@ func codeGenerator(symbolTable, isGoscript) {
 			str("^", typ, " ", symbol)
 		},
 		PERCENT: constantFunc("%"),
-		PERCENTNUM: func{"%" str ..},
+		PERCENTNUM: func{"%" str $1},
 		PERCENTVARADIC: constantFunc("%&"),
-		FUNCTIONPARTS:  func{str("(",  ") (" s.join ...,  ")")},
+		FUNCTIONPARTS:  func{str("(",  ") (" s.join $*,  ")")},
 		FUNCTIONPART0:  func(expression) {
 			"[] " str expression
 		} (typ, expression) {
@@ -432,20 +435,20 @@ func codeGenerator(symbolTable, isGoscript) {
 			listStr("^" str typ, name, str("[this ", params, "]"), block)
 		},
 		PARAMETERS:     blankJoin,
-		VARIADIC:       func{"& " str ..},
+		VARIADIC:       func{"& " str $1},
 		VECLIT:         vecStr,
-		DICTLIT:        func{str apply ...},
+		DICTLIT:        func{str apply $*},
 		DICTELEMENT:    func(key, value) {str(key, " ", value, " ")},
-		SETLIT:         func{str("#{",  " " s.join ...,  "}")},
+		SETLIT:         func{str("#{",  " " s.join $*,  "}")},
 		STRUCTLIT:      func(typ, exprs...) {
 			listStr apply ((typ str ".") cons exprs)
 		},
-		LABEL:          func{str(":", s.replace(s.lowerCase(..), /_/, "-"))},
+		LABEL:          func{str(":", s.replace(s.lowerCase($1), /_/, "-"))},
 		IDENTIFIER:     func(string) {
 			s.replace(
 				string,
 				/\p{Ll}\p{Lu}/,
-				func{str(first(..), "-", s.lowerCase(last(..)))}
+				func{str(first($1), "-", s.lowerCase(last($1)))}
 			)
 		},
 		TYPEDIDENTIFIER: func(identifier, typ) {
@@ -461,20 +464,20 @@ func codeGenerator(symbolTable, isGoscript) {
 			)
 			blankJoin apply decls
 		},
-		IMPORTED:         func{"." s.join ...},
+		IMPORTED:         func{"." s.join $*},
 		DECIMALLIT:    identity,
 		BIGINTLIT:     str,
 		BIGFLOATLIT:   str,
 		FLOATLIT:      str,
 		DECIMALS:      identity,
 		EXPONENT:      str,
-		REGEX:         func{str(`#"`,  s.escape(str apply ..., {'"':`\"`}),  `"`)},
+		REGEX:         func{str(`#"`,  s.escape(str apply $*, {'"':`\"`}),  `"`)},
 		ESCAPEDSLASH: constantFunc(`/`),
-		INTERPRETEDSTRINGLIT: func{str(`"`,  str apply ...,  `"`)},
+		INTERPRETEDSTRINGLIT: func{str(`"`,  str apply $*,  `"`)},
 		CLOJUREESCAPE: identity,
 		LITTLEUVALUE:  func(d1,d2,d3,d4){str(`\u`,d1,d2,d3,d4)},
 		OCTALBYTEVALUE:  func(d1,d2,d3){str(`\o`,d1,d2,d3)},
-		UNICODECHAR:   func{`\` str ..},
+		UNICODECHAR:   func{`\` str $1},
 		NEWLINECHAR:   constantFunc(`\newline`),
 		SPACECHAR:     constantFunc(`\space`),
 		BACKSPACECHAR: constantFunc(`\backspace`),
@@ -485,8 +488,8 @@ func codeGenerator(symbolTable, isGoscript) {
 		DQUOTECHAR:    constantFunc(`\"`),
 		HEXDIGIT:      identity,
 		OCTALDIGIT:    identity,
-		RAWSTRINGLIT:  func{str(`"`, s.escape(.., charEscapeString), `"`)},
-		DASHIDENTIFIER: func{ "-" str ..},
+		RAWSTRINGLIT:  func{str(`"`, s.escape($1, charEscapeString), `"`)},
+		DASHIDENTIFIER: func{ "-" str $1},
 		ISIDENTIFIER:   func(initial, identifier) {
 			str( s.lowerCase(initial), identifier, "?")
 		},
@@ -505,14 +508,14 @@ func codeGenerator(symbolTable, isGoscript) {
 		SHIFTRIGHT:  constantFunc("bit-shift-right"),
 		NOT:         constantFunc("not"),
 		MOD:         constantFunc("mod"),
-		DEREF:           func{"@"   str ..},
-		SYNTAXQUOTE:     func{"`"   str ..},
-		UNQUOTE:         func{"~"   str ..},
-		UNQUOTESPLICING: func{ "~@" str ..},
+		DEREF:           func{"@"   str $1},
+		SYNTAXQUOTE:     func{"`"   str $1},
+		UNQUOTE:         func{"~"   str $1},
+		UNQUOTESPLICING: func{ "~@" str $1},
 		JAVAFIELD:      func(expression, identifier) {
 			listStr(".", expression, identifier)
 		},
-		JAVASTATIC:      func{"/" s.join ...},
+		JAVASTATIC:      func{"/" s.join $*},
 		TYPENAME:        func(segments...){
 			const typ = "." s.join segments
 			if !hasType(typ) {
@@ -522,7 +525,7 @@ func codeGenerator(symbolTable, isGoscript) {
 			}
 			typ
 		},
-		UNDERSCOREJAVAIDENTIFIER: func{ "-" str ..},
+		UNDERSCOREJAVAIDENTIFIER: func{ "-" str $1},
 		JAVAMETHODCALL: func(expression, identifier) {
 			str("(. ", expression, " (", identifier, "))")
 		} (expression, identifier, call) {
