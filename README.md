@@ -95,7 +95,7 @@ fgo=>     2+3
 Clojure:  (+ 2 3)
 Result:   5
 
-fgo=>     func{10 * ..} map [1,2,3,4,5,6]
+fgo=>     func{10 * $1} map [1,2,3,4,5,6]
 Clojure:  (map #(* 10 %) [1 2 3 4 5 6])
 Result:   (10 20 30 40 50 60)
 
@@ -323,6 +323,20 @@ The outer infix expression shows an example of Funcgo being used as a
 functional programming language. The [`apply`][apply] function is an
 example of a function that takes a function as a parameter.  Here
 [`str`][str] is passed as the first argument.
+
+#### Calling function variadically
+```go
+        str(...(" " interpose [1, 2.000, 3/1, 4/9]))
+
+        => "1 2.0 3 4/9"
+```
+
+This example is equivalent to the previous one, but it shows some
+syntactic sugar for the `apply` function in a way that echoes how
+variadic functions are declared.  Essentially if you have `const args
+= [a, b, c]` then calling `foo(...args)` is the same as calling
+`foo(a, b, c)`.
+
 
 #### Inter-operating with Java or JavaScript
 ```go
