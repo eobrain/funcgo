@@ -129,7 +129,8 @@ func codeGenerator(symbolTable, isGoscript) {
 
 	// Mapping from parse tree to generators of CLJ code.
 	{
-		SOURCEFILE:     func(header, body) {str(header, " ", body)},
+		SOURCEFILE:  blankJoin,
+		NONPKGFILE:  identity,
 		IMPORTDECLS: blankJoin,
 		IMPORTDECL:     func() {
 			""

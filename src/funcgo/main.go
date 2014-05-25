@@ -121,9 +121,20 @@ func CompileString(inPath, fgoText) {
 }
 
 func compileFile(inFile File, root File, opts) {
+	const splitRoot = reMatches(/([^\.]+)(\.[a-z]+)?(\.gos?)/, inFile->getPath)
+	if !isNil(splitRoot) {
+		const [_, inPath, suffixExtra, suffix] = splitRoot
+		compileFile(
+			inFile,
+			root,
+			inPath str suffix,
+			opts,
+			if isNil(suffixExtra){""} else {suffixExtra}
+		)
+	}
+} (inFile File, root File, inPath, opts, suffixExtra) {
         const(
-                inPath = inFile->getPath()
-                outFile = io.file(string.replace(inPath, /\.go(s?)$/, ".clj$1"))
+                outFile = io.file(string.replace(inPath, /\.go(s?)$/, ".clj$1" str suffixExtra))
         )
         if opts(FORCE) || outFile->lastModified() < inFile->lastModified() {
 		const(
@@ -133,8 +144,12 @@ func compileFile(inFile File, root File, opts) {
                 print("  ", relative, " ")
 		{
 			const(
-				cljText String 
-				    = core.Parse(relative, slurp(inFile), SOURCEFILE, opts(NODES))
+				fgoText = slurp(inFile)
+				cljText String = if suffixExtra == "" {
+					core.Parse(relative, fgoText, SOURCEFILE, opts(NODES))
+				} else {
+					core.Parse(relative, fgoText, NONPKGFILE, opts(NODES))
+				}
 				// TODO(eob) open using with-open
 				writer = io.writer(outFile)
 			)
@@ -164,13 +179,10 @@ func compileTree(root File, opts) {
 	println(root->getName())
 	for f := range fileSeq(root) {
 		const (
-			ff File = f
-			name = ff->getName
+			inFile File = f
 		)
 		try {
-			if name->endsWith(".go") || name->endsWith(".gos") { 
-				compileFile(ff, root, opts)
-			}
+			compileFile(inFile, root, opts)
 		} catch Exception e {
 			println("\n    Compile failed: ", e->getMessage())
 		}
