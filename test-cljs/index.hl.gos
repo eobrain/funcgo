@@ -1,0 +1,12 @@
+// -*- mode: go -*-
+
+page("index.html")
+
+html(
+	head(
+		link(REL, "stylesheet", TYPE, "text/css", HREF, "css/main.css")
+	),
+	body(
+		h1("Hello, World!")
+	)
+)
