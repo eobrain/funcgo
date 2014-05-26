@@ -444,7 +444,8 @@ func codeGenerator(symbolTable, isGoscript) {
 		STRUCTLIT:      func(typ, exprs...) {
                         listStr(typ str ".", ...exprs)
 		},
-		LABEL:          func{str(":", s.replace(s.lowerCase($1), /_/, "-"))},
+		LABEL:          func{":" str s.replace(s.lowerCase($1), /_/, "-")},
+		ISLABEL:        func{str(":", s.replace(s.lowerCase($1), /_/, "-"), "?")},
 		IDENTIFIER:     func(string) {
 			s.replace(
 				string,
