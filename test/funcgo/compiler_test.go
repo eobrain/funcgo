@@ -367,6 +367,11 @@ test.fact("labels have no lower case",
 	parse("FOO_BAR")        ,=>, parsed(":foo-bar"),
 	parse("OVER18")         ,=>, parsed(":over18")
 )
+test.fact("labels with any characters",
+	parse("DIV#ID.CLASS1")             ,=>, parsed(":div#id.class1"),
+	parse("SPAN.TEXT")                 ,=>, parsed(":span.text"),
+	parse("DIV#EMAIL.SELECTED.STARRED"),=>, parsed(":div#email.selected.starred")
+)
 test.fact("dictionary literals",
 	parse("{}")             ,=>, parsed("{}"),
 	parse("{A:1}")          ,=>, parsed("{:a 1}"),

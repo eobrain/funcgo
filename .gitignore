@@ -8,6 +8,7 @@ pom.xml.asc
 /.nrepl-port
 *~
 *.cljs
+*.cljs.hl
 /src/*.clj
 /src/*/*.clj
 /test/*.clj
