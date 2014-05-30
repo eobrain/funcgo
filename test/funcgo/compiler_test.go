@@ -53,6 +53,20 @@ b.xxx
 )
 
 
+test.fact("can import for side effectpackages",
+        compileString("foo.go", `
+package foo
+import(
+  b "bar"
+  _ "foo"
+)
+b.xxx
+`),
+        =>,
+        `(ns foo (:gen-class) (:require [bar :as b] [foo])) (set! *warn-on-reflection* true) b/xxx`
+)
+
+
 func parse(expr) {
 	parse(expr, [], [])
 } (expr, pkgs) {

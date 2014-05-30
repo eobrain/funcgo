@@ -100,8 +100,14 @@ func codeGenerator(symbolTable, isGoscript) {
 	func importSpec(imported) {
 		importSpec(last(imported s.split /\./), imported)
 	} (identifier, imported) {
-		symbolTable symbols.PackageImported identifier
-		vecStr(imported, ":as", identifier)
+		if identifier == "_" {
+			// package imported for sideeffect only
+			vecStr(imported)
+		} else {
+			// normal import
+			symbolTable symbols.PackageImported identifier
+			vecStr(imported, ":as", identifier)
+		}
 	}
 	func externImportSpec(identifier) {
 		symbolTable symbols.PackageImported identifier
