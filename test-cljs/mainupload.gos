@@ -2,9 +2,6 @@
 
 package mainupload
 
-import (
-	ef "enfocus/core"
-)
 import macros (
 	em "enfocus/macros"
 )

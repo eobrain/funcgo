@@ -28,7 +28,7 @@ environment is configured correctly.
 #### 2. Convert your project into a Functional Go project.
 
 In your favorite text editor, edit the file `project.clj` and
-insert `[org.eamonn.funcgo/funcgo-lein-plugin "0.2.3"]` in *both* the
+insert `[org.eamonn.funcgo/funcgo-lein-plugin "0.2.4"]` in *both* the
 dependencies section *and* the plugins section. You should end up with
 something like ...
 ```clj
@@ -38,8 +38,8 @@ something like ...
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.eamonn.funcgo/funcgo-lein-plugin "0.2.3"]]
-  :plugins [ [org.eamonn.funcgo/funcgo-lein-plugin "0.2.3"]]
+                 [org.eamonn.funcgo/funcgo-lein-plugin "0.2.4"]]
+  :plugins [ [org.eamonn.funcgo/funcgo-lein-plugin "0.2.4"]]
   :main ^:skip-aot hello.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
