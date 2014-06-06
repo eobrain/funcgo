@@ -527,6 +527,9 @@ test.fact("for",
 	parse("for [a,b]:= lazy xs{f(a,b)}") ,=>, parsed("(for [[a b] xs] (f a b))"),
 	parse("for x:=lazy xs if x<0 {f(x)}") ,=>, parsed("(for [x xs :when (< x 0)] (f x))")
 )
+test.fact("c-style for",
+	parse("for i := 0; i<n; i++ {f(i)}") ,=>, parsed("(dotimes [i n] (f i))")
+)
 test.fact("Camelcase is converted to dash-separated",
 	parse("foo") ,=>, parsed("foo"),
 	parse("fooBar") ,=>, parsed("foo-bar"),

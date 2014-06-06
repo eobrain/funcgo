@@ -262,6 +262,15 @@ func codeGenerator(symbolTable, isGoscript) {
 		FORTIMES: func(identifier, count, expressions) {
 			str("(dotimes [", identifier, " ", count, "] ", expressions, ")")
 		},
+		FORCSTYLE: func(ident, identAgain, count, identYetAgain, expressions) {
+			if ident != identAgain || ident != identYetAgain {
+				throw(new Exception(
+					`cannot mix different identifiers in c-style for loop`
+				))
+				
+			}
+			str("(dotimes [", ident, " ", count, "] ", expressions, ")")
+		},
 		TRYEXPR: func(expressions, catches) {
 			listStr("try", expressions, catches)
 		} (expressions, catches, finally) {

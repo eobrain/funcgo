@@ -48,7 +48,7 @@ nonpkgfile = NL? (expressions|topwithconst) _
          imported = Identifier {<'/'> Identifier}
  expressions = expr | expressions NL expr
    <expr>  = precedence0 | Vars | shortvardecl | ifelseexpr | letifelseexpr | tryexpr | forrange |
-                   forlazy | fortimes | Blocky | ExprSwitchStmt
+                   forlazy | fortimes | forcstyle | Blocky | ExprSwitchStmt
      <ExprSwitchStmt> = boolswitch | constswitch | letconstswitch | typeswitch
        typeswitch = <'switch'> _ PrimaryExpr _ <'.'> _ <'('> _ <'type'> _ <')'> _  <'{'>
                          _   <'case'> _ typename _ <':'> _ expressions
@@ -138,6 +138,10 @@ nonpkgfile = NL? (expressions|topwithconst) _
      forlazy = <'for'> <__> Destruct _ <':='> _ <'lazy'> <_> expr
                ( <__> <'if'> <__> expr )? _ Blocky
      fortimes = <'for'> <__> Identifier _ <':='> _ <'times'> <_> expr _ Blocky
+     forcstyle = <'for'> <__> Identifier _ <':='> _ <'0'> _ <';'>
+                         _ Identifier _ <'<'> _ expr _ <';'>
+                         _ Identifier _ <'++'>
+                         _ Blocky
      tryexpr = <'try'> _ ImpliedDo _ catches ( _ finally )?
        catches = ( catch {_ catch} )?
          catch = <'catch'> _ typename _ Identifier _ ImpliedDo
