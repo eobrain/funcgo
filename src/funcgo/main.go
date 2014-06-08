@@ -27,8 +27,9 @@ import type (
 	jline.console.ConsoleReader
 )
 
-var commandLineOptions = [
+const commandLineOptions = [
         ["-r", "--repl",  "start a Funcgo interactive console"],
+        ["-s", "--sync", "No asynchronous channel constructs"],
         ["-n", "--nodes", "print out the parse tree that the parser produces"],
         ["-u", "--ugly",  "do not pretty-print the Clojure"],
         ["-f", "--force", "Force compiling even if not out-of-date"],
@@ -145,11 +146,13 @@ func compileFile(inFile File, root File, opts) {
 		{
 			const(
 				fgoText = slurp(inFile)
-				cljText String = if suffixExtra == "" {
-					core.Parse(relative, fgoText, SOURCEFILE, opts(NODES))
-				} else {
-					core.Parse(relative, fgoText, NONPKGFILE, opts(NODES))
-				}
+				start = if suffixExtra == "" {SOURCEFILE} else {NONPKGFILE}
+				cljText String = core.Parse(
+					relative,
+					fgoText,
+					start,
+					opts(NODES), opts(SYNC)
+				)
 				// TODO(eob) open using with-open
 				writer = io.writer(outFile)
 			)

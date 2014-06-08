@@ -6,6 +6,8 @@ import (
         "clojure/string"
 )
 
+const requireAsync = "[clojure.core.async :as async :refer [chan go <!! >!!]]"
+
 func compileString(path, fgoText) {
 	string.trim(
 		string.replace(
@@ -49,7 +51,11 @@ import(
 b.xxx
 `),
         =>,
-        `(ns foo (:gen-class) (:require [bar :as b])) (set! *warn-on-reflection* true) b/xxx`
+        str(
+		`(ns foo (:gen-class) (:require `,
+		requireAsync,
+		` [bar :as b])) (set! *warn-on-reflection* true) b/xxx`
+	)
 )
 
 
@@ -62,8 +68,11 @@ import(
 )
 b.xxx
 `),
-        =>,
-        `(ns foo (:gen-class) (:require [bar :as b] [foo])) (set! *warn-on-reflection* true) b/xxx`
+        =>, str(
+		`(ns foo (:gen-class) (:require `,
+		requireAsync,
+		` [bar :as b] [foo])) (set! *warn-on-reflection* true) b/xxx`
+	)
 )
 
 
@@ -85,7 +94,7 @@ func parse(expr) {
 			str("import type(\n", "\n" string.join types, "\n)\n")
 		}
 	)
-	compileString("foo.go", 
+	compileString("foo.go",
 		str("package foo\n", imports, importtypes, expr)
 	)
 }
@@ -133,7 +142,7 @@ func parsed(expr) {
 			""
 		} else {
 			const lines = for p := lazy pkgs {str("[", p, " :as ", p, "]")}
-			str(" (:require ", " " string.join lines, ")")
+			str(" (:require ", " " string.join (requireAsync cons lines), ")")
 		}
 		importtypes = if count(types) == 0 {
 			""
@@ -565,6 +574,32 @@ test.fact("java method calls",
 	parse("f->foo / b->bar")             ,=>, parsed( "(/ (. f foo) (. b bar))"),
 	parse("999 * f->foo / b->bar")         ,=>, parsed( "(/ (* 999 (. f foo)) (. b bar))")
 )
+test.fact("goroutine",
+	parse(`func Main() {
+    go say("world")
+    say("hello")
+}`), =>, parsed(`(defn Main [] (do (go (say "world")) (say "hello")))` )//, ["clojure.core.async"], [])
+)
+test.fact("channel",
+	parse("chan"),     =>, parsed("(chan)")
+)
+test.fact("put",
+	//parse("c <- x"),   =>, parsed("(>! c x)"),
+	parse("c <- x"),  =>, parsed("(>!! c x)")
+)
+test.fact("take",
+	//parse("<-c"),         =>, parsed("(<! c)"),
+	parse("<-c"),        =>, parsed("(<!! c)"),
+	//parse("Foo := <-c"),  =>, parsed("(def Foo (<! c))"),
+	parse("Foo := <-c"), =>, parsed("(def Foo (<!! c))")
+)
+
+test.fact("routine",
+	parse(`func Main() {
+    say("world")
+    say("hello")
+}`), =>, parsed(`(defn Main [] (do (say "world") (say "hello")))`)
+)
 test.fact("there are some non-alphanumeric symbols",
 	parse("foo(a,=>,b)") ,=>, parsed("(foo a => b)"),
 	parse(`test.fact("interesting", parse("a"), =>, parsed("a"))`, "test"),
@@ -675,7 +710,11 @@ func FooBar(iii, jjj) {
     }
   )
 }
-`)  ,=>, `(ns foo (:gen-class) (:require [bar.baz :as b] [foo.faz.fedudle :as ff])) (set! *warn-on-reflection* true) (def ^:private x (b/bbb "blah blah")) (defn Foo-bar [iii jjj] (ff/fumanchu {:ooo (fn [m n] (str m n)) :ppp (fn [m n] (str m n)) :qqq qq }))`)
+`)  ,=>, str(
+	`(ns foo (:gen-class) (:require `,
+	requireAsync,
+	` [bar.baz :as b] [foo.faz.fedudle :as ff])) (set! *warn-on-reflection* true) (def ^:private x (b/bbb "blah blah")) (defn Foo-bar [iii jjj] (ff/fumanchu {:ooo (fn [m n] (str m n)) :ppp (fn [m n] (str m n)) :qqq qq }))`
+))
 
 
 test.fact("Escaped string terminater",

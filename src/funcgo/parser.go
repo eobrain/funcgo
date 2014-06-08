@@ -42,13 +42,14 @@ nonpkgfile = NL? (expressions|topwithconst) _
                                           JavaIdentifier
                                         | <'{'> _ JavaIdentifier _ (<','> _ JavaIdentifier)* _ <'}'>
                          )
-         typepackageimportspec = JavaIdentifier {<'.'>  JavaIdentifier} 
+         typepackageimportspec = JavaIdentifier {<'.'>  JavaIdentifier}
      <ImportSpec> = importspec
        importspec = ( Identifier _ )?  QQ imported QQ
          imported = Identifier {<'/'> Identifier}
  expressions = expr | expressions NL expr
    <expr>  = precedence0 | Vars | shortvardecl | ifelseexpr | letifelseexpr | tryexpr | forrange |
-                   forlazy | fortimes | forcstyle | Blocky | ExprSwitchStmt
+                   forlazy | fortimes | forcstyle | Blocky | ExprSwitchStmt | sendstmt
+                                                                            (* | sendstmtingo*)
      <ExprSwitchStmt> = boolswitch | constswitch | letconstswitch | typeswitch
        typeswitch = <'switch'> _ PrimaryExpr _ <'.'> _ <'('> _ <'type'> _ <')'> _  <'{'>
                          _   <'case'> _ typename _ <':'> _ expressions
@@ -98,7 +99,7 @@ nonpkgfile = NL? (expressions|topwithconst) _
 	   and = <'&&'>
 	   precedence3 = precedence4
                        | precedence3 _ relop  _ precedence4
-             relop = equals | noteq | '<' | '<=' | '>='               (* TODO(eob)  | '>' *)
+             relop = equals | noteq | (!'<-' '<') | '<=' | '>='               (* TODO(eob)  | '>' *)
 	       equals = <'=='>
                noteq  = <'!='>
 	     precedence4 = precedence5
@@ -125,6 +126,8 @@ nonpkgfile = NL? (expressions|topwithconst) _
 	     escapedidentifier = <'\\'> #'\b[\p{L}_][\p{L}_\p{Digit}]*\b'
      shortvardecl = Identifier _ <':='> _ expr
                (*   | Identifier _ ',' _ shortvardecl _ ',' _ expr *)
+     (*sendstmtingo = expr _ (!'<--' <'<-'>) _ expr*)
+     sendstmt     = expr _ <'<-'> _ expr
      <Vars> = <'var'> _ ( <'('> _ VarDecl {NL VarDecl} _ <')'> | VarDecl )
      <VarDecl> = primarrayvardecl | arrayvardecl | vardecl1 | vardecl2
        primarrayvardecl = Identifier _ <'['> _ int_lit  _ <']'> _ primitivetype
@@ -149,23 +152,24 @@ nonpkgfile = NL? (expressions|topwithconst) _
      <UnaryExpr> = PrimaryExpr | javafield | ReaderMacro | assoc | dissoc | associn | unaryexpr
        assoc = expr _ <'+='> _ <'{'> _ associtem _ { <','> _ associtem _ } <'}'>
        dissoc = expr _ <'-='> _ <'{'> _ associtem _ { <','> _ associtem _ } <'}'>
-	 associtem = expr _ <':'> _ expr 
+	 associtem = expr _ <':'> _ expr
        associn = expr _ <'+='> _ <'{'> _ associnpath _ <':'> _ expr _ <'}'>
 	 associnpath = expr _ expr {_ expr}
        unaryexpr = unary_op _ UnaryExpr
-	 <unary_op> = '+' | '-' | '!' | not | (!and '&') | bitnot
+	 <unary_op> = '+' | '-' | '!' | not | (!and '&') | bitnot | take (*| takeingo*)
 	   bitnot = <'^'>
 	   not    = <'!'>
+           (*takeingo = !'<--' <'<-'>*)
+           take     = <'<-'>
        <ReaderMacro> = deref | syntaxquote | unquote | unquotesplicing
        deref           = <'*'>               _ UnaryExpr
        syntaxquote     = <'syntax'>     _ UnaryExpr
        unquote         = <'unquote'>         _ UnaryExpr
        unquotesplicing = <'unquotes'> _ UnaryExpr
        javafield  = UnaryExpr _ <'->'> _ JavaIdentifier
-       <PrimaryExpr> = functioncall
-                     | variadiccall
-                     | typeconversion
-                     | javamethodcall
+       <PrimaryExpr> = Routine
+                     | goroutine
+                     | chan
                      | Operand
                      | functiondecl
                      | TypeDecl
@@ -177,9 +181,15 @@ nonpkgfile = NL? (expressions|topwithconst) _
                                                                 PrimaryExpr Selector |
                                                                 PrimaryExpr Slice |
                                                                 PrimaryExpr TypeAssertion | *)
+         goroutine = <'go'> _ Routine
+         chan      = <'chan'>
+         <Routine> = functioncall
+                     | variadiccall
+                     | typeconversion
+                     | javamethodcall
          typeconversion = primitivetype _ <'('> _ expr _ <')'>
          indexed = PrimaryExpr _ <'['> _ expr _ <']'>
-         variadiccall = PrimaryExpr 
+         variadiccall = PrimaryExpr
                            <'('> _ ( ArgumentList _ <','> _ )? _ Ellipsis _ PrimaryExpr _ <')'>
          functioncall = PrimaryExpr Call
          javamethodcall = UnaryExpr _ <'->'> _ JavaIdentifier _ Call

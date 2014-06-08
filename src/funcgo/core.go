@@ -25,8 +25,8 @@ import (
 func Parse(path, fgo) {
 	Parse(path, fgo, SOURCEFILE)
 } (path, fgo, startRule) {
-	Parse(path, fgo, startRule, false)
-} (path, fgo, startRule, isNodes) {
+	Parse(path, fgo, startRule, false, false)
+} (path, fgo, startRule, isNodes, isSync) {
         const parsed = parser.Parse(string.replace(fgo, /\t/, "        "), START, startRule)
         if insta.isFailure(parsed) {
 		throw(new Exception(str(withOutStr(failure.pprintFailure(parsed)))))
@@ -34,7 +34,6 @@ func Parse(path, fgo) {
 		if isNodes {
 			pprint.pprint(parsed)
 		}
-		codegen.Generate(path, parsed)
+		codegen.Generate(path, parsed, isSync)
         }
 }
-
