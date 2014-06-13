@@ -18,6 +18,8 @@ import (
 	symbols "funcgo/symboltable"
 )
 
+const kAsyncRules = set{GOROUTINE, CHAN, TAKE, SENDSTMT}
+
 // Returns a map of parser targets to functions that generate the
 // corresponding Clojure code.
 func codeGenerator(symbolTable, isGoscript) {
@@ -520,9 +522,7 @@ func codeGenerator(symbolTable, isGoscript) {
 		BITXOR:	     constantFunc("bit-xor"),
 		BITNOT:	     constantFunc("bit-not"),
 		TAKE:	     constantFunc("<!!"),
-		//TAKEINGO:    constantFunc("<!"),
 		SENDSTMT:    func(channel, expr) { listStr(">!!", channel, expr) },
-		//SENDSTMTINGO:func(channel, expr) { listStr(">!", channel, expr) },
 		SHIFTLEFT:   constantFunc("bit-shift-left"),
 		SHIFTRIGHT:  constantFunc("bit-shift-right"),
 		NOT:	     constantFunc("not"),
@@ -556,8 +556,18 @@ func codeGenerator(symbolTable, isGoscript) {
 	}
 }
 
-func packageclauseFunc(symbolTable, path String, isGoscript) {
-	const [parent, name] = splitPath(path)
+func packageclauseFunc(symbolTable, path String, isGoscript, isSync) {
+	const (
+		[parent, name] = splitPath(path)
+		syncImport = if isSync {
+			[]
+		} else {
+			print(" (uses async channels) ")
+			[listStr(":require",
+				"[clojure.core.async :as async :refer [chan go <!! >!!]]"
+			)]
+		}
+	)
 	if isGoscript {
 		symbolTable symbols.PackageCreated "js"
 	}
@@ -570,13 +580,14 @@ func packageclauseFunc(symbolTable, path String, isGoscript) {
 			)))
 		}
 		if isGoscript {
-			listStr("ns", fullImported, importDecls)
+			listStr("ns", fullImported, importDecls, ...syncImport)
 		} else {
 			str(
 				listStr("ns",
 					fullImported,
 					"(:gen-class)",
-					importDecls
+					importDecls,
+					...syncImport
 				),
 				" (set! *warn-on-reflection* true)"
 			)
@@ -584,20 +595,31 @@ func packageclauseFunc(symbolTable, path String, isGoscript) {
 	}
 }
 
-func importDeclFunc(isSync) {
-	if isSync {
-		func() {
-			""
-		} (importSpecs...) {
-			listStr(":require", ...importSpecs)
+func importDeclFunc() {
+	func() {
+		""
+	} (importSpecs...) {
+		listStr(":require", ...importSpecs)
+	}
+}
+
+func usesAsync(parsed) {
+	func walk(vector) {
+		if isEmpty(vector) {
+			false
+		} else {
+			const f = first(vector)
+			if isVector(f) && usesAsync(f) {
+				true
+			} else {
+				recur(rest(vector))
+			}
 		}
+	}
+	if kAsyncRules  isContains  first(parsed) {
+		true
 	} else {
-		const requireAsync = "[clojure.core.async :as async :refer [chan go <!! >!!]]"
-		func() {
-			""
-		} (importSpecs...) {
-			listStr(":require", requireAsync, ...importSpecs)
-		}
+		walk(rest(parsed))
 	}
 }
 
@@ -609,9 +631,9 @@ func Generate(path String, parsed, isSync) {
 		codeGen = assoc(
 			codeGenerator(symbolTable, isGoscript),
 			PACKAGECLAUSE,
-			packageclauseFunc(symbolTable, path, isGoscript),
-			IMPORTDECL,
-			importDeclFunc(isGoscript || isSync)
+			packageclauseFunc(symbolTable, path, isGoscript, !usesAsync(parsed)),
+			IMPORTDECL,  // TODO(eob) put this in the static part
+			importDeclFunc()
 		)
 		//codeGen = codeGenerator(symbolTable) + {
 		//	PACKAGECLAUSE: packageclauseFunc(symbolTable, path)

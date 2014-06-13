@@ -6,7 +6,7 @@ import (
         "clojure/string"
 )
 
-const requireAsync = "[clojure.core.async :as async :refer [chan go <!! >!!]]"
+const requireAsync = "(:require [clojure.core.async :as async :refer [chan go <!! >!!]])"
 
 func compileString(path, fgoText) {
 	string.trim(
@@ -52,9 +52,7 @@ b.xxx
 `),
         =>,
         str(
-		`(ns foo (:gen-class) (:require `,
-		requireAsync,
-		` [bar :as b])) (set! *warn-on-reflection* true) b/xxx`
+		`(ns foo (:gen-class) (:require [bar :as b])) (set! *warn-on-reflection* true) b/xxx`
 	)
 )
 
@@ -69,9 +67,7 @@ import(
 b.xxx
 `),
         =>, str(
-		`(ns foo (:gen-class) (:require `,
-		requireAsync,
-		` [bar :as b] [foo])) (set! *warn-on-reflection* true) b/xxx`
+		`(ns foo (:gen-class) (:require [bar :as b] [foo])) (set! *warn-on-reflection* true) b/xxx`
 	)
 )
 
@@ -142,7 +138,7 @@ func parsed(expr) {
 			""
 		} else {
 			const lines = for p := lazy pkgs {str("[", p, " :as ", p, "]")}
-			str(" (:require ", " " string.join (requireAsync cons lines), ")")
+			str(" (:require ", " "  string.join  lines, ")")
 		}
 		importtypes = if count(types) == 0 {
 			""
@@ -154,6 +150,14 @@ func parsed(expr) {
 	str("(ns foo (:gen-class)",
 		imports,
 		importtypes,
+		") (set! *warn-on-reflection* true) ",
+		expr
+	)
+}
+
+func parsedAsync(expr) {
+	str("(ns foo (:gen-class) ",
+		requireAsync,
 		") (set! *warn-on-reflection* true) ",
 		expr
 	)
@@ -578,20 +582,17 @@ test.fact("goroutine",
 	parse(`func Main() {
     go say("world")
     say("hello")
-}`), =>, parsed(`(defn Main [] (do (go (say "world")) (say "hello")))` )//, ["clojure.core.async"], [])
+}`), =>, parsedAsync(`(defn Main [] (do (go (say "world")) (say "hello")))` )
 )
 test.fact("channel",
-	parse("chan"),     =>, parsed("(chan)")
+	parse("chan"),     =>, parsedAsync("(chan)")
 )
 test.fact("put",
-	//parse("c <- x"),   =>, parsed("(>! c x)"),
-	parse("c <- x"),  =>, parsed("(>!! c x)")
+	parse("c <- x"),  =>, parsedAsync("(>!! c x)")
 )
 test.fact("take",
-	//parse("<-c"),         =>, parsed("(<! c)"),
-	parse("<-c"),        =>, parsed("(<!! c)"),
-	//parse("Foo := <-c"),  =>, parsed("(def Foo (<! c))"),
-	parse("Foo := <-c"), =>, parsed("(def Foo (<!! c))")
+	parse("<-c"),        =>, parsedAsync("(<!! c)"),
+	parse("Foo := <-c"), =>, parsedAsync("(def Foo (<!! c))")
 )
 
 test.fact("routine",
@@ -711,9 +712,32 @@ func FooBar(iii, jjj) {
   )
 }
 `)  ,=>, str(
-	`(ns foo (:gen-class) (:require `,
+	`(ns foo (:gen-class) (:require [bar.baz :as b] [foo.faz.fedudle :as ff])) (set! *warn-on-reflection* true) (def ^:private x (b/bbb "blah blah")) (defn Foo-bar [iii jjj] (ff/fumanchu {:ooo (fn [m n] (str m n)) :ppp (fn [m n] (str m n)) :qqq qq }))`
+))
+
+test.fact("full source file with async", fgo.Parse("foo.go", `
+package foo
+import(
+  b "bar/baz"
+  ff "foo/faz/fedudle"
+)
+
+x := b.bbb("blah blah")
+func FooBar(iii, jjj) {
+  ff.fumanchu(
+    {
+      OOO: func(m,n) {str(m,n)},
+      PPP: func(m,n) {
+        go str(m,n)
+      },
+      QQQ: qq
+    }
+  )
+}
+`)  ,=>, str(
+	`(ns foo (:gen-class) (:require [bar.baz :as b] [foo.faz.fedudle :as ff]) `,
 	requireAsync,
-	` [bar.baz :as b] [foo.faz.fedudle :as ff])) (set! *warn-on-reflection* true) (def ^:private x (b/bbb "blah blah")) (defn Foo-bar [iii jjj] (ff/fumanchu {:ooo (fn [m n] (str m n)) :ppp (fn [m n] (str m n)) :qqq qq }))`
+	`) (set! *warn-on-reflection* true) (def ^:private x (b/bbb "blah blah")) (defn Foo-bar [iii jjj] (ff/fumanchu {:ooo (fn [m n] (str m n)) :ppp (fn [m n] (go (str m n))) :qqq qq }))`
 ))
 
 
