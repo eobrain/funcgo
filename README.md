@@ -10,6 +10,16 @@ it, and any feedback would be more than welcome, but be aware that the
 language is not yet stable and it is likely there will be
 non-backward-compatible changes before the 1.0 release.
 
+## Try It Out
+
+Without installing anything you can try the [online tour][fgotour]
+where you can type Functional Go and see how it converts to Clojure
+and evaluates.
+
+(By the way the online tour is itself an example web application that
+[uses Functional Go][fgosite] for both it server side (JVM) and its
+client side (JS).
+
 ## Quick Start
 
 #### 1. Set up Clojure development environment.
@@ -28,7 +38,7 @@ environment is configured correctly.
 #### 2. Convert your project into a Functional Go project.
 
 In your favorite text editor, edit the file `project.clj` and
-insert `[org.eamonn.funcgo/funcgo-lein-plugin "0.2.4"]` in *both* the
+insert `[org.eamonn.funcgo/funcgo-lein-plugin "0.2.5"]` in *both* the
 dependencies section *and* the plugins section. You should end up with
 something like ...
 ```clj
@@ -38,8 +48,8 @@ something like ...
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.eamonn.funcgo/funcgo-lein-plugin "0.2.4"]]
-  :plugins [ [org.eamonn.funcgo/funcgo-lein-plugin "0.2.4"]]
+                 [org.eamonn.funcgo/funcgo-lein-plugin "0.2.5"]]
+  :plugins [ [org.eamonn.funcgo/funcgo-lein-plugin "0.2.5"]]
   :main ^:skip-aot hello.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
@@ -543,3 +553,5 @@ version 1.0 or (at your option) any later version.
 [plugin]: https://github.com/eobrain/funcgo-lein
 [src]: https://github.com/eobrain/funcgo/tree/master/src/funcgo
 [fgolib]: https://github.com/eobrain/fgolib
+[fgosite]: https://github.com/eobrain/fgosite
+[fgotour]: http://tour.funcgo.org
