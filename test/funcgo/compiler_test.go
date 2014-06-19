@@ -591,6 +591,31 @@ test.fact("channel",
 	parse("make(chan, 10)"),     =>, parsedAsync("(chan 10)"),
 	parse("make(chan int, 10)"), =>, parsedAsync("(chan 10)")
 )
+
+
+test.fact("go syntax",
+	parse(`
+func main() {
+    a := []int{7, 2, 8, -9, 4, 0}
+
+    c := make(chan int)
+    go sum(a[:len(a)/2], c)
+    go sum(a[len(a)/2:], c)
+    x, y := <-c, <-c // receive from c
+
+    Println(x, y, x+y)
+}`), =>, parsedAsync(str(
+	"(defn main [] (do",
+	" (def ^:private a [7 2 8 (- 9) 4 0])",
+	" (def ^:private c (chan))",
+	" (go (sum (take (/ (count a) 2) a) c))",
+	" (go (sum (drop (/ (count a) 2) a) c))",
+	" (def ^:private x (<!! c))",
+	" (def ^:private y (<!! c))",
+	" (Println x y (+ x y))",
+	"))"
+)))
+
 test.fact("put",
 	parse("c <- x"),  =>, parsedAsync("(>!! c x)")
 )
@@ -865,7 +890,7 @@ func (Sequence) (
 `, [], ["sort.Interface"]),
 	=>, parsed(str(
 		`(extend-type Sequence Interface`,
-		` (^long Len [this] (len this))`,
+		` (^long Len [this] (count this))`,
 		` (^boolean Less [this i ^long j] (< (nth this i) (nth this j)))`,
 		` (Swap [this i ^long j] (assoc this i (nth this j) j (nth this i))))`),
 		[], ["sort Interface"])
@@ -965,7 +990,7 @@ new List()
 	=>,
 	`(ns joy.java (:gen-class) (:import (java.util HashMap List) (java.util.concurrent.atomic AtomicLong))) (set! *warn-on-reflection* true) (HashMap. {"happy?" true}) (AtomicLong. 42) (List.)`
 )
-	
+
 test.fact("assoc",
 	parse(`x += {AA: aaa, BB: bbb}`), =>, parsed(`(assoc x :aa aaa :bb bbb)`)
 )

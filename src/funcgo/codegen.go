@@ -135,6 +135,14 @@ func codeGenerator(symbolTable, isGoscript) {
 		}
 	}
 
+	func def_(identifier, expression) {
+		if isPublic(identifier) {
+			listStr("def", identifier, expression)
+		} else {
+			listStr("def", "^:private", identifier, expression)
+		}
+	}
+
 	// Mapping from parse tree to generators of CLJ code.
 	{
 		SOURCEFILE:  blankJoin,
@@ -279,11 +287,15 @@ func codeGenerator(symbolTable, isGoscript) {
 		FINALLY: func{listStr("finally", $1)},
 		NEW:	 func{str($1, ".")},
 		SHORTVARDECL:	func(identifier, expression) {
-			if isPublic(identifier) {
-				listStr("def", identifier, expression)
-			} else {
-				listStr("def", "^:private", identifier, expression)
-			}
+			def_(identifier, expression)
+		} (ident1, ident2, expr1, expr2) {
+			def_(ident1, expr1)  blankJoin  def_(ident2, expr2)
+		} (ident1, ident2, ident3, expr1, expr2, expr3) {
+			blankJoin(
+				def_(ident1, expr1),
+				def_(ident2, expr2),
+				def_(ident3, expr3)
+			)
 		},
 		PRIMARRAYVARDECL: func(identifier, number, primtype) {
 			const elements = blankJoin(...(for _ := times readString(number) {"0"}))
@@ -311,10 +323,9 @@ func codeGenerator(symbolTable, isGoscript) {
 		VARIADICCALL: func(function, params...) {
 			listStr("apply", function, ...params)
 		},
-		FUNCTIONCALL:	 func(function) {
-			listStr(function)
-		} (function, call) {
-			listStr(function, call)
+		FUNCTIONCALL:	 listStr,
+		LEN: func(call) {
+			listStr("count", call)
 		},
 		CHAN:		func() {
 			"(chan)"
@@ -331,6 +342,8 @@ func codeGenerator(symbolTable, isGoscript) {
 		},
 		TYPECONVERSION: listStr,
 		INDEXED: func(xs, i){ listStr("nth", xs, i) },
+		TAKESLICE: func(xs, i){ listStr("take", i, xs) },
+		DROPSLICE: func(xs, i){ listStr("drop", i, xs) },
 		TOPWITHCONST: declBlockFunc("let"),
 		WITHCONST: declBlockFunc("let"),
 		LOOP:	   declBlockFunc("loop"),

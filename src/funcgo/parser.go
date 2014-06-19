@@ -124,7 +124,10 @@ nonpkgfile = NL? (expressions|topwithconst) _
 	     isidentifier = <'is'> #'\p{L}' identifier
 	     mutidentifier = <'mutate'> #'\p{L}' identifier
 	     escapedidentifier = <'\\'> #'\b[\p{L}_][\p{L}_\p{Digit}]*\b'
-     shortvardecl = Identifier _ <':='> _ expr
+     shortvardecl =  identifier _ <':='> _ expr
+                   | identifier _ <','> _ identifier _ <':='> _ expr  _ <','> _ expr
+                   | identifier _ <','> _ identifier _<','> _ identifier _
+                                   <':='> _ expr  _ <','> _ expr  _ <','> _ expr
                (*   | Identifier _ ',' _ shortvardecl _ ',' _ expr *)
      (*sendstmtingo = expr _ (!'<--' <'<-'>) _ expr*)
      sendstmt     = expr _ <'<-'> _ expr
@@ -176,6 +179,8 @@ nonpkgfile = NL? (expressions|topwithconst) _
                      | implements
                      | funclikedecl
                      | indexed
+                     | dropslice
+                     | takeslice
                                                                 (* Conversion |
                                                                 BuiltinCall |
                                                                 PrimaryExpr Selector |
@@ -184,14 +189,19 @@ nonpkgfile = NL? (expressions|topwithconst) _
          goroutine = <'go'> _ Routine
          chan      = <'make'> _ <'('> _ <'chan'> (_ <typename>)? (_ <','> _ expr)? _ <')'>
          <Routine> = functioncall
+                     | MappedFunctionCall
                      | variadiccall
                      | typeconversion
                      | javamethodcall
          typeconversion = primitivetype _ <'('> _ expr _ <')'>
          indexed = PrimaryExpr _ <'['> _ expr _ <']'>
+         takeslice = PrimaryExpr _ <'['> _ <':'> _ expr _ <']'>
+         dropslice = PrimaryExpr _ <'['>  _ expr _ <':'> _ <']'>
          variadiccall = PrimaryExpr
                            <'('> _ ( ArgumentList _ <','> _ )? _ Ellipsis _ PrimaryExpr _ <')'>
          functioncall = PrimaryExpr Call
+         <MappedFunctionCall> = len
+           len = <'len'> Call
          javamethodcall = UnaryExpr _ <'->'> _ JavaIdentifier _ Call
            <Call> =  <'('> _ ( ArgumentList _ )? <')'>
              <ArgumentList> = expressionlist                                         (* [ _ Ellipsis ] *)
@@ -209,7 +219,7 @@ nonpkgfile = NL? (expressions|topwithconst) _
 		 methodparameters = methodparam
 				  | methodparameters _ <','> _ methodparam
 		   methodparam = symbol (_ Identifier)?
-         implements = <'implements'> _ typename _ 
+         implements = <'implements'> _ typename _
                         <'func'> _ <'('> _ JavaIdentifier <')'> _ (
                           MethodImpl | <'('> _ MethodImpl ( NL MethodImpl )* _ <')'>
                         )
@@ -273,7 +283,8 @@ nonpkgfile = NL? (expressions|topwithconst) _
                      octaldigit = #'[0-7]'
                    littleuvalue = <'\\u'> hexdigit hexdigit hexdigit hexdigit
                      hexdigit = #'[0-9a-fA-F]'
-	     veclit = <'['> _ ( expr {_ <','> _ expr _} )? <']'>
+	     veclit =                               <'['> _ ( expr {_ <','> _ expr _} )? <']'>
+                     |  <'['> _  <']'> _ <typename> <'{'> _ ( expr {_ <','> _ expr _} )? <'}'>
 	     dictlit = '{' _ ( dictelement _ {<','> _ dictelement} )? (_ <','>)? _ '}'
                dictelement = expr _ <':'> _ expr
              NotType = 'func' | 'set'
