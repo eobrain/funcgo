@@ -316,7 +316,11 @@ func codeGenerator(symbolTable, isGoscript) {
 		} (function, call) {
 			listStr(function, call)
 		},
-		CHAN:		constantFunc("(chan)"),
+		CHAN:		func() {
+			"(chan)"
+		} (n) {
+			listStr("chan", n)
+		},
 		EXPRESSIONLIST: blankJoin,
 		EXPRESSIONS:	blankJoin,
 		CONSTS:		blankJoin,

@@ -182,7 +182,7 @@ nonpkgfile = NL? (expressions|topwithconst) _
                                                                 PrimaryExpr Slice |
                                                                 PrimaryExpr TypeAssertion | *)
          goroutine = <'go'> _ Routine
-         chan      = <'chan'>
+         chan      = <'make'> _ <'('> _ <'chan'> (_ <typename>)? (_ <','> _ expr)? _ <')'>
          <Routine> = functioncall
                      | variadiccall
                      | typeconversion

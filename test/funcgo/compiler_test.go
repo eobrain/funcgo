@@ -585,7 +585,11 @@ test.fact("goroutine",
 }`), =>, parsedAsync(`(defn Main [] (do (go (say "world")) (say "hello")))` )
 )
 test.fact("channel",
-	parse("chan"),     =>, parsedAsync("(chan)")
+	parse("make(chan)"),         =>, parsedAsync("(chan)"),
+	parse("make(chan int)"),     =>, parsedAsync("(chan)"),
+	parse("make(chan int)"),     =>, parsedAsync("(chan)"),
+	parse("make(chan, 10)"),     =>, parsedAsync("(chan 10)"),
+	parse("make(chan int, 10)"), =>, parsedAsync("(chan 10)")
 )
 test.fact("put",
 	parse("c <- x"),  =>, parsedAsync("(>!! c x)")
