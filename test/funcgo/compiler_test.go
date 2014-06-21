@@ -6,7 +6,7 @@ import (
         "clojure/string"
 )
 
-const requireAsync = "(:require [clojure.core.async :as async :refer [chan go <!! >!!]])"
+requireAsync := "(:require [clojure.core.async :as async :refer [chan go <!! >!!]])"
 
 func compileString(path, fgoText) {
 	string.trim(
@@ -415,11 +415,11 @@ test.fact("dictionary literals with trailing comma",
 test.fact("set literals",
 	parse("set{}")                 ,=>, parsed("#{}"),
 	parse("set{A}")                ,=>, parsed("#{:a}"),
-	parse("set{A, B}")             ,=>, parsed("#{:a :b}"),
-	parse("set{A, B, C}")          ,=>, parsed("#{:a :c :b}"),
-	parse(`set{"A", "B", "C"}`)    ,=>, parsed(`#{"A" "B" "C"}`),
+	parse("set{A, B}")             ,=>, parsed("#{:b :a}"),
+	parse("set{A, B, C}")          ,=>, parsed("#{:c :b :a}"),
+	parse(`set{"A", "B", "C"}`)    ,=>, parsed(`#{"C" "B" "A"}`),
 	parse(`set{'A', 'B', 'C'}`)    ,=>, parsed(`#{\A \B \C}`),
-	parse(`set{A, "B", 'C', 999}`) ,=>, parsed(`#{"B" \C 999 :a}`)
+	parse(`set{A, "B", 'C', 999}`) ,=>, parsed(`#{\C 999 "B" :a}`)
 )
 test.fact("private named functions",
 	parse("func foo(){d}")     ,=>, parsed("(defn- foo [] d)"),
@@ -963,13 +963,13 @@ test.fact("Error if import not used",
 	=>, test.throws(Exception, `Packages imported but never used: [aaa]`),
 
 	parse("1234", ["aaa", "bbb"], []),
-	=>, test.throws(Exception, `Packages imported but never used: [aaa, bbb]`),
+	=>, test.throws(Exception, /Packages imported but never used/),
 
 	parse("aaa.xxx", ["aaa", "bbb"], []),
 	=>, test.throws(Exception, `Packages imported but never used: [bbb]`),
 
 	parse("1234", [], ["a.Aaa", "b.Bbb"]),
-	=>, test.throws(Exception, `Types imported but never used: [Aaa, Bbb]`),
+	=>, test.throws(Exception, /Types imported but never used/),
 
 	parse("Aaa::xxx", [], ["a.Aaa", "b.Bbb"]),
 	=>, test.throws(Exception, `Types imported but never used: [Bbb]`)

@@ -30,7 +30,7 @@ func sum(x1, x2, c) {
 
 test.fact("channel",
 	{
-		const c = chan
+		const c = make(chan)
 		go sum(3, 4, c)
 		<-c
 	}, =>, 7
