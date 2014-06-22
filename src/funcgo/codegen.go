@@ -18,7 +18,7 @@ import (
 	symbols "funcgo/symboltable"
 )
 
-const kAsyncRules = set{GOROUTINE, CHAN, TAKE, SENDSTMT}
+const kAsyncRules = set{GOROUTINE, GOBLOCK, CHAN, TAKE, TAKEINGO, SENDSTMT, SENDSTMTINGO}
 
 // Returns a map of parser targets to functions that generate the
 // corresponding Clojure code.
@@ -320,6 +320,9 @@ func codeGenerator(symbolTable, isGoscript) {
 		GOROUTINE: func(routine) {
 			"go"  listStr  routine
 		},
+		GOBLOCK: func(expr) {
+			"go"  listStr  expr
+		},
 		VARIADICCALL: func(function, params...) {
 			listStr("apply", function, ...params)
 		},
@@ -539,7 +542,9 @@ func codeGenerator(symbolTable, isGoscript) {
 		BITXOR:	     constantFunc("bit-xor"),
 		BITNOT:	     constantFunc("bit-not"),
 		TAKE:	     constantFunc("<!!"),
-		SENDSTMT:    func(channel, expr) { listStr(">!!", channel, expr) },
+		TAKEINGO:    constantFunc("<!"),
+		SENDSTMT:     func(channel, expr) { listStr(">!!", channel, expr) },
+		SENDSTMTINGO: func(channel, expr) { listStr(">!", channel, expr) },
 		SHIFTLEFT:   constantFunc("bit-shift-left"),
 		SHIFTRIGHT:  constantFunc("bit-shift-right"),
 		NOT:	     constantFunc("not"),
@@ -581,7 +586,7 @@ func packageclauseFunc(symbolTable, path String, isGoscript, isSync) {
 		} else {
 			print(" (uses async channels) ")
 			[listStr(":require",
-				"[clojure.core.async :as async :refer [chan go <!! >!!]]"
+				"[clojure.core.async :as async :refer [chan go <! <!! >! >!!]]"
 			)]
 		}
 	)

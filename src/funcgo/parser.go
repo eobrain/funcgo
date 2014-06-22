@@ -49,7 +49,8 @@ nonpkgfile = NL? (expressions|topwithconst) _
  expressions = expr | expressions NL expr
    <expr>  = precedence0 | Vars | shortvardecl | ifelseexpr | letifelseexpr | tryexpr | forrange |
                    forlazy | fortimes | forcstyle | Blocky | ExprSwitchStmt | sendstmt
-                                                                            (* | sendstmtingo*)
+                                                                            | sendstmtingo
+
      <ExprSwitchStmt> = boolswitch | constswitch | letconstswitch | typeswitch
        typeswitch = <'switch'> _ PrimaryExpr _ <'.'> _ <'('> _ <'type'> _ <')'> _  <'{'>
                          _   <'case'> _ typename _ <':'> _ expressions
@@ -99,7 +100,8 @@ nonpkgfile = NL? (expressions|topwithconst) _
 	   and = <'&&'>
 	   precedence3 = precedence4
                        | precedence3 _ relop  _ precedence4
-             relop = equals | noteq | (!'<-' '<') | '<=' | '>='               (* TODO(eob)  | '>' *)
+             chanops = '<-' | '<:'
+             relop = equals | noteq | (!chanops '<') | '<=' | '>='           (* TODO(eob)  | '>' *)
 	       equals = <'=='>
                noteq  = <'!='>
 	     precedence4 = precedence5
@@ -129,7 +131,7 @@ nonpkgfile = NL? (expressions|topwithconst) _
                    | identifier _ <','> _ identifier _<','> _ identifier _
                                    <':='> _ expr  _ <','> _ expr  _ <','> _ expr
                (*   | Identifier _ ',' _ shortvardecl _ ',' _ expr *)
-     (*sendstmtingo = expr _ (!'<--' <'<-'>) _ expr*)
+     sendstmtingo = expr _ <'<:'> _ expr
      sendstmt     = expr _ <'<-'> _ expr
      <Vars> = <'var'> _ ( <'('> _ VarDecl {NL VarDecl} _ <')'> | VarDecl )
      <VarDecl> = primarrayvardecl | arrayvardecl | vardecl1 | vardecl2
@@ -159,10 +161,10 @@ nonpkgfile = NL? (expressions|topwithconst) _
        associn = expr _ <'+='> _ <'{'> _ associnpath _ <':'> _ expr _ <'}'>
 	 associnpath = expr _ expr {_ expr}
        unaryexpr = unary_op _ UnaryExpr
-	 <unary_op> = '+' | '-' | '!' | not | (!and '&') | bitnot | take (*| takeingo*)
+	 <unary_op> = '+' | '-' | '!' | not | (!and '&') | bitnot | take | takeingo
 	   bitnot = <'^'>
 	   not    = <'!'>
-           (*takeingo = !'<--' <'<-'>*)
+           takeingo = <'<:'>
            take     = <'<-'>
        <ReaderMacro> = deref | syntaxquote | unquote | unquotesplicing
        deref           = <'*'>               _ UnaryExpr
@@ -172,6 +174,7 @@ nonpkgfile = NL? (expressions|topwithconst) _
        javafield  = UnaryExpr _ <'->'> _ JavaIdentifier
        <PrimaryExpr> = Routine
                      | goroutine
+                     | goblock
                      | chan
                      | Operand
                      | functiondecl
@@ -187,6 +190,7 @@ nonpkgfile = NL? (expressions|topwithconst) _
                                                                 PrimaryExpr Slice |
                                                                 PrimaryExpr TypeAssertion | *)
          goroutine = <'go'> _ Routine
+         goblock = <'go'> _ ImpliedDo
          chan      = <'make'> _ <'('> _ <'chan'> (_ <typename>)? (_ <','> _ expr)? _ <')'>
          <Routine> = functioncall
                      | MappedFunctionCall

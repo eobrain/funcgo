@@ -6,7 +6,7 @@ import (
         "clojure/string"
 )
 
-requireAsync := "(:require [clojure.core.async :as async :refer [chan go <!! >!!]])"
+requireAsync := "(:require [clojure.core.async :as async :refer [chan go <! <!! >! >!!]])"
 
 func compileString(path, fgoText) {
 	string.trim(
@@ -35,12 +35,12 @@ package foo
 test.fact("package can be dotted",
         compileString("foo/bar.go", "package bar;12345"),
         => ,
-        `(ns foo.bar (:gen-class)) (set! *warn-on-reflection* true) 12345`)
+        `(ns foo.bar (:gen-class)) (set! *warn-on-reflection* true) 12345`,
 
-test.fact("package can be dotted",
         compileString("yippee/yaday/yahoo/boys.go", "package boys;12345"),
         => ,
-        `(ns yippee.yaday.yahoo.boys (:gen-class)) (set! *warn-on-reflection* true) 12345`)
+        `(ns yippee.yaday.yahoo.boys (:gen-class)) (set! *warn-on-reflection* true) 12345`
+)
 
 test.fact("can import other packages",
         compileString("foo.go", `
@@ -57,7 +57,7 @@ b.xxx
 )
 
 
-test.fact("can import for side effectpackages",
+test.fact("can import packages for side effect",
         compileString("foo.go", `
 package foo
 import(
@@ -113,21 +113,10 @@ func parseJs(expr) {
 			str("import type(\n", "\n" string.join types, "\n)\n")
 		}
 	)
-	compileString("foo.gos", 
+	compileString("foo.gos",
 		str("package foo\n", imports, importtypes, expr)
 	)
 }
-//func parseJs(expr, pkgs...) {
-//	compileString("foo.gos", 
-//		if count(pkgs) == 0 {
-//			str("package foo;", expr)
-//		}else {
-//			const imports = func{str(`"`, $1, `"`)} map pkgs
-//			str("package foo; import(", "\n" string.join imports, ");", expr)
-//		}
-//	)
-//}
-
 func parsed(expr) {
 	parsed(expr, [], [])
 } (expr, pkgs) {
@@ -190,15 +179,6 @@ func parsedJs(expr) {
 	)
 }
 
-//func parsedJs(expr, pkgs...) {
-//	if count(pkgs) == 0 {
-//		str("(ns foo) ", expr)
-//	}else{
-//		const imports = func{str(" [", $1, " :as ", $1, "]")} map pkgs
-//		str("(ns foo (:require", (str apply imports), ")) ", expr)
-//	}
-//}
-
 func parseNoPretty(expr) {
 	fgo.Parse("foo.go", "package foo;" str expr)
 }
@@ -218,7 +198,7 @@ test.fact("can refer to numbers",
 	parse("0"),   =>, parsed("0")
 )
 
-test.fact("outside symbols",
+test.fact("can refer to symbols in other packages",
 	parse("other.foo", "other"), =>, parsed("other/foo", "other")
 )
 
@@ -234,7 +214,7 @@ test.fact("can define things",
 )
 
 
-test.fact("vector",
+test.fact("can create vectors",
         parse("[]"), =>, parsed("[]"),
         parse("[a]"), =>, parsed("[a]"),
         parse("[a,b]"), =>, parsed("[a b]"),
@@ -245,24 +225,24 @@ test.fact("vector",
         parse(" [   a  , b,     c ]  "), =>, parsed("[a b c]")
 )
 
-test.fact("escaped identifier",
+test.fact("can escape identifier that are not legal Funcgo identifiers",
         parse(`\range`), =>, parsed("range"),
         parse(`\for`), =>, parsed("for")
 )
 
-test.fact("multiple expressions inside func",
+test.fact("can have multiple expressions inside func",
         parse(`func(){if c {d}}`),    =>, parsed(`(fn [] (when c d))`),
         parse(`func(){b;c}`),         =>, parsed(`(fn [] (do b c))`),
         parse(`func(){b;if c {d}}`), =>, parsed(`(fn [] (do b (when c d)))`)
 )
 
-test.fact("subsequent const nests",
+test.fact("can have nested consts",
         parse(`{const(a=1)x;{const(b=2)y}}`), =>, parsed(`(let [a 1] x (let [b 2] y))`),
         parse(`{const a=1; {const b=2; y}}`), =>, parsed(`(let [a 1] (let [b 2] y))`)
 )
 
 // See http://blog.jayfields.com/2010/07/clojure-destructuring.html
-test.fact("Vector Destructuring",
+test.fact("Can destructure vectors",
         parse(`{const([a,b]=ab) f(a,b)}`),
         =>,
         parsed(`(let [[a b] ab] (f a b))`),
@@ -293,7 +273,7 @@ test.fact("Vector Destructuring",
         parsed(`(let [[[a b] [c d]] numbers] (f a b c d))`)
 )
 
-test.fact("Map Destructuring",
+test.fact("can destructure dicts",
         parse(`{const({theX: X, theY: Y} = point) f(theX, theY)}`),
         =>,
         parsed(`(let [{the-x :x, the-y :y} point] (f the-x the-y))`),
@@ -305,7 +285,7 @@ test.fact("Map Destructuring",
         parse(`{const({name: NAME, {[pages, \isbn10]: KEYS}: DETAILS} = book) f(name,pages,\isbn10)}`),
         =>,
         parsed(`(let [{name :name, {[pages isbn10] :keys} :details} book] (f name pages isbn10))`),
-        
+
         parse(`{const({name: NAME, [hole1, hole2]: SCORES} = golfer) f(name, hole1, hole2)}`),
         =>,
         parsed(`(let [{name :name, [hole1 hole2] :scores} golfer] (f name hole1 hole2))`),
@@ -323,7 +303,7 @@ test.fact("Map Destructuring",
         parsed(`(print-status {:name "Jim", :scores [3 5 4 5]})`)
 )
 
-test.fact("type hints",
+test.fact("can specity types to avoid reflection",
         parse(`{const(a FooType = 3) f(a)}`, [], ["foo.FooType"]),
 	=>, parsed(`(let [^FooType a 3] (f a))`, [], ["foo FooType"]),
 
@@ -351,7 +331,7 @@ test.fact("type hints",
 	parsed(`(fn (^long [a] (/ a 3)) (^double [a b] (+ a b)))`)
 )
 
-test.fact("expression",
+test.fact("bit expressions are supported",
 	parse(`1<<64 - 1`),         =>, parsed(`(- (bit-shift-left 1 64) 1)`),
 	parse(`var a = 1<<64 - 1`), =>, parsed(`(def ^:private a (- (bit-shift-left 1 64) 1))`)
 )
@@ -431,10 +411,8 @@ test.fact("named functions",
 	parse("func Foo(){d}")     ,=>, parsed("(defn Foo [] d)"),
 	parse("func Foo(a){d}")    ,=>, parsed("(defn Foo [a] d)"),
 	parse("func Foo(a,b){d}")  ,=>, parsed("(defn Foo [a b] d)"),
-	parse("func Foo(a,b,c){d}"),=>, parsed("(defn Foo [a b c] d)")
-)
-test.fact("named functions space",
-      parse("func n(a,b) {c}") ,=>, parsed("(defn- n [a b] c)")
+	parse("func Foo(a,b,c){d}"),=>, parsed("(defn Foo [a b c] d)"),
+        parse("func n(a,b) {c}") ,=>, parsed("(defn- n [a b] c)")
 )
 test.fact("named multifunctions",
       parse("func n(a){b}(c){d}"),=>,parsed("(defn- n ([a] b) ([c] d))")
@@ -616,12 +594,13 @@ func main() {
 	"))"
 )))
 
-test.fact("put",
-	parse("c <- x"),  =>, parsedAsync("(>!! c x)")
-)
-test.fact("take",
+test.fact("can operate on channels",
+	parse("c <- x"),     =>, parsedAsync("(>!! c x)"),
+	parse("c <: x"),     =>, parsedAsync("(>! c x)"),
 	parse("<-c"),        =>, parsedAsync("(<!! c)"),
-	parse("Foo := <-c"), =>, parsedAsync("(def Foo (<!! c))")
+	parse("<:c"),        =>, parsedAsync("(<! c)"),
+	parse("Foo := <-c"), =>, parsedAsync("(def Foo (<!! c))"),
+	parse("Foo := <:c"), =>, parsedAsync("(def Foo (<! c))")
 )
 
 test.fact("routine",
@@ -770,11 +749,11 @@ func FooBar(iii, jjj) {
 ))
 
 
-test.fact("Escaped string terminater",
+test.fact("Escaped string terminator",
       parse(`"aaa\"aaa"`), =>, parsed(`"aaa\"aaa"`)
 )
 
-test.fact("Escaped regex terminater",
+test.fact("Escaped regex terminator",
 	parse(`/aaa\/bbb/`)          ,=>, parsed(`#"aaa/bbb"`)
 )
 
@@ -868,7 +847,7 @@ test.fact("implements",
 
 	parse(`implements Ia func (Ty) f(a) {b}`, [], ["a.Ia"]),
 	=>, parsed(`(extend-type Ty Ia (f [this a] b))`, [], ["a Ia"]),
-		
+
 	parse(`implements Ia func(Ty)(f(a) {b}; g() {c})`, [], ["a.Ia"]),
 	=>, parsed(`(extend-type Ty Ia (f [this a] b) (g [this] c))`, [], ["a Ia"])
 )
@@ -913,10 +892,8 @@ test.fact("struct",
 	parse(`type TreeNode struct{val; l; r}`), 
 	=>,
 	parsed(str(`(defrecord TreeNode [val l r]`,
-		` Object (toString [this] (str "{" val " " l " " r "}")))`))
-)
+		` Object (toString [this] (str "{" val " " l " " r "}")))`)),
 
-test.fact("typed struct",
 	parse(`type TreeNode struct{}; type TreeNode struct{val; l TreeNode; r TreeNode}`), 
 	=>,
 	parsed(str(`(defrecord TreeNode []) (defrecord TreeNode [val ^TreeNode l ^TreeNode r]`,
