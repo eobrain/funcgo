@@ -1,3 +1,5 @@
+![Go sugary crust on a Clojure center][logo]
+
 # funcgo
 
 Funcgo is a compiler that converts Functional Go into Clojure, to run
@@ -84,6 +86,8 @@ Functional Go program!
 You can get a better feel for the language by reading the Introduction
 to the Funcgo Language section below.
 
+To dive deeper, see [Funcgo Reference][ref] doc.
+
 To browse some actual working code, the biggest and most complex
 program so far written in Functional Go is its own compiler. (Turtles
 all the way down!)  You might start at the `main.go` file in
@@ -109,7 +113,7 @@ fgo=>     func{10 * $1} map [1,2,3,4,5,6]
 Clojure:  (map #(* 10 %) [1 2 3 4 5 6])
 Result:   (10 20 30 40 50 60)
 
-fgo=>     
+fgo=>
 ```
 (Warning, the REPL still has poor error handling.)
 
@@ -555,3 +559,5 @@ version 1.0 or (at your option) any later version.
 [fgolib]: https://github.com/eobrain/fgolib
 [fgosite]: https://github.com/eobrain/fgosite
 [fgotour]: http://tour.funcgo.org
+[ref]: doc/reference.md
+[logo]: doc/funcgo-logo-banner.png
