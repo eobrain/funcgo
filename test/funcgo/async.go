@@ -1,4 +1,4 @@
-package golang
+package async
 import test "midje/sweet"
 
 func printAfterDelay(s) {
@@ -123,4 +123,48 @@ test.fact("can read and write channels in parallel using lightweight processes",
 		}
 	}, =>, [2, 3, 5, 7]
 
+)
+
+func fibonacci(c, quit) {
+	loop (
+		x = 0
+		y = 1
+	){
+		select {
+		case c <- x:
+			recur(y, x + y)
+		case <-quit:
+			println("quit")
+		}
+	}
+}
+
+
+
+test.fact("can use select to block on multiple things",
+
+	withOutStr({
+		const(
+			c = make(chan int)
+			quit = make(chan int)
+		)
+		go func() {
+			for i := 0; i < 10; i++ {
+				println(<-c)
+			}
+			quit <- 0
+		}()
+		fibonacci(c, quit)
+	}), =>, `0
+1
+1
+2
+3
+5
+8
+13
+21
+34
+quit
+`
 )

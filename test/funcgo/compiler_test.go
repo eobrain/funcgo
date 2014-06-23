@@ -6,7 +6,7 @@ import (
         "clojure/string"
 )
 
-requireAsync := "(:require [clojure.core.async :as async :refer [chan go <! <!! >! >!!]])"
+requireAsync := "(:require [clojure.core.async :as async :refer [chan go <! >! <!! >!! alt!!]])"
 
 func compileString(path, fgoText) {
 	string.trim(
@@ -562,6 +562,7 @@ test.fact("goroutine",
     say("hello")
 }`), =>, parsedAsync(`(defn Main [] (do (go (say "world")) (say "hello")))` )
 )
+
 test.fact("channel",
 	parse("make(chan)"),         =>, parsedAsync("(chan)"),
 	parse("make(chan int)"),     =>, parsedAsync("(chan)"),
@@ -570,6 +571,53 @@ test.fact("channel",
 	parse("make(chan int, 10)"), =>, parsedAsync("(chan 10)")
 )
 
+test.fact("select",
+	parse(`
+select {
+  case c <- x:
+    foo
+  case <-quit:
+    bar
+}
+`), =>, parsedAsync("(alt!! [[c x]] (do foo) quit (do bar))"),
+
+	parse(`
+select {
+case i1 = <-c1:
+	print("received ", i1, " from c1\n")
+case c2 <- i2:
+	print("sent ", i2, " to c2\n")
+default:
+	print("no communication\n")
+}
+`), =>, parsedAsync(str(`(alt!!`,
+	` c1 ([i1] (print "received " i1 " from c1\n"))`,
+	` [[c2 i2]] (do (print "sent " i2 " to c2\n"))`,
+	` :default (do (print "no communication\n"))`,
+	`)`)),
+
+	parse(`
+	select {
+	case c <- 0:  // note: no statement, no fallthrough, no folding of cases
+	case c <- 1:
+	}
+`), =>, parsedAsync("(alt!! [[c 0]] nil [[c 1]] nil)"),
+
+// 	parse(`
+// for {  // send random sequence of bits to c
+// 	select {
+// 	case c <- 0:  // note: no statement, no fallthrough, no folding of cases
+// 	case c <- 1:
+// 	}
+// }
+// `), =>, parsedAsync("(loop [] (alt!! [c 0] nil [c 1] nil) (recur))"),
+
+	parse(`
+select {}  // block forever
+`), =>, parsedAsync("(alt!!)")
+
+
+)
 
 test.fact("go syntax",
 	parse(`

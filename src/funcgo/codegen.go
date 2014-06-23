@@ -18,7 +18,7 @@ import (
 	symbols "funcgo/symboltable"
 )
 
-const kAsyncRules = set{GOROUTINE, GOBLOCK, CHAN, TAKE, TAKEINGO, SENDSTMT, SENDSTMTINGO}
+const kAsyncRules = set{GOROUTINE, GOBLOCK, CHAN, TAKE, TAKEINGO, SENDSTMT, SENDSTMTINGO, SELECTSTMT}
 
 // Returns a map of parser targets to functions that generate the
 // corresponding Clojure code.
@@ -143,6 +143,14 @@ func codeGenerator(symbolTable, isGoscript) {
 		}
 	}
 
+	func sendClause(channel, val, expr) {
+		vecStr(channel  vecStr  val)  blankJoin   expr
+	}
+
+	func doStr(expressions) {
+		"do"  listStr  expressions
+	}
+
 	// Mapping from parse tree to generators of CLJ code.
 	{
 		SOURCEFILE:  blankJoin,
@@ -211,6 +219,27 @@ func codeGenerator(symbolTable, isGoscript) {
 			":else"
 		} (cond) {
 			cond
+		},
+		SELECTSTMT: func(clauses...){
+			listStr("alt!!", ...clauses)
+		},
+		SENDCLAUSE: func(channel, value) {
+			sendClause(channel, value, "nil")
+		} (channel, value, expressions) {
+			sendClause(channel, value, doStr(expressions))
+		},
+		RECVCLAUSE: func(channel) {
+			channel  blankJoin  "nil"
+		} (channel, expressions) {
+			channel  blankJoin  doStr(expressions)
+		},
+		RECVVALCLAUSE: func(identifier, channel, expressions) {
+			channel  blankJoin  (vecStr(identifier)  listStr   expressions)
+		},
+		DEFAULTCLAUSE: func() {
+			":default"
+		} (expessions) {
+			":default"  blankJoin  doStr(expessions)
 		},
 		TYPESWITCH: func(x, args...) {
 			func recursing(acc, remaining) {
@@ -584,9 +613,14 @@ func packageclauseFunc(symbolTable, path String, isGoscript, isSync) {
 		syncImport = if isSync {
 			[]
 		} else {
-			print(" (uses async channels) ")
-			[listStr(":require",
-				"[clojure.core.async :as async :refer [chan go <! <!! >! >!!]]"
+			const ops = if isGoscript {
+				"[chan go <! >!]"
+			} else {
+				"[chan go <! >! <!! >!! alt!!]"
+			}
+			[listStr(
+				":require",
+				vecStr("clojure.core.async", ":as", "async", ":refer", ops)
 			)]
 		}
 	)
