@@ -12,4 +12,4 @@ pom.xml.asc
 /src/*.clj
 /src/*/*.clj
 /test/*.clj
-/test/*/*.clj
+/test/**/*.clj
