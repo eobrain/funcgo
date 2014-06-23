@@ -204,7 +204,67 @@ ClojureScript macros
     ...
     ```
 
-    Occasionally you will need to refer to symbols that you cannot
-    import.  As shown above you can declare them as `extern` symbols.
+    Occasionally you will need to refer to symbols in libraries that
+    you cannot import.  As shown above you can declare them as
+    `extern` libraries.
+
+## Const
+
+In Funcgo you should use `const` declarations for any value that is
+set once and never changed.
+
+```go
+... {
+	const (
+		cljText = core.Parse(inPath, fgoText, EXPR)
+		strWriter = new StringWriter()
+		writer = new BufferedWriter(strWriter)
+	)
+	cljText writePrettyTo writer
+	strWriter->toString()
+}
+```
+
+There can only be a single `const` section in each _block_ of
+expressions, where a block is either to top-level code if a file after
+the `import` statements, or some newline-separated expressions
+surrounded in curly braces.  The constants you define can only be used
+inside that block.
+
+```go
+... {
+	const consoleReader = new ConsoleReader()
+	consoleReader->setPrompt("fgo=>     ")
+	consoleReader
+}
+```
+
+If there is a just a single constant, you can drop the parentheses.
+
+## Type Hints
+
+Funcgo is a _gradually typed_ language.  Unlike Go, you do not need to
+specify any types, and in most cases the Clojure runtime can figure
+them out. However sometimes you may get a runtime warning from the
+Clojure runtime that it is using _reflection_ because it cannot figure
+out your types.  To allow your code to run more efficiently you can
+add types using the same syntax as the Go language.
+
+In practice, you usually only need to add types in a very few places
+in your code.
+
+```go
+	const consoleReader ConsoleReader = newConsoleReader()
+```
+
+Above is an example of a constant being declared of `ConsoleReader`
+type so future uses of the constant are more efficient.
+
+```go
+func compileFile(inFile File, root File, opts) {
+```
+
+And above is an example of the first two of the three function
+parameters being declared to be of type `File`.
 
 [1]: http://clojure.github.io/clojure/

@@ -51,6 +51,27 @@ nonpkgfile = NL? (expressions|topwithconst) _
                    forlazy | fortimes | forcstyle | Blocky | ExprSwitchStmt | sendstmt
                                                                             | sendstmtingo
 
+     <Blocky> = block | withconst | loop
+       withconst = <'{'> _ <'const'> _ ( const NL | <'('> _ consts _ <')'> )  _ expressions _ <'}'>
+         consts = ( const {NL const} )?
+           const = Destruct _ <'='> _ expr
+	     <Destruct> = Identifier | typedidentifier | vecdestruct | dictdestruct
+	       typedidentifiers = Identifier ({_ <','> _ Identifier })? _ typename
+	       typedidentifier = Identifier _ typename
+		 typename = JavaIdentifier {<'.'>  JavaIdentifier} | primitivetype | string
+                   <primitivetype> = long | double | 'byte' | 'short' | 'char' | 'boolean'
+                     long = <'int'> | <'long'>
+                     double = <'float'> | <'float64'>
+                   string = <'string'>
+	       vecdestruct = <'['> _ VecDestructElem _ {<','> _ VecDestructElem _ } <']'>
+		 <VecDestructElem> = Destruct | variadicdestruct | label
+		   variadicdestruct = Destruct Ellipsis
+	       dictdestruct = <'{'> dictdestructelem { _ <','> _ dictdestructelem} <'}'>
+		 dictdestructelem = Destruct _ <':'> _ expr
+       loop = <'loop'> _  <'('> _ {consts} _ <')'> _ ImpliedDo
+       <ImpliedDo> =  <'{'> _ expressions _ <'}'> | withconst
+       block = <'{'> _ expr {NL expr} _ <'}'>
+       topwithconst =  <'const'> _ ( const NL | <'('> _ consts _ <')'> )  _ expressions
      <ExprSwitchStmt> = boolswitch | constswitch | letconstswitch | typeswitch
                         | selectstmtingo | selectstmt
        selectstmt = <'select'> _ <'{'> _ { CommClause _ } <'}'>
@@ -79,27 +100,6 @@ nonpkgfile = NL? (expressions|topwithconst) _
 	   constswitchcase = <'case'> _ constantlist | <'default'>
 	     constantlist = expr {_ <','> _ expr}
 	       <Constant> = label | BasicLit | veclit | dictlit | setlit | structlit
-     <Blocky> = block | withconst | loop
-       loop = <'loop'> _  <'('> _ {consts} _ <')'> _ ImpliedDo
-       <ImpliedDo> =  <'{'> _ expressions _ <'}'> | withconst
-       block = <'{'> _ expr {NL expr} _ <'}'>
-       topwithconst =  <'const'> _ ( const NL | <'('> _ consts _ <')'> )  _ expressions
-       withconst = <'{'> _ <'const'> _ ( const NL | <'('> _ consts _ <')'> )  _ expressions _ <'}'>
-         consts = ( const {NL const} )?
-           const = Destruct _ <'='> _ expr
-	     <Destruct> = Identifier | typedidentifier | vecdestruct | dictdestruct
-	       typedidentifiers = Identifier ({_ <','> _ Identifier })? _ typename
-	       typedidentifier = Identifier _ typename
-		 typename = JavaIdentifier {<'.'>  JavaIdentifier} | primitivetype | string
-                   <primitivetype> = long | double | 'byte' | 'short' | 'char' | 'boolean'
-                     long = <'int'> | <'long'>
-                     double = <'float'> | <'float64'> 
-                   string = <'string'>
-	       vecdestruct = <'['> _ VecDestructElem _ {<','> _ VecDestructElem _ } <']'>
-		 <VecDestructElem> = Destruct | variadicdestruct | label
-		   variadicdestruct = Destruct Ellipsis
-	       dictdestruct = <'{'> dictdestructelem { _ <','> _ dictdestructelem} <'}'>
-		 dictdestructelem = Destruct _ <':'> _ expr
      precedence0 = precedence1
                  | precedence0 _nonNL symbol _nonNL precedence1
        symbol = ( Identifier <'.'> )? Identifier

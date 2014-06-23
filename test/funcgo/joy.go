@@ -67,7 +67,7 @@ test.fact("neighbors works",
 	func{matrix getIn $1} map neighbors(3, [0,0]),
 	=>, [4,2]
 )
-	
+
 
 var pool ExecutorService = Executors::newFixedThreadPool(
 	2 + Runtime::getRuntime()->availableProcessors()
@@ -166,7 +166,7 @@ test.fact("initial state",
 test.fact("Coordinated, synchronous change using alter",
 	5 take repeatedly(func{chooseMove(*toMove)}),
 	=>,  [  // starting at [KB, [2,1]]
-		[KB, [2,2]],  
+		[KB, [2,2]],
 		[KB, [1,0]],
 		[KB, [1,1]],
 		[KB, [1,2]],
@@ -252,7 +252,7 @@ test.fact("using alter to update a Ref",
 
 //Define recored type
 type TreeNode struct{val; l; r}
-		
+
 test.fact("Persistent binary tree built of records",
 	{
 		// Add to tree
@@ -267,7 +267,7 @@ test.fact("Persistent binary tree built of records",
 				new TreeNode( VAL(t), L(t), xconj(R(t), v))
 			}
 		}
-		
+
 		// conver trees to seq
 		func xseq(t) {
 			//println("xseq(", t, ")")
@@ -275,9 +275,9 @@ test.fact("Persistent binary tree built of records",
 				concat(xseq(L(t)), [VAL(t)], xseq(R(t)))
 			}
 		}
-		
+
 		var sampleTree = reduce(xconj, nil, [3, 5, 2, 4, 6])
-		
+
 		xseq(sampleTree)
 	},
 
