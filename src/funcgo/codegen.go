@@ -18,7 +18,17 @@ import (
 	symbols "funcgo/symboltable"
 )
 
-const kAsyncRules = set{GOROUTINE, GOBLOCK, CHAN, TAKE, TAKEINGO, SENDSTMT, SENDSTMTINGO, SELECTSTMT}
+const kAsyncRules = set{
+	GOROUTINE,
+	GOBLOCK,
+	CHAN,
+	TAKE,
+	TAKEINGO,
+	SENDSTMT,
+	SENDSTMTINGO,
+	SELECTSTMT,
+	SELECTSTMTINGO
+}
 
 // Returns a map of parser targets to functions that generate the
 // corresponding Clojure code.
@@ -240,6 +250,22 @@ func codeGenerator(symbolTable, isGoscript) {
 			":default"
 		} (expessions) {
 			":default"  blankJoin  doStr(expessions)
+		},
+		SELECTSTMTINGO: func(clauses...){
+			listStr("alt!", ...clauses)
+		},
+		SENDCLAUSEINGO: func(channel, value) {
+			sendClause(channel, value, "nil")
+		} (channel, value, expressions) {
+			sendClause(channel, value, doStr(expressions))
+		},
+		RECVCLAUSEINGO: func(channel) {
+			channel  blankJoin  "nil"
+		} (channel, expressions) {
+			channel  blankJoin  doStr(expressions)
+		},
+		RECVVALCLAUSEINGO: func(identifier, channel, expressions) {
+			channel  blankJoin  (vecStr(identifier)  listStr   expressions)
 		},
 		TYPESWITCH: func(x, args...) {
 			func recursing(acc, remaining) {
@@ -614,9 +640,9 @@ func packageclauseFunc(symbolTable, path String, isGoscript, isSync) {
 			[]
 		} else {
 			const ops = if isGoscript {
-				"[chan go <! >!]"
+				"[chan go <! >! alt!]"
 			} else {
-				"[chan go <! >! <!! >!! alt!!]"
+				"[chan go <! >! alt! <!! >!! alt!!]"
 			}
 			[listStr(
 				":require",

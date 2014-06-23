@@ -166,5 +166,44 @@ test.fact("can use select to block on multiple things",
 21
 34
 quit
+`,
+
+	withOutStr({
+		const(
+			c = make(chan int)
+			quit = make(chan int)
+		)
+		go {
+			for i := 0; i < 10; i++ {
+				println(<:c)
+			}
+			quit <: 0
+		}
+		fibonacci(c, quit)
+	}), =>, `0
+1
+1
+2
+3
+5
+8
+13
+21
+34
+quit
 `
 )
+
+func goFibonacci(c, quit) {
+	loop (
+		x = 0
+		y = 1
+	){
+		select {
+		case c <: x:
+			recur(y, x + y)
+		case <:quit:
+			println("quit")
+		}
+	}
+}

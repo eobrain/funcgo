@@ -6,7 +6,7 @@ import (
         "clojure/string"
 )
 
-requireAsync := "(:require [clojure.core.async :as async :refer [chan go <! >! <!! >!! alt!!]])"
+requireAsync := "(:require [clojure.core.async :as async :refer [chan go <! >! alt! <!! >!! alt!!]])"
 
 func compileString(path, fgoText) {
 	string.trim(
@@ -615,7 +615,48 @@ default:
 	parse(`
 select {}  // block forever
 `), =>, parsedAsync("(alt!!)")
+)
 
+test.fact("select in lightweight process",
+	parse(`
+select {
+  case c <: x:
+    foo
+  case <:quit:
+    bar
+}
+`), =>, parsedAsync("(alt! [[c x]] (do foo) quit (do bar))"),
+
+	parse(`
+select {
+case i1 = <:c1:
+	print("received ", i1, " from c1\n")
+case c2 <: i2:
+	print("sent ", i2, " to c2\n")
+default:
+	print("no communication\n")
+}
+`), =>, parsedAsync(str(`(alt!`,
+	` c1 ([i1] (print "received " i1 " from c1\n"))`,
+	` [[c2 i2]] (do (print "sent " i2 " to c2\n"))`,
+	` :default (do (print "no communication\n"))`,
+	`)`)),
+
+	parse(`
+	select {
+	case c <: 0:  // note: no statement, no fallthrough, no folding of cases
+	case c <: 1:
+	}
+`), =>, parsedAsync("(alt! [[c 0]] nil [[c 1]] nil)")
+
+// 	parse(`
+// for {  // send random sequence of bits to c
+// 	select {
+// 	case c <: 0:  // note: no statement, no fallthrough, no folding of cases
+// 	case c <: 1:
+// 	}
+// }
+// `), =>, parsedAsync("(loop [] (alt! [c 0] nil [c 1] nil) (recur))")
 
 )
 

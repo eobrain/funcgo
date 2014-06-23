@@ -51,13 +51,19 @@ nonpkgfile = NL? (expressions|topwithconst) _
                    forlazy | fortimes | forcstyle | Blocky | ExprSwitchStmt | sendstmt
                                                                             | sendstmtingo
 
-     <ExprSwitchStmt> = boolswitch | constswitch | letconstswitch | typeswitch | selectstmt
+     <ExprSwitchStmt> = boolswitch | constswitch | letconstswitch | typeswitch
+                        | selectstmtingo | selectstmt
        selectstmt = <'select'> _ <'{'> _ { CommClause _ } <'}'>
          <CommClause> = sendclause | recvclause | recvvalclause | defaultclause
            sendclause       = <'case'> _ expr _ <'<-'> _ expr                _ <':'> (_ expressions)?
            recvclause       = <'case'> _                       <'<-'> _ expr _ <':'> (_ expressions)?
            recvvalclause    = <'case'> _  identifier _ <'='> _ <'<-'> _ expr _ <':'>  _ expressions
            defaultclause    = <'default'>                                    _ <':'> (_ expressions)?
+       selectstmtingo = <'select'> _ <'{'> _ { CommClauseInGo _ } <'}'>
+         <CommClauseInGo> = sendclauseingo | recvclauseingo | recvvalclauseingo | defaultclause
+           sendclauseingo    = <'case'> _ expr _ <'<:'> _ expr                _ <':'> (_ expressions)?
+           recvclauseingo    = <'case'> _                       <'<:'> _ expr _ <':'> (_ expressions)?
+           recvvalclauseingo = <'case'> _  identifier _ <'='> _ <'<:'> _ expr _ <':'>  _ expressions
        typeswitch = <'switch'> _ PrimaryExpr _ <'.'> _ <'('> _ <'type'> _ <')'> _  <'{'>
                          _   <'case'> _ typename _ <':'> _ expressions
                          {NL <'case'> _ typename _ <':'> _ expressions}
