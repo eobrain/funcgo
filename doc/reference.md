@@ -9,13 +9,12 @@ A file called `name.go` must start with `package name` followed by
 optional `import` statements, an optional `const` declaration, and a
 list of expressions.
 
-As a minimal example, the file `hello.go` contains
 ```go
 package hello
 println("Hello World")
 ```
+As a minimal example, the code above is in a file `hello.go`.
 
-As a slightly longer example, the file `larger.go` contains
 ```go
 package larger
 
@@ -35,14 +34,13 @@ test.fact("can use infix when calling two-parameter-function",
 	"Hello "  str  name,      =>, "Hello Eamonn"
 )
 ```
+The above slightly longer example is in a file called `larger.go`.
 
 ## Everything is an Expression
 
 Unlike Go, in Funcgo everything is an expression, including constructs
-like if statements.
+like `if` statements.
 
-The following treats an if-else as an expression, setting `smaller`
-to either `a` or `b`.
 ```go
 		const smaller = if a < b {
 			a
@@ -50,10 +48,8 @@ to either `a` or `b`.
 			b
 		}
 ```
-
-And here the value returned from a for loop is actually the vector of
-the values generated on each iteration.  (Called a _list
-comprehension_ in some language.)
+The above treats an `if`-`else` as an expression, setting `smaller`
+to either `a` or `b`.
 
 ```go
 		const (
@@ -65,16 +61,15 @@ comprehension_ in some language.)
 		squares
 	=> [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
 ```
+And here the value returned from a `for` loop is actually the vector
+of the values generated on each iteration.  (Called a _list
+comprehension_ in some language.)
 
 ## Syntax
 
 Unlike some languages, newlines can be significant in Funcgo.  This
-happens when you have multiple expressions inside each construct.  For
-example in the `if` statement below the two `println` expressions must
-be separated by a newline.  (In this case we are ignoring the values
-returned by the two expressions, the latter of which is returned by
-the `if`.  Instead we are using these expressions for their
-side-effects/
+happens when you have multiple expressions inside curly braces or at
+the top level of the source file.
 
 ```go
 		if a < b {
@@ -86,8 +81,12 @@ Conclusion:
 55 is smaller than 66
 ```
 
-If you really want to, you can use semicolons instead of newlines, but
-for readability I recommend you avoid semicolons.
+For example in the `if` statement above the two `println` expressions
+must be separated by a newline.  (In this case we are ignoring the
+values returned by the two expressions, the latter of which is
+returned by the `if`.  Instead we are using these expressions for
+their side-effects:
+
 
 ```go
 		if a < b { println("Conclusion:"); println(a, "is smaller than", b) }
@@ -95,3 +94,117 @@ for readability I recommend you avoid semicolons.
 Conclusion:
 55 is smaller than 66
 ```
+
+If you really want to, you can use semicolons instead of newlines as
+shown above, but for readability I recommend you avoid semicolons.
+
+## Imports
+
+You can directly use anything provided by the [clojure.core][1] API
+without further specification.  However if you want to use anything
+from any other library you have to explicitly import it at the top of
+your file.  Depending on what you are you importing you use one of
+these forms.
+
+1. `import` (the most common case) for Clojure or Funcgo libraries
+
+   ```go
+   import (
+           test "midje/sweet"
+           fgo "funcgo/core"
+           fgoc "funcgo/main"
+           "clojure/string"
+   )
+   ...
+   test.fact(...
+   ...
+   fgo.Parse(...
+   ...
+   string.trim(...
+
+   ```
+
+    As shown above an `import` statement can import multiple Clojure
+    or Funcgo libraries.  It specifies the library as a string of
+    slash-separated identifiers. Each library can be preceded by a
+    short name by which the library is referred to in the body of the
+    code. If no short name is specified, then the last identifier in
+    the library name is used (for example `string` in the last example
+    above).
+
+    In the body of the code any function or variable referenced from
+    an imported library must be qualified by short name.
+
+    ```go
+    import(
+        _ "hiccups/runtime"
+        "fgosite/code"
+    )
+    ```
+
+    Sometimes you want to import a library only for the side-effect of
+    importing it. To avoid getting a compile error complaining about
+    an unused import, you can use `_` as shown above.
+
+    ```go
+    import "clojure/string"
+    ```
+
+    If you are only importing a single library you can use a short
+    form without parentheses as shown above.
+
+1. `import type` for JVM classes and interfaces
+
+    ```go
+    import type (
+        java.io.{BufferedWriter, File, StringWriter}
+        jline.console.ConsoleReader
+    )
+    ...
+	... = new StringWriter()
+    ...
+    func compileTree(root File, opts) {
+    ...
+    ```
+
+    JVM types, such as defined in Java (and sometimes in Clojure),
+    have a different syntax for importing as show above.  Each type
+    must be explicitly listed, though types in the same package can
+    expressed using the compressed syntax shown above for `java.io`.
+
+    Once imported, such types can be simply referenced by name,
+    without qualification.
+
+    Types from the base `java.lang` API do not need to be imported.
+
+1. `import macros` (when targeting JavaScript only) for importing
+ClojureScript macros
+
+    ```go
+    import macros (
+        hiccups "hiccups/core"
+    )
+    ...
+    func<hiccups.defhtml> pageTemplate(index) {
+    ...
+    ```
+
+    When targeting the JavaScript runtime you sometimes need to import
+    macro definitions in a special way as shown above.
+
+1. `import extern` (advanced use only) needed when creating macros
+
+    ```go
+    import extern(
+        produce
+        bakery
+    )
+    ...
+    ... quote(produce.onions) ...
+    ...
+    ```
+
+    Occasionally you will need to refer to symbols that you cannot
+    import.  As shown above you can declare them as `extern` symbols.
+
+[1]: http://clojure.github.io/clojure/

@@ -7,7 +7,7 @@ import(
 import extern(
 	produce
 	bakery
-)	
+)
 
 test.fact("Simple example",
 	{
