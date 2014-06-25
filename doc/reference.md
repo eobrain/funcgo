@@ -36,10 +36,10 @@ test.fact("can use infix when calling two-parameter-function",
 ```
 The above slightly longer example is in a file called `larger.go`.
 
-## Everything is an Expression
+## Most things are Expression
 
-Unlike Go, in Funcgo everything is an expression, including constructs
-like `if` statements.
+In Funcgo most things are expression, including constructs like `if`
+statements that are statements in Go.
 
 ```go
 		const smaller = if a < b {
@@ -214,7 +214,8 @@ In Funcgo you should use `const` declarations for any value that is
 set once and never changed.
 
 ```go
-... {
+...
+{
 	const (
 		cljText = core.Parse(inPath, fgoText, EXPR)
 		strWriter = new StringWriter()
@@ -232,7 +233,8 @@ surrounded in curly braces.  The constants you define can only be used
 inside that block.
 
 ```go
-... {
+...
+{
 	const consoleReader = new ConsoleReader()
 	consoleReader->setPrompt("fgo=>     ")
 	consoleReader
@@ -240,6 +242,234 @@ inside that block.
 ```
 
 If there is a just a single constant, you can drop the parentheses.
+
+## Looping with tail recursion
+
+First, lets look at an ordinary (non-tail) recursion
+
+```go
+		func sumSquares(vec) {
+			if isEmpty(vec) {
+				0
+			} else {
+				const x = first(vec)
+				x * x + sumSquares(rest(vec))
+			}
+		}
+		sumSquares([3, 4, 5, 10])
+	=> 150
+```
+
+The above example shows the `sumSquares` function that returns the sum
+of squares of a vector of numbers.  It is implemented as the square of
+the first element plus the recursive sum of squares of the rest of the
+vector.  This works fine for small vectors but for large vectors it
+could cause an infamous _stack overflow_ exception.
+
+```go
+		func sumSquares(vec) {
+			func sumSq(accum, v) {
+				if isEmpty(v) {
+					accum
+				} else {
+					const x = first(v)
+					recur(accum + x * x, rest(v))
+				}
+			}
+			sumSq(0, vec)
+		}
+		sumSquares([3, 4, 5, 10])
+	=> 150
+```
+
+The above example avoids this stack overflow by using the special
+`recur` syntax to recursively call the containing function.  However
+`recur` must be in _tail position_, which means that the function
+needs to be re-arranged to add an inner recursive function that passes
+down as accumulator variable.  This version can be called on
+arbitrarily long vectors without blowing your stack.
+
+There is also an equivalent way of getting the same result using the
+`loop` construct.
+
+```go
+		func sumSquares(vec) {
+			loop(accum=0, v=vec) {
+				if isEmpty(v) {
+					accum
+				} else {
+					const x int = first(v)
+					recur(accum + x * x, rest(v))
+				}
+			}
+		}
+		sumSquares([3, 4, 5, 10])
+	=> 150
+```
+
+The `loop` construct declares a set of iteration variables and sets
+their initial values.  The `recur` calls the nearest enclosing `loop`
+passing in updated iteration variables (which are actually constants
+in each iteration).  The number of parameters in the `recur` must match the
+number of parameters in the `loop`.
+
+```go
+	loop(vec=[], count = 0) {
+		if count < 10 {
+			const v = vec  conj  count
+			recur(v, count + 1)
+		} else {
+			vec
+		}
+    }
+	=> [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+```
+
+And above is another simpler example of using `loop`, starting with an
+empty vector and using the `conj` operator to add numbers to it.
+
+## Curly Brace Block
+
+Everywhere you can put an expression you can put a newline-separated
+sequence of expressions in a curly braces block.  The result of the
+last expression is returned as the result of the block.
+
+```go
+		const product = {
+			log->info("doing the multiplication")
+			100 * 100
+		}
+		product
+	=> 10000
+```
+
+Above is an example of the `product` constant being assigned the value
+of the block, with the multiplication expression being preceded by a
+logging statement that is executed only for its side-effects.
+
+# Switch
+
+There are two forms of switch statement.
+
+```go
+				switch count(remaining) {
+				case 1: {
+					const [expr] = remaining
+					str(acc, " :else ", expr, ")")
+				}
+				case 2:
+					typeCase()  str  ")"
+				default:
+					recur(typeCase(), 2  drop  remaining)
+				}
+```
+
+In the first form, shown above, the switch takes an expression and
+matches execute whichever of its `case` sections match the result of
+the expression.  This is the more efficient form of switch because the
+dispatch to a case happens in constant time, but it has the restriction
+that the `case` sections must have compile-time constants values.
+
+```go
+			switch {
+			case isNil(t):
+				new TreeNode(v, nil, nil)
+			case v < VAL(t):
+				new TreeNode(VAL(t), L(t)  xconj  v, R(t))
+			default:
+				new TreeNode(VAL(t), L(t), R(t)  xconj  v)
+			}
+```
+
+The second form, shown above, is more general.  There is no expression
+beside the `switch` but instead each `case` has an arbitrary Boolean
+expression.  In general this form is slower because the dispatch
+happens in linear time, each case expression being evaluated in turn
+until one returns true.
+
+## Destructuring
+
+You can declare multiple constants on the left-hand-side of the `=`
+and put a vector on the right-hand-side.  Thus "unpacks" the vector
+assigning each element to the corresponding constant.
+
+```go
+		const (
+			vec = [111, 222, 333, 444]
+			[a, b, c, d] = vec
+		)
+		b
+    => 222
+```
+
+For example, above we unpack the vector `vec`, so that constant `b`
+ends up with the value `222`.
+
+```go
+		func second([a, b, c, d]) {
+			b
+		}
+		second(vec)
+	=> 222
+```
+
+This also works for function arguments, where above we have used a
+function to extract the second element from the vector.
+
+```go
+		const (
+			vec = [111, 222, 333, 444]
+			[first, rest...] = vec
+		)
+		rest
+	}, =>, [222, 333, 444]
+```
+
+For variable-length vectors you can use ellipses `...` after the
+constant to match it to the remaining part of the vector.  So for
+example, above `first` gets the the first element in the vector and
+`rest` gets the remaining elements.
+
+```go
+		const (
+			dict = {AAA: 11,  BBB: 22,  CCC: 33,  DDD: 44}
+			{c: CCC, a: AAA} = dict
+		)
+		c
+	=> 33,
+```
+
+You can also destructure dicts using the syntax shown above, where on
+the left-hand-side each match is specified as _constant_`:` _key_.
+
+```go
+		func extractCCC({c: CCC}) {
+			c
+		}
+		extractCCC(dict)
+	=> 33
+```
+
+Dict destructuring also works in function parameters as shown above.
+
+```go
+		const (
+			planets = [
+				{NAME: "Mercury", RADIUS_KM: 2440},
+				{NAME: "Venus",   RADIUS_KM: 6052},
+				{NAME: "Earth",   RADIUS_KM: 6371},
+				{NAME: "Mars",    RADIUS_KM: 3390}
+			]
+			[_, _, {earthRadiusKm: RADIUS_KM}, _] = planets
+		)
+		earthRadiusKm
+	=> 6371
+```
+
+You can nest these destructurings to any depth.  For example the above
+example plucks the `earthRadiusKm` constant from two-levels down inside
+a vector of dicts.  We are using the convention of using the `_`
+identifier for unused values.
 
 ## Type Hints
 

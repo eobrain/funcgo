@@ -268,7 +268,7 @@ func codeGenerator(symbolTable, isGoscript) {
 			channel  blankJoin  (vecStr(identifier)  listStr   expressions)
 		},
 		TYPESWITCH: func(x, args...) {
-			func recursing(acc, remaining) {
+			loop(acc="(cond", remaining=args) {
 				func typeCase() {
 					const (
 						typ = first(remaining)
@@ -281,15 +281,12 @@ func codeGenerator(symbolTable, isGoscript) {
 					const [expr] = remaining
 					str(acc, " :else ", expr, ")")
 				}
-				case 2: {
-					typeCase() str ")"
-				}
-				default: {
-					recur(typeCase(), 2 drop remaining)
-				}
+				case 2:
+					typeCase()  str  ")"
+				default:
+					recur(typeCase(), 2  drop  remaining)
 				}
 			}
-			recursing("(cond", args)
 		},
 		CONSTSWITCH: func(expr, clauses...) {
 			listStr("case", expr, ...clauses)
@@ -392,7 +389,8 @@ func codeGenerator(symbolTable, isGoscript) {
 		},
 		EXPRESSIONLIST: blankJoin,
 		EXPRESSIONS:	blankJoin,
-		CONSTS:		blankJoin,
+		CONSTS:	blankJoin,
+		COMMACONSTS:	blankJoin,
 		BLOCK: func (expr){
 			expr
 		} (expr0, exprRest...) {

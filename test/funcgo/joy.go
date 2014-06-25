@@ -262,9 +262,9 @@ test.fact("Persistent binary tree built of records",
 			case isNil(t):
 				new TreeNode(v, nil, nil)
 			case v < VAL(t):
-				new TreeNode( VAL(t), xconj(L(t), v), R(t))
+				new TreeNode(VAL(t), L(t)  xconj  v, R(t))
 			default:
-				new TreeNode( VAL(t), L(t), xconj(R(t), v))
+				new TreeNode(VAL(t), L(t), R(t)  xconj  v)
 			}
 		}
 
