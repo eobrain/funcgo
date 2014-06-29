@@ -290,7 +290,7 @@ test.fact("select",
 			c2 = make(chan, 1)
 		)
 		go {
-			for i := times(10000) { x := i }
+			for i := times(100000) { x := i }
 			<:c1
 		}
 		go {

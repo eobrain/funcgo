@@ -11,7 +11,7 @@
    (concat
     ["java"
      "-jar"
-     "bin/funcgo-compiler-0.2.6-standalone.jar"
+     "bin/funcgo-compiler-0.2.7-standalone.jar"
      "src"
      "test"
      "tasks"]
