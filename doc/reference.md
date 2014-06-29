@@ -1,5 +1,7 @@
 # Funcgo Reference
 
+_[incomplete]_
+
 ## Source File Structure
 
 Source files names must end with either `.go` (if to be run on the
@@ -349,7 +351,7 @@ logging statement that is executed only for its side-effects.
 
 # Switch
 
-There are two forms of switch statement.
+There are three forms of switch statement.
 
 ```go
 				switch count(remaining) {
@@ -386,6 +388,177 @@ beside the `switch` but instead each `case` has an arbitrary Boolean
 expression.  In general this form is slower because the dispatch
 happens in linear time, each case expression being evaluated in turn
 until one returns true.
+
+The third form is the _type switch_ using the `.(type)`
+suffix to indicate that we are switching on the type, and using
+typenames in the case statements.
+
+```go
+		func plus(a, b) {
+			switch a.(type) {
+			case Number:   a + b
+			case String:   a  str  b
+			case Iterable: vec(a  concat  b)
+			default:       str("Unknown types for ", a, " and ", b)
+			}
+		}
+
+		[
+			2       plus  3,
+			0.5     plus  0.75,
+			[P, Q]  plus  [R, S, T],
+			"foo"   plus  "bar",
+                        FOO     plus  BAR
+		]
+
+	=> [
+		5,
+		1.25,
+		[P, Q, R, S, T],
+		"foobar",
+		"Unknown types for :foo and :bar"
+	]
+```
+
+In the above example we define a _plus_ function that does different
+operations depending on the types of the first argument.  (A more
+robust version would check both arguments.)
+
+## Asynchronous Channels
+
+```go
+		const (
+			c1 = make(chan, 1)
+			c2 = make(chan, 1)
+		)
+		go func(){
+			Thread::sleep(10)
+			c1 <- 111
+		}()
+		c2 <- 222
+		select {
+		case x = <-c1:
+			x * 100
+		case x = <-c2:
+			x * 100
+		}
+	=> 22200
+```
+
+The example above uses the same syntax as Go, where for a channel `c`
+the operation `<-c` is taking from a channel (blocking if necessary
+until input arrives) and `c <- x` is sending the value `x` to the
+channel.
+
+The `select` construct allows you to block on multiple asynchronous
+channel operations, such that the first one that unblocks will
+activate.
+
+When targeting JavaScript however we are restricted because
+JavaScript is single-threaded, instead you have to use a different
+syntax (using `<:` instead of `<-') for channel operations,
+
+```go
+		const (
+			c1 = make(chan, 1)
+			c2 = make(chan, 1)
+		)
+		go {
+			for i := times(10000) { x := i }
+			c1 <: 111
+		}
+		go {
+			c2 <: 222
+		}
+		<-go {
+			select {
+			case x = <:c1:
+				x * 100
+			case x = <:c2:
+				x * 100
+			}
+		}
+	=> 22200
+```
+
+These operations are restricted to being directly inside a `go {
+... }` block as shown above.
+
+```go
+		const (
+			c1 = make(chan, 1)
+			c2 = make(chan)
+		)
+		thread {
+			Thread::sleep(20)
+			c1 <- 111
+		}
+		thread {
+			Thread::sleep(10)
+			<-c2
+		}
+		select {
+		case x = <-c1:
+			x * 100
+		case c2 <- 222:
+			"wrote to c2"
+		default:
+			"nothing ready"
+		}
+	=> "nothing ready"
+```
+
+Finally the example above shows some more features.  The `thread`
+block is like a `go` block except that it fires up a real thread
+rather than a goroutine, thus it can only be used when targeting the
+JVM.
+
+If there is a `default` clause in the `select` and all the `case`
+clauses are blocked, then it will execute instead.
+
+Finally note that this example has both types of `case` clauses, those
+writing to channels and those reading from channels, both of which can
+block.
+
+## Infix functions
+
+```go
+	str("foo", "bar")
+	=> "foobar"
+```
+
+You can call a function of two arguments in the normal prefix format
+of `f(a,b)`.
+
+```go
+	"foo"  str  "bar"
+	=> "foobar"
+```
+
+Alternatively you can call such a function in an infix format of `a  f
+b`.
+
+## Binary Operators and Precedence
+
+This table shows all the built-in operators and how they group.  The
+ones at the top bind most tightly.
+
+6. unary expression
+5. `*` `/` `%` `<<` `>>` `&` `&^`
+4. `+` `-` `|` `^`
+3. `==` `!=` `<` `>` `<=` `>=`
+2. `&&`
+1. `||`
+0. inline function call
+
+```go
+	^a * b          // => (^a) * b,
+	a * b - c       // => (a * b) - c
+	a + b < c       // => (a + b) < c
+	a < b && b < c  // => (a < b) && (b < c)
+	p && q || r     // => (p && q) || r
+	p || q  str  r  // => (p || q)  str  r
+```
 
 ## Destructuring
 

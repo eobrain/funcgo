@@ -13,15 +13,13 @@
 
 package parser
 
-import (
-	insta "instaparse/core"
-)
+import insta "instaparse/core"
 
 var Parse = insta.parser(`
 sourcefile = NL? packageclause (expressions|topwithconst) _
 nonpkgfile = NL? (expressions|topwithconst) _
  <_> =      <#'[ \t\x0B\f\r\n]*'> | comment+                                 (* optional whitespace *)
- <_nonNL> = <#'[ \t\x0B\f\r]*'>                                  (* optional non-newline whitespace *)
+ <_nonNL> = <#'[ \t\x0B\f\r]+'>                                  (* non-newline whitespace *)
  <NL> = nl | comment+
    <nl> = <#'\s*[\n;]\s*'>                     (* whitespace with at least one newline or semicolon *)
    <comment> = <#'[;\s]*//[^\n]*\n\s*'>
@@ -83,7 +81,7 @@ nonpkgfile = NL? (expressions|topwithconst) _
            defaultclause    = <'default'>                                    _ <':'> (_ expressions)?
        selectstmtingo = <'select'> _ <'{'> _ { CommClauseInGo _ } <'}'>
          <CommClauseInGo> = sendclauseingo | recvclauseingo | recvvalclauseingo | defaultclause
-           sendclauseingo    = <'case'> _ expr _ <'<:'> _ expr                _ <':'> (_ expressions)?
+           sendclauseingo    = <'case'> _ expr _ <'<:'> _ expr           _ <':'> (_ expressions)?
            recvclauseingo    = <'case'> _                       <'<:'> _ expr _ <':'> (_ expressions)?
            recvvalclauseingo = <'case'> _  identifier _ <'='> _ <'<:'> _ expr _ <':'>  _ expressions
        typeswitch = <'switch'> _ PrimaryExpr _ <'.'> _ <'('> _ <'type'> _ <')'> _  <'{'>
@@ -114,19 +112,22 @@ nonpkgfile = NL? (expressions|topwithconst) _
 	   precedence3 = precedence4
                        | precedence3 _ relop  _ precedence4
              chanops = '<-' | '<:'
-             relop = equals | noteq | (!chanops '<') | '<=' | '>='           (* TODO(eob)  | '>' *)
+             relop = equals | noteq | (!chanops '<') | '<=' | '>=' | '>'
 	       equals = <'=='>
                noteq  = <'!='>
 	     precedence4 = precedence5
                          | precedence4 _ addop _ precedence5
-	       addop = '+' | '-' | ( !or '|' ) | bitxor
+	       addop = '+' | '-' | ( !or bitor ) | bitxor
+                 bitor = <'|'>
                  bitxor = <'^'>
 	       precedence5 = UnaryExpr
                            | precedence5 _ mulop _ UnaryExpr
-	         mulop = '*' | (!comment '/') | mod | shiftleft | shiftright | mod | (!and '&') | '&^'
+	         mulop = '*' | (!comment '/') | mod | shiftleft | shiftright | bitand | bitandnot
                    shiftleft = <'<<'>
                    shiftright = <'>>'>
                    mod = <'%'>
+                   bitand = !and <'&'>
+                   bitandnot = !and <'&^'>
 	   javastatic = typename _ <'::'> _ JavaIdentifier
 	     <JavaIdentifier> = #'\b[\p{L}_][\p{L}_\p{Digit}]*\b'
                               | underscorejavaidentifier
@@ -144,8 +145,8 @@ nonpkgfile = NL? (expressions|topwithconst) _
                    | identifier _ <','> _ identifier _<','> _ identifier _
                                    <':='> _ expr  _ <','> _ expr  _ <','> _ expr
                (*   | Identifier _ ',' _ shortvardecl _ ',' _ expr *)
-     sendstmtingo = expr _ <'<:'> _ expr
-     sendstmt     = expr _ <'<-'> _ expr
+     sendstmtingo = expr _nonNL <'<:'> _ expr
+     sendstmt     = expr _nonNL <'<-'> _ expr
      <Vars> = <'var'> _ ( <'('> _ VarDecl {NL VarDecl} _ <')'> | VarDecl )
      <VarDecl> = primarrayvardecl | arrayvardecl | vardecl1 | vardecl2
        primarrayvardecl = Identifier _ <'['> _ int_lit  _ <']'> _ primitivetype
@@ -188,6 +189,8 @@ nonpkgfile = NL? (expressions|topwithconst) _
        <PrimaryExpr> = Routine
                      | goroutine
                      | goblock
+                     | threadroutine
+                     | threadblock
                      | chan
                      | Operand
                      | functiondecl
@@ -203,7 +206,9 @@ nonpkgfile = NL? (expressions|topwithconst) _
                                                                 PrimaryExpr Slice |
                                                                 PrimaryExpr TypeAssertion | *)
          goroutine = <'go'> _ Routine
+         threadroutine = <'thread'> _ Routine
          goblock = <'go'> _ ImpliedDo
+         threadblock = <'thread'> _ ImpliedDo
          chan      = <'make'> _ <'('> _ <'chan'> (_ <typename>)? (_ <','> _ expr)? _ <')'>
          <Routine> = functioncall
                      | MappedFunctionCall
@@ -271,10 +276,10 @@ nonpkgfile = NL? (expressions|topwithconst) _
                  decimals  = #'[0-9]+'
                  exponent  = ( 'e' | 'E' ) ( '+' | '-' )? decimals
                bigfloatlit = (floatlit | int_lit) 'M'
-               <int_lit> = decimallit | octal_lit | hex_lit
+               <int_lit> = decimallit | octal_lit | hexlit
 		 decimallit = #'[1-9][0-9]*' | #'[0-9]'
 		 <octal_lit>  = #'0[0-7]+'
-		 <hex_lit>    = #'0x[0-9a-fA-F]+'
+		 hexlit    = <'0x'> #'[0-9a-fA-F]+'
                bigintlit = int_lit 'N'
 	       regex = <'/'> ( #'[^/\n]' | escapedslash )+ <'/'>
                  escapedslash = <'\\/'>

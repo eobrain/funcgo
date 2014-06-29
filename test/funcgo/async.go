@@ -126,10 +126,7 @@ test.fact("can read and write channels in parallel using lightweight processes",
 )
 
 func fibonacci(c, quit) {
-	loop (
-		x = 0
-		y = 1
-	){
+	loop(x=0, y=1){
 		select {
 		case c <- x:
 			recur(y, x + y)
@@ -195,10 +192,7 @@ quit
 )
 
 func goFibonacci(c, quit) {
-	loop (
-		x = 0
-		y = 1
-	){
+	loop(x=0, y=1){
 		select {
 		case c <: x:
 			recur(y, x + y)

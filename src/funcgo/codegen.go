@@ -17,10 +17,15 @@ import (
 	insta "instaparse/core"
 	symbols "funcgo/symboltable"
 )
+//import type (
+//	java.math.BigInteger
+//)
 
 const kAsyncRules = set{
 	GOROUTINE,
 	GOBLOCK,
+	THREADROUTINE,
+	THREADBLOCK,
 	CHAN,
 	TAKE,
 	TAKEINGO,
@@ -166,11 +171,6 @@ func codeGenerator(symbolTable, isGoscript) {
 		SOURCEFILE:  blankJoin,
 		NONPKGFILE:  identity,
 		IMPORTDECLS: blankJoin,
-		MACROIMPORTDECL:     func() {
-			""
-		} (importSpecs...) {
-			listStr(":require-macros", ...importSpecs)
-		},
 		IMPORTSPEC: importSpec,
 		EXTERNIMPORTSPEC: externImportSpec,
 		TYPEIMPORTDECL: func() {
@@ -375,6 +375,12 @@ func codeGenerator(symbolTable, isGoscript) {
 		GOBLOCK: func(expr) {
 			"go"  listStr  expr
 		},
+		THREADROUTINE: func(routine) {
+			"thread"  listStr  routine
+		},
+		THREADBLOCK: func(expr) {
+			"thread"  listStr  expr
+		},
 		VARIADICCALL: func(function, params...) {
 			listStr("apply", function, ...params)
 		},
@@ -559,6 +565,13 @@ func codeGenerator(symbolTable, isGoscript) {
 		BIGINTLIT:     str,
 		BIGFLOATLIT:   str,
 		FLOATLIT:      str,
+		HEXLIT:        func(s string){
+			//if s->length() > 7 {
+				Integer::parseInt(s, 16)
+			//} else {
+			//	new BigInteger(s, 16)
+			//}
+		},
 		DECIMALS:      identity,
 		EXPONENT:      str,
 		REGEX:	       func{str(`#"`,  s.escape(str(...$*), {'"':`\"`}),  `"`)},
@@ -592,6 +605,9 @@ func codeGenerator(symbolTable, isGoscript) {
 		ESCAPEDIDENTIFIER:  identity,
 		UNARYEXPR: func(operator, expression) { listStr(operator, expression) },
 		NOTEQ:	     constantFunc("not="),
+		BITAND:	     constantFunc("bit-and"),
+		BITANDNOT:	     constantFunc("bit-and-not"),
+		BITOR:	     constantFunc("bit-or"),
 		BITXOR:	     constantFunc("bit-xor"),
 		BITNOT:	     constantFunc("bit-not"),
 		TAKE:	     constantFunc("<!!"),
@@ -631,28 +647,65 @@ func codeGenerator(symbolTable, isGoscript) {
 	}
 }
 
+func syncImports(isGoscript, isSync) {
+	if isSync {
+		[]
+	} else {
+		if isGoscript {
+			[vecStr(
+				"cljs.core.async", ":as", "async", ":refer",
+				"[chan <! >! alt!]"
+			)]
+		} else {
+			[vecStr(
+				"clojure.core.async", ":as", "async", ":refer",
+				"[chan go thread <! >! alt! <!! >!! alt!!]"
+			)]
+		}
+	}
+}
+
+func macroSyncImports(isGoscript, isSync) {
+	if isSync || !isGoscript {
+		[]
+	} else {
+		[vecStr("cljs.core.async.macros", ":as", "async", ":refer", "[go]")]
+	}
+}
+
+// Return an empty list if tail is empty, otherwise return listStr(head, ...tail)
+func req(head, tail) {
+	if isEmpty(tail) {
+		[]
+	} else {
+		[listStr(head, ...tail)]
+	}
+}
+
 func packageclauseFunc(symbolTable, path String, isGoscript, isSync) {
 	const (
 		[parent, name] = splitPath(path)
-		syncImport = if isSync {
-			[]
-		} else {
-			const ops = if isGoscript {
-				"[chan go <! >! alt!]"
-			} else {
-				"[chan go <! >! alt! <!! >!! alt!!]"
-			}
-			[listStr(
-				":require",
-				vecStr("clojure.core.async", ":as", "async", ":refer", ops)
-			)]
-		}
 	)
 	if isGoscript {
 		symbolTable symbols.PackageCreated "js"
 	}
-	func(imported, importDecls) {
-		const fullImported = parent str imported
+	func(imported, importDecls String) {
+		const (
+			fullImported = parent str imported
+			hasImports = importDecls->contains(":require ")
+			hasMacroImports = importDecls->contains(":require-macros ")
+			xtraImports = if hasImports {
+				[]
+			} else {
+				req(":require", syncImports(isGoscript, isSync))
+			}
+			xtraMacroImports = if hasMacroImports {
+				[]
+			} else {
+				req(":require-macros", macroSyncImports(isGoscript, isSync))
+			}
+			imports = concat([importDecls], xtraMacroImports, xtraImports)
+		)
 		if imported != name {
 			throw(new Exception(str(
 				`Got package "`, imported, `" instead of expected "`,
@@ -660,26 +713,31 @@ func packageclauseFunc(symbolTable, path String, isGoscript, isSync) {
 			)))
 		}
 		if isGoscript {
-			listStr("ns", fullImported, importDecls, ...syncImport)
+			listStr("ns", fullImported, ...imports)
 		} else {
 			str(
-				listStr("ns",
-					fullImported,
-					"(:gen-class)",
-					importDecls,
-					...syncImport
-				),
+				listStr("ns", fullImported, "(:gen-class)", ...imports),
 				" (set! *warn-on-reflection* true)"
 			)
 		}
 	}
 }
 
-func importDeclFunc() {
+func importDeclFunc(isGoscript, isSync) {
 	func() {
 		""
 	} (importSpecs...) {
-		listStr(":require", ...importSpecs)
+		const imports = importSpecs concat syncImports(isGoscript, isSync)
+		listStr(":require", ...imports)
+	}
+}
+
+func macroImportDeclFunc(isGoscript, isSync) {
+	func() {
+		""
+	} (importSpecs...) {
+		const imports = importSpecs concat macroSyncImports(isGoscript, isSync)
+		listStr(":require-macros", ...imports)
 	}
 }
 
@@ -708,16 +766,12 @@ func Generate(path String, parsed, isSync) {
 	const (
 		symbolTable = symbols.New()
 		isGoscript  = path->endsWith(".gos")
-		codeGen = assoc(
-			codeGenerator(symbolTable, isGoscript),
-			PACKAGECLAUSE,
-			packageclauseFunc(symbolTable, path, isGoscript, !usesAsync(parsed)),
-			IMPORTDECL,  // TODO(eob) put this in the static part
-			importDeclFunc()
-		)
-		//codeGen = codeGenerator(symbolTable) + {
-		//	PACKAGECLAUSE: packageclauseFunc(symbolTable, path)
-		//}
+		isSync = !usesAsync(parsed)
+		codeGen = codeGenerator(symbolTable, isGoscript) += {
+			PACKAGECLAUSE:   packageclauseFunc(symbolTable, path, isGoscript, isSync),
+			IMPORTDECL:      importDeclFunc(isGoscript, isSync) ,
+			MACROIMPORTDECL: macroImportDeclFunc(isGoscript, isSync)
+		}
 		clj = insta.transform(codeGen, parsed)
 	)
 	symbols.CheckAllUsed(symbolTable)

@@ -5,8 +5,13 @@ import (
         fgoc "funcgo/main"
         "clojure/string"
 )
+//import type (
+//	java.math.BigInteger
+//)
 
-requireAsync := "(:require [clojure.core.async :as async :refer [chan go <! >! alt! <!! >!! alt!!]])"
+
+requireAsync := `[clojure.core.async :as async :refer [chan go thread <! >! alt! <!! >!! alt!!]]`
+requireJsAsync := `(:require-macros [cljs.core.async.macros :as async :refer [go]]) (:require [cljs.core.async :as async :refer [chan <! >! alt!]])`
 
 func compileString(path, fgoText) {
 	string.trim(
@@ -146,8 +151,16 @@ func parsed(expr) {
 
 func parsedAsync(expr) {
 	str("(ns foo (:gen-class) ",
-		requireAsync,
-		") (set! *warn-on-reflection* true) ",
+		"(:require ", requireAsync,
+		")) (set! *warn-on-reflection* true) ",
+		expr
+	)
+}
+
+func parsedJsAsync(expr) {
+	str("(ns foo ",
+		requireJsAsync,
+		") ",
 		expr
 	)
 }
@@ -380,6 +393,16 @@ test.fact("labels with other characters",
 	parse("DIV#EMAIL.SELECTED.STARRED"),=>, parsed(":div#email.selected.starred"),
 	parse("IS_EXISTS"),=>, parsed(":exists?")
 )
+test.fact("hex literal",
+	parse("0xff"),       =>, parsed(str(Integer::parseInt("ff",16))),
+	parse("0xcafe"),     =>, parsed(str(Integer::parseInt("cafe",16))),
+	parse("0xbabe"),     =>, parsed(str(Integer::parseInt("babe",16))),
+	//parse("0xcafebabe"), =>, parsed(str(new BigInteger("cafebabe",16))),
+	parse("0xFF"),       =>, parsed(str(Integer::parseInt("FF",16))),
+	parse("0xCAFE"),     =>, parsed(str(Integer::parseInt("CAFE",16))),
+	parse("0xBABE"),     =>, parsed(str(Integer::parseInt("BABE",16))) //,
+	//parse("0xCAFEBABE"), =>, parsed(str(new BigInteger("CAFEBABE",16)))
+)
 test.fact("dictionary literals",
 	parse("{}")             ,=>, parsed("{}"),
 	parse("{A:1}")          ,=>, parsed("{:a 1}"),
@@ -561,6 +584,13 @@ test.fact("goroutine",
     go say("world")
     say("hello")
 }`), =>, parsedAsync(`(defn Main [] (do (go (say "world")) (say "hello")))` )
+)
+
+test.fact("goroutine js",
+	parseJs(`func Main() {
+    go say("world")
+    say("hello")
+}`), =>, parsedJsAsync(`(defn Main [] (do (go (say "world")) (say "hello")))` )
 )
 
 test.fact("channel",
@@ -832,9 +862,9 @@ func FooBar(iii, jjj) {
   )
 }
 `)  ,=>, str(
-	`(ns foo (:gen-class) (:require [bar.baz :as b] [foo.faz.fedudle :as ff]) `,
+	`(ns foo (:gen-class) (:require [bar.baz :as b] [foo.faz.fedudle :as ff] `,
 	requireAsync,
-	`) (set! *warn-on-reflection* true) (def ^:private x (b/bbb "blah blah")) (defn Foo-bar [iii jjj] (ff/fumanchu {:ooo (fn [m n] (str m n)) :ppp (fn [m n] (go (str m n))) :qqq qq }))`
+	`)) (set! *warn-on-reflection* true) (def ^:private x (b/bbb "blah blah")) (defn Foo-bar [iii jjj] (ff/fumanchu {:ooo (fn [m n] (str m n)) :ppp (fn [m n] (go (str m n))) :qqq qq }))`
 ))
 
 
