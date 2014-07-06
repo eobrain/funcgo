@@ -566,11 +566,7 @@ func codeGenerator(symbolTable, isGoscript) {
 		BIGFLOATLIT:   str,
 		FLOATLIT:      str,
 		HEXLIT:        func(s string){
-			//if s->length() > 7 {
 				Integer::parseInt(s, 16)
-			//} else {
-			//	new BigInteger(s, 16)
-			//}
 		},
 		DECIMALS:      identity,
 		EXPONENT:      str,

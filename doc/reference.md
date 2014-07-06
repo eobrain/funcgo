@@ -391,7 +391,7 @@ until one returns true.
 
 The third form is the _type switch_ using the `.(type)`
 suffix to indicate that we are switching on the type, and using
-typenames in the case statements.
+type names in the case statements.
 
 ```go
 		func plus(a, b) {
@@ -423,6 +423,163 @@ typenames in the case statements.
 In the above example we define a _plus_ function that does different
 operations depending on the types of the first argument.  (A more
 robust version would check both arguments.)
+
+## Java Statics
+
+To use static methods or fields from a Java class you use the `::`
+operator after the Java class name (which you should import using the
+`import type` syntax unless it is in the java.lang package).
+
+```go
+	2 * Double::MAX_VALUE          // => Double::POSITIVE_INFINITY
+	Integer::parseInt("-42")       // => -42
+	Math::round(2.999)             // => 3
+	13 Integer::toString 2         // => "1101"
+```
+
+The first example shows how a static field is uses.  The remaining
+three are static method invocations, with the last one showing how you
+can use infix notation to invoke a static method that takes two
+parameters.
+
+## Identifiers
+
+Clojure allows characters in identifiers that are not allowed in
+Funcgo identifiers, therefore to allow inter-operation Funcgo
+identifiers are mangled like so:
+
+* camel-case is converted to dash-separated:
+  * `fooBarBaz` &rarr; `foo-bar-baz`
+  * `FooBarBaz` &rarr; `Foo-bar-baz`
+* `is` prefix is converted to `?` suffix
+  * `isEqual` &rarr; `equal?`
+* `mutate` prefix is converted to `!` suffix
+  * `mutateSort` &rarr; `sort!`
+* underscore prefix is converted to dash prefix
+  * `_main` &rarr; `-main`
+
+However, identifiers referring to Java entities are *not* mangled.
+These are any identifiers in `import type` statements, anything before
+or after a `::` and anything after a `->`.
+
+And finally you can avoid mangling by using a backslash and back-quotes:
+
+```go
+        const origDispatch = \`pprint/*print-pprint-dispatch*`
+```
+
+The above example uses this escaped identifier syntax to refer to the
+`pprint/*print-pprint-dispatch*` Clojure identifier which has the
+"earmuff" characters not allowed by Funcgo.
+
+## Vars
+
+If possible you should use consts because they are immutable, but
+sometimes you need vars.  These are thread-local mutable storage.
+
+The case of the name is significant.  If it begins with an upper-case
+letter then it is exported and visible globally, otherwise it is
+private to the file it is declared in.
+
+As in Go, there are two different syntaxes for declaring vars.
+
+```go
+initialBoard := [
+	[EE, KW, EE],
+	[EE, EE, EE],
+	[EE, KB, EE]
+]
+```
+The first syntax uses a the `:=` operator to declare a var and assign it
+a value.
+
+```go
+		aa, bb, cc := 111, 222, 333
+		aa + bb + cc
+	=> 666
+```
+
+You can do multiple assignments, declaring and initializing multiple
+vars as shown above.
+
+```go
+		var (
+			pp = 111
+			qq = 222
+		)
+		pp + qq
+	=> 333
+```
+
+The second syntax uses `var` in a way similar to the `const`
+construct.  It can use the grouped version of the syntax as shown
+above.
+
+```go
+		var pp = 111
+		var qq = 222
+		pp + qq
+	=> 333
+```
+
+Alternatively each var can be separately declared as shown above.
+
+Unlike consts, var declarations do not have to be at the beginning of
+a curly-bracket block.
+
+```go
+		var tt int    = 111
+		var uu string = "foo"
+		uu  str  tt
+	=> "foo111"
+```
+
+The second `var` syntax, unlike the first `:=` syntax allows type
+hints as shown above.
+
+## If-Else
+
+```go
+		filename = if isJvm { "main.go" } else { "main.gos" }
+```
+The above example shows the if-else expression.
+
+```go
+	if cmdLine(ERRORS) {
+		println(cmdLine(ERRORS))
+	}
+```
+
+If the `else` part is omitted the `if` expression returns nil when
+the condition is false, though in the example above this is ignored.
+
+```go
+			if met := meta(o); met {
+				print("^")
+				if count(met) == 1 {
+					if met(TAG) {
+						origDispatch(met(TAG))
+					} else {
+						if met(PRIVATE) == true {
+							origDispatch(PRIVATE)
+						} else {
+							origDispatch(met)
+						}
+					}
+				} else {
+					origDispatch(met)
+				}
+				print(" ")
+				pprint.pprintNewline(FILL)
+			}
+```
+
+Finally, the first line of the example above shows another format,
+where a constant `met` is set and tested as part of the `if` line.
+This constant can be used in the body of the if expression.  The above
+example also emphasizes the fact that there is no "else-if" construct
+-- you must use nested if-else expressions (or alternatively use the
+switch expression).
 
 ## Asynchronous Channels
 

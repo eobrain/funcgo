@@ -42,7 +42,7 @@ func prettyPrint(obj, writer) {
         const origDispatch = \`pprint/*print-pprint-dispatch*`
         pprint.withPprintDispatch(
                 func(o) {
-                        if met := meta(o); met {
+			if met := meta(o); met {
 				print("^")
 				if count(met) == 1 {
 					if met(TAG) {
@@ -130,7 +130,7 @@ func compileFile(inFile File, root File, opts) {
 			root,
 			inPath str suffix,
 			opts,
-			if isNil(suffixExtra){""} else {suffixExtra}
+			if isNil(suffixExtra) {""} else {suffixExtra}
 		)
 	}
 } (inFile File, root File, inPath, opts, suffixExtra) {
@@ -181,9 +181,7 @@ func compileFile(inFile File, root File, opts) {
 func compileTree(root File, opts) {
 	println(root->getName())
 	for f := range fileSeq(root) {
-		const (
-			inFile File = f
-		)
+		const inFile File = f
 		try {
 			compileFile(inFile, root, opts)
 		} catch Exception e {

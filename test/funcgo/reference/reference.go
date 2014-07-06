@@ -290,7 +290,9 @@ test.fact("select",
 			c2 = make(chan, 1)
 		)
 		go {
-			for i := times(100000) { x := i }
+			withOutStr(
+				for i := times(1000000000) { println(i) }
+			)
 			<:c1
 		}
 		go {
@@ -397,4 +399,31 @@ test.fact("precedence",
 	a < b && b < c , =>, (a < b) && (b < c),
 	p && q || r    , =>, (p && q) || r,
 	p || q  str  r , =>, (p || q)  str  r
+)
+
+test.fact("vars",
+	{
+		aa, bb, cc := 111, 222, 333
+		aa + bb + cc
+	}, =>, 666,
+
+	{
+		var (
+			pp = 111
+			qq = 222
+		)
+		pp + qq
+	}, =>, 333,
+
+	{
+		var rr = 111
+		var ss = 222
+		pp + qq
+	}, =>, 333,
+
+	{
+		var tt int    = 111
+		var uu string = "foo"
+		uu  str  tt
+	}, =>, "foo111"
 )
