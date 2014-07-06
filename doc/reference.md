@@ -581,6 +581,35 @@ example also emphasizes the fact that there is no "else-if" construct
 -- you must use nested if-else expressions (or alternatively use the
 switch expression).
 
+## For loops
+
+```go
+		const (
+			fib = [1, 1, 2, 3, 5, 8]
+			fibSquared = for x := lazy fib {
+				x * x
+			}
+		)
+		fibSquared
+	=> [1, 1, 4, 9, 25, 64]
+```
+
+```go
+		const fib = [1, 1, 2, 3, 5, 8]
+		for x := range fib {
+			print(" ", x)
+		}
+	=> "  1  1  2  3  5  8"
+```
+```go
+		const fib = [1, 1, 2, 3, 5, 8]
+		for x := lazy fib {
+			print(" ", x)
+		}
+	=> ""
+```
+
+
 ## Asynchronous Channels
 
 ```go

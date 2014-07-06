@@ -427,3 +427,31 @@ test.fact("vars",
 		uu  str  tt
 	}, =>, "foo111"
 )
+
+test.fact("for",
+
+	{
+		const (
+			fib = [1, 1, 2, 3, 5, 8]
+			fibSquared = for x := lazy fib {
+				x * x
+			}
+		)
+		fibSquared
+	}, =>, [1, 1, 4, 9, 25, 64],
+
+	withOutStr({
+		const fib = [1, 1, 2, 3, 5, 8]
+		for x := lazy fib {
+			print(" ", x)
+		}
+	}), =>, "",
+
+	withOutStr({
+		const fib = [1, 1, 2, 3, 5, 8]
+		for x := range fib {
+			print(" ", x)
+		}
+	}), =>, "  1  1  2  3  5  8"
+
+)
