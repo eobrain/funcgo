@@ -9,9 +9,8 @@ import (
 //	java.math.BigInteger
 //)
 
-
-requireAsync := `[clojure.core.async :as async :refer [chan go thread <! >! alt! <!! >!! alt!!]]`
-requireJsAsync := `(:require-macros [cljs.core.async.macros :as async :refer [go]]) (:require [cljs.core.async :as async :refer [chan <! >! alt!]])`
+var requireAsync = `[clojure.core.async :as async :refer [chan go thread <! >! alt! <!! >!! alt!!]]`
+var requireJsAsync = `(:require-macros [cljs.core.async.macros :as async :refer [go]]) (:require [cljs.core.async :as async :refer [chan <! >! alt!]])`
 
 func compileString(path, fgoText) {
 	string.trim(
@@ -82,19 +81,17 @@ func parse(expr) {
 } (expr, pkgs) {
 	parse(expr, list(pkgs), [])
 } (expr, pkgs, types) {
-	const(
-		imports = if count(pkgs) == 0 {
-			""
-		} else {
-			const lines = for p := lazy pkgs {str(`"`, p, `"`)}
-			str("import(\n", "\n" string.join lines, "\n)\n")
-		}
-		importtypes = if count(types) == 0 {
-			""
-		} else {
-			str("import type(\n", "\n" string.join types, "\n)\n")
-		}
-	)
+	imports := if count(pkgs) == 0 {
+		""
+	} else {
+		lines := for p := lazy pkgs {str(`"`, p, `"`)}
+		str("import(\n", "\n" string.join lines, "\n)\n")
+	}
+	importtypes := if count(types) == 0 {
+		""
+	} else {
+		str("import type(\n", "\n" string.join types, "\n)\n")
+	}
 	compileString("foo.go",
 		str("package foo\n", imports, importtypes, expr)
 	)
@@ -105,19 +102,17 @@ func parseJs(expr) {
 } (expr, pkgs) {
 	parseJs(expr, list(pkgs), [])
 } (expr, pkgs, types) {
-	const(
-		imports = if count(pkgs) == 0 {
-			""
-		} else {
-			const lines = for p := lazy pkgs {str(`"`, p, `"`)}
-			str("import(\n", "\n" string.join lines, "\n)\n")
-		}
-		importtypes = if count(types) == 0 {
-			""
-		} else {
-			str("import type(\n", "\n" string.join types, "\n)\n")
-		}
-	)
+	imports := if count(pkgs) == 0 {
+		""
+	} else {
+		lines := for p := lazy pkgs {str(`"`, p, `"`)}
+		str("import(\n", "\n" string.join lines, "\n)\n")
+	}
+	importtypes := if count(types) == 0 {
+		""
+	} else {
+		str("import type(\n", "\n" string.join types, "\n)\n")
+	}
 	compileString("foo.gos",
 		str("package foo\n", imports, importtypes, expr)
 	)
@@ -127,20 +122,18 @@ func parsed(expr) {
 } (expr, pkgs) {
 	parsed(expr, list(pkgs), [])
 } (expr, pkgs, types) {
-	const(
-		imports = if count(pkgs) == 0 {
-			""
-		} else {
-			const lines = for p := lazy pkgs {str("[", p, " :as ", p, "]")}
-			str(" (:require ", " "  string.join  lines, ")")
-		}
-		importtypes = if count(types) == 0 {
-			""
-		} else {
-			const lines = for t := lazy types {str("(", t, ")")}
-			str(" (:import ", " " string.join lines, ")")
-		}
-	)
+	imports := if count(pkgs) == 0 {
+		""
+	} else {
+		lines := for p := lazy pkgs {str("[", p, " :as ", p, "]")}
+		str(" (:require ", " "  string.join  lines, ")")
+	}
+	importtypes := if count(types) == 0 {
+		""
+	} else {
+		lines := for t := lazy types {str("(", t, ")")}
+		str(" (:import ", " " string.join lines, ")")
+	}
 	str("(ns foo (:gen-class)",
 		imports,
 		importtypes,
@@ -170,20 +163,18 @@ func parsedJs(expr) {
 } (expr, pkgs) {
 	parsedJs(expr, list(pkgs), [])
 } (expr, pkgs, types) {
-	const(
-		imports = if count(pkgs) == 0 {
-			""
-		} else {
-			const lines = for p := lazy pkgs {str("[", p, " :as ", p, "]")}
-			str(" (:require ", " " string.join lines, ")")
-		}
-		importtypes = if count(types) == 0 {
-			""
-		} else {
-			const lines = for t := lazy types {str("(", t, ")")}
-			str(" (:import ", " " string.join lines, ")")
-		}
-	)
+	imports := if count(pkgs) == 0 {
+		""
+	} else {
+		lines := for p := lazy pkgs {str("[", p, " :as ", p, "]")}
+		str(" (:require ", " " string.join lines, ")")
+	}
+	importtypes := if count(types) == 0 {
+		""
+	} else {
+		lines := for t := lazy types {str("(", t, ")")}
+		str(" (:import ", " " string.join lines, ")")
+	}
 	str("(ns foo",
 		imports,
 		importtypes,
@@ -216,11 +207,11 @@ test.fact("can refer to symbols in other packages",
 )
 
 test.fact("can define things",
-	parse("a := 12345"), =>, parsed("(def ^:private a 12345)"),
+	//parse("a := 12345"), =>, parsed("(def ^:private a 12345)"),
 	parse("var a = 12345"), =>, parsed("(def ^:private a 12345)"),
 	parse("var a FooType = 12345", [], ["foo.FooType"]),
 		=>, parsed("(def ^{:private true, :tag FooType} a 12345)", [], ["foo FooType"]),
-	parse("Foo := 12345"), =>, parsed("(def Foo 12345)"),
+	//parse("Foo := 12345"), =>, parsed("(def Foo 12345)"),
 	parse("var Foo = 12345"), =>, parsed("(def Foo 12345)"),
 	parse("var Foo FooType = 12345", [], ["foo.FooType"]),
 	=>, parsed("(def ^FooType Foo 12345)", [], ["foo FooType"])
@@ -254,8 +245,13 @@ test.fact("can have nested consts",
         parse(`{const a=1; {const b=2; y}}`), =>, parsed(`(let [a 1] (let [b 2] y))`)
 )
 
+test.fact("can have nested :=",
+        parse(`{a:=1;x;{b:=2;y}}`), =>, parsed(`(let [a 1] x (let [b 2] y))`),
+        parse(`{a:=1; {b:=2; y}}`), =>, parsed(`(let [a 1] (let [b 2] y))`)
+)
+
 // See http://blog.jayfields.com/2010/07/clojure-destructuring.html
-test.fact("Can destructure vectors",
+test.fact("Can destructure vectors using const",
         parse(`{const([a,b]=ab) f(a,b)}`),
         =>,
         parsed(`(let [[a b] ab] (f a b))`),
@@ -286,7 +282,31 @@ test.fact("Can destructure vectors",
         parsed(`(let [[[a b] [c d]] numbers] (f a b c d))`)
 )
 
-test.fact("can destructure dicts",
+// See http://blog.jayfields.com/2010/07/clojure-destructuring.html
+test.fact("Can destructure vectors using :=",
+        parse(`{[a,b]:=ab; f(a,b)}`),
+        =>,
+        parsed(`(let [[a b] ab] (f a b))`),
+
+        parse(`{[x, more...] := indexes; f(x, more)}`),
+        =>,
+        parsed(`(let [[x & more] indexes] (f x more))`),
+
+        parse(`{[x, more..., AS, full] := indexes; f(x, more, full)}`),
+        =>,
+        parsed(`(let [[x & more :as full] indexes] (f x more full))`),
+
+        // TODO(eob) implement KEYS:
+        //parse(`const({KEYS: [x, y]} = point) f(x, y)`),
+        //=>,
+        //parsed(`(let [{:keys [x y]} point] (f x y))`),
+
+        parse(`{[[a,b],[c,d]] := numbers; f(a, b, c, d)}`),
+        =>,
+        parsed(`(let [[[a b] [c d]] numbers] (f a b c d))`)
+)
+
+test.fact("can destructure dicts using const and func",
         parse(`{const({theX: X, theY: Y} = point) f(theX, theY)}`),
         =>,
         parsed(`(let [{the-x :x, the-y :y} point] (f the-x the-y))`),
@@ -314,6 +334,20 @@ test.fact("can destructure dicts",
         parse(`printStatus( {NAME: "Jim", SCORES: [3, 5, 4, 5]} )`),
         =>,
         parsed(`(print-status {:name "Jim", :scores [3 5 4 5]})`)
+)
+
+test.fact("can destructure dicts using :=",
+        parse(`{{theX: X, theY: Y} := point; f(theX, theY)}`),
+        =>,
+        parsed(`(let [{the-x :x, the-y :y} point] (f the-x the-y))`),
+
+        parse(`{{name: NAME, {[pages, \isbn10]: KEYS}: DETAILS} := book; f(name,pages,\isbn10)}`),
+        =>,
+        parsed(`(let [{name :name, {[pages isbn10] :keys} :details} book] (f name pages isbn10))`),
+
+        parse(`{{name: NAME, [hole1, hole2]: SCORES} := golfer; f(name, hole1, hole2)}`),
+        =>,
+        parsed(`(let [{name :name, [hole1 hole2] :scores} golfer] (f name hole1 hole2))`)
 )
 
 test.fact("can specity types to avoid reflection",
@@ -485,6 +519,13 @@ test.fact("const",
 	parse("{const(\nb = 2\n)\na}"),=>, parsed("(let [b 2] a)"),
 	parse("{ const(\n  c = 2\n )\n a}"),=>, parsed("(let [c 2] a)"),
 	parse("{const(a = 2)f(a,b)}"),=>, parsed("(let [a 2] (f a b))")
+)
+test.fact(":=",
+	parse("{a := 2;a}"),=>, parsed("(let [a 2] a)"),
+	parse("{  a := 2 ; a}"),=>, parsed("(let [a 2] a)"),
+	parse("{\nb := 2\n\na}"),=>, parsed("(let [b 2] a)"),
+	parse("{ \n  c := 2\n \n a}"),=>, parsed("(let [c 2] a)"),
+	parse("{a := 2;f(a,b)}"),=>, parsed("(let [a 2] (f a b))")
 )
 test.fact("comment",
 	parse("//0 blah blah\naaa0")          ,=>, parsed("aaa0"),
@@ -698,13 +739,13 @@ func main() {
     c := make(chan int)
     go sum(a[:len(a)/2], c)
     go sum(a[len(a)/2:], c)
-    x, y := <-c, <-c // receive from c
+    var x, y = <-c, <-c // receive from c
 
     Println(x, y, x+y)
 }`), =>, parsedAsync(str(
-	"(defn main [] (do",
-	" (def ^:private a [7 2 8 (- 9) 4 0])",
-	" (def ^:private c (chan))",
+	"(defn main [] (let",
+	" [a [7 2 8 (- 9) 4 0]",
+	" c (chan)]",
 	" (go (sum (take (/ (count a) 2) a) c))",
 	" (go (sum (drop (/ (count a) 2) a) c))",
 	" (def ^:private x (<!! c))",
@@ -718,8 +759,8 @@ test.fact("can operate on channels",
 	parse("c <: x"),     =>, parsedAsync("(>! c x)"),
 	parse("<-c"),        =>, parsedAsync("(<!! c)"),
 	parse("<:c"),        =>, parsedAsync("(<! c)"),
-	parse("Foo := <-c"), =>, parsedAsync("(def Foo (<!! c))"),
-	parse("Foo := <:c"), =>, parsedAsync("(def Foo (<! c))")
+	parse("var Foo = <-c"), =>, parsedAsync("(def Foo (<!! c))"),
+	parse("var Foo = <:c"), =>, parsedAsync("(def Foo (<! c))")
 )
 
 test.fact("routine",
@@ -826,7 +867,7 @@ import(
   ff "foo/faz/fedudle"
 )
 
-x := b.bbb("blah blah")
+var x = b.bbb("blah blah")
 func FooBar(iii, jjj) {
   ff.fumanchu(
     {
@@ -849,7 +890,7 @@ import(
   ff "foo/faz/fedudle"
 )
 
-x := b.bbb("blah blah")
+var x = b.bbb("blah blah")
 func FooBar(iii, jjj) {
   ff.fumanchu(
     {

@@ -4,9 +4,7 @@ import (
 	test "midje/sweet"
 )
 
-const (
-	name = "Eamonn"
-)
+name := "Eamonn"
 
 test.fact("can concatenate strings",
 	str("Hello ",  name),     =>, "Hello Eamonn"

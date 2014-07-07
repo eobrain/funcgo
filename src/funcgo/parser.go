@@ -16,8 +16,8 @@ package parser
 import insta "instaparse/core"
 
 var Parse = insta.parser(`
-sourcefile = NL? packageclause (expressions|topwithconst) _
-nonpkgfile = NL? (expressions|topwithconst) _
+sourcefile = NL? packageclause (expressions|topwithconst|topwithassign) _
+nonpkgfile = NL? (expressions|topwithconst|topwithassign) _
  <_> =      <#'[ \t\x0B\f\r\n]*'> | comment+                                 (* optional whitespace *)
  <_nonNL> = <#'[ \t\x0B\f\r]+'>                                  (* non-newline whitespace *)
  <NL> = nl | comment+
@@ -45,14 +45,17 @@ nonpkgfile = NL? (expressions|topwithconst) _
        importspec = ( Identifier _ )?  QQ imported QQ
          imported = Identifier {<'/'> Identifier}
  expressions = expr | expressions NL expr
-   <expr>  = precedence0 | Vars | shortvardecl | ifelseexpr | letifelseexpr | tryexpr | forrange |
+   <expr>  = precedence0 | Vars | (*shortvardecl |*) ifelseexpr | letifelseexpr | tryexpr | forrange |
                    forlazy | fortimes | forcstyle | Blocky | ExprSwitchStmt | sendstmt
                                                                             | sendstmtingo
 
-     <Blocky> = block | withconst | loop
-       withconst = <'{'> _ <'const'> _ ( const NL | <'('> _ consts _ <')'> )  _ expressions _ <'}'>
-         consts = ( const {NL const} )?
-           const = Destruct _ <'='> _ expr
+     <Blocky> = block | withconst | withassign | loop
+       withconst  = <'{'> _ <'const'> _ ( const NL | <'('> _ consts _ <')'> )  _ expressions _ <'}'>
+       withassign = <'{'> _ assigns NL expressions _ <'}'>
+         consts  = ( const  {NL const} )?
+         assigns = assign {NL assign}
+           const  = Destruct _ <'='> _ expr
+           assign = Destruct (_ <','> _ Destruct)* _ ':=' _ expr (_ <','> _ expr)*
 	     <Destruct> = Identifier | typedidentifier | vecdestruct | dictdestruct
 	       typedidentifiers = Identifier ({_ <','> _ Identifier })? _ typename
 	       typedidentifier = Identifier _ typename
@@ -70,7 +73,8 @@ nonpkgfile = NL? (expressions|topwithconst) _
          commaconsts = ( const { _ <','> _ const} )?
        <ImpliedDo> =  <'{'> _ expressions _ <'}'> | withconst
        block = <'{'> _ expr {NL expr} _ <'}'>
-       topwithconst =  <'const'> _ ( const NL | <'('> _ consts _ <')'> )  _ expressions
+       topwithconst  =  <'const'> _ ( const NL | <'('> _ consts _ <')'> )  _ expressions
+       topwithassign =  assigns NL expressions
      <ExprSwitchStmt> = boolswitch | constswitch | letconstswitch | typeswitch
                         | selectstmtingo | selectstmt
        selectstmt = <'select'> _ <'{'> _ { CommClause _ } <'}'>
@@ -140,10 +144,10 @@ nonpkgfile = NL? (expressions|topwithconst) _
 	     isidentifier = <'is'> #'\p{L}' identifier
 	     mutidentifier = <'mutate'> #'\p{L}' identifier
 	     escapedidentifier = <'\\'> #'\b[\p{L}_][\p{L}_\p{Digit}]*\b'
-     shortvardecl =  identifier _ <':='> _ expr
+     (*shortvardecl =  identifier _ <':='> _ expr
                    | identifier _ <','> _ identifier _ <':='> _ expr  _ <','> _ expr
                    | identifier _ <','> _ identifier _<','> _ identifier _
-                                   <':='> _ expr  _ <','> _ expr  _ <','> _ expr
+                                   <':='> _ expr  _ <','> _ expr  _ <','> _ expr *)
                (*   | Identifier _ ',' _ shortvardecl _ ',' _ expr *)
      sendstmtingo = expr _nonNL <'<:'> _ expr
      sendstmt     = expr _nonNL <'<-'> _ expr

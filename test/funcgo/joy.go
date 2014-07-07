@@ -6,7 +6,7 @@ import type (
 	java.util.concurrent.{ExecutorService, Executors}
 )
 
-matrix := [
+var matrix = [
 	[1,2,3],
 	[4,5,6],
 	[7,8,9]
@@ -19,7 +19,7 @@ test.fact("getIn",
 
 test.fact("assoc assoc",
 	{
-		const row = matrix[1] += {2: X}
+		row := matrix[1] += {2: X}
 		matrix += {1: row}
 	},
 	=>, [
@@ -56,10 +56,8 @@ func onBoard(size) {
 func neighbors(size, yx) {
 	neighbors([[-1,0], [1,0], [0,-1], [0,1]], size, yx)
 } (deltas, size, yx) {
-	const (
-		addYx = func{map(+, yx, $1)}
-		unfiltered = addYx map deltas
-	)
+	addYx := func{map(+, yx, $1)}
+	unfiltered := addYx map deltas
 	onBoard(size) filter unfiltered
 }
 
@@ -75,14 +73,14 @@ var pool ExecutorService = Executors::newFixedThreadPool(
 
 func mutateDothreads(f, {threadCount:THREADS, execCount:TIMES} ) {
 	for _ := times threadCount {
-		const multipleCalls Runnable = func{
+		multipleCalls Runnable := func{
 			for _ := times execCount { f() }
 		}
 		pool->submit(multipleCalls)
 	}
 }
 
-initialBoard := [
+var initialBoard = [
 	[EE, KW, EE],
 	[EE, EE, EE],
 	[EE, KB, EE]
@@ -95,10 +93,10 @@ func boardMap(f, bd) {
 }
 
 func doReset() {
-	board := boardMap(ref, initialBoard)
-	toMove := ref([[KB, [2, 1]], [KW, [0,1]]])
+	var board = boardMap(ref, initialBoard)
+	var toMove = ref([[KB, [2, 1]], [KW, [0,1]]])
 	//toMove := &[[KB, [2, 2]], [KW, [0,1]]]
-	numMoves := ref(0)
+	var numMoves = ref(0)
 	//numMoves := &0
 }
 
@@ -116,17 +114,17 @@ func isGoodMove(to, enemySq){
 	}
 }
 
-rotateCount := ref(0)
+var rotateCount = ref(0)
 func fakeShuffle(xs) {
 	dosync(rotateCount alter inc)
 	{
-		const shift = (*rotateCount) % count(xs)
+		shift := (*rotateCount) % count(xs)
 		(shift drop xs) concat (shift take xs)
 	}
 }
 
 // Fake shuffle to make test deterministic
-shuffle := fakeShuffle
+var shuffle = fakeShuffle
 
 test.fact("fake shuffle is actually rotate",
 	shuffle([111,222,333,444]), =>, [222,333,444,111],
@@ -191,7 +189,7 @@ func updateToMove(move) {
 func makeMove() {
 	dosync(
 		{
-			const move = chooseMove(*toMove)
+			move := chooseMove(*toMove)
 			movePiece(move, *toMove)
 			updateToMove(move)
 		}

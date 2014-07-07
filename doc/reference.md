@@ -24,9 +24,7 @@ import (
 	test "midje/sweet"
 )
 
-const (
-	name = "Eamonn"
-)
+name := "Eamonn"
 
 test.fact("can concatenate strings",
 	str("Hello ",  name),     =>, "Hello Eamonn"
@@ -44,22 +42,22 @@ In Funcgo most things are expression, including constructs like `if`
 statements that are statements in Go.
 
 ```go
-		const smaller = if a < b {
+		smaller := if a < b {
 			a
 		} else {
 			b
 		}
+		smaller
+	=> 55
 ```
 The above treats an `if`-`else` as an expression, setting `smaller`
 to either `a` or `b`.
 
 ```go
-		const (
-			digits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-			squares = for d := lazy digits {
-				d * d
-			}
-		)
+		digits  := [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+		squares := for d := lazy digits {
+			d * d
+		}
 		squares
 	=> [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
 ```

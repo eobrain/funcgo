@@ -8,16 +8,14 @@ import type (
 	java.lang.Iterable
 )
 
-const (
-	a = 55
-	b = 66
-	log = Logger::getLogger(str(\`*ns*`))
-)
+a := 55
+b := 66
+log := Logger::getLogger(str(\`*ns*`))
 
 test.fact("Most things are Expression",
 
 	{
-		const smaller = if a < b {
+		smaller := if a < b {
 			a
 		} else {
 			b
@@ -26,12 +24,10 @@ test.fact("Most things are Expression",
 	}, =>, 55,
 
 	{
-		const (
-			digits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-			squares = for d := lazy digits {
-				d * d
-			}
-		)
+		digits  := [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+		squares := for d := lazy digits {
+			d * d
+		}
 		squares
 	}, =>, [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
 )
@@ -56,15 +52,13 @@ test.fact("syntax",
 test.fact("can destructure",
 
 	{
-		const (
-			vec = [111, 222, 333, 444]
-			[a, b, c, d] = vec
-		)
+		vec          := [111, 222, 333, 444]
+		[a, b, c, d] := vec
 		b
 	}, =>, 222,
 
 	{
-		const vec = [111, 222, 333, 444]
+		vec := [111, 222, 333, 444]
 
 		func theSecond([a, b, c, d]) {
 			b
@@ -73,23 +67,19 @@ test.fact("can destructure",
 	}, =>, 222,
 
 	{
-		const (
-			vec = [111, 222, 333, 444]
-			[first, rest...] = vec
-		)
+		vec              := [111, 222, 333, 444]
+		[first, rest...] := vec
 		rest
 	}, =>, [222, 333, 444],
 
 	{
-		const (
-			dict = {AAA: 11,  BBB: 22,  CCC: 33,  DDD: 44}
-			{c: CCC, a: AAA} = dict
-		)
+		dict             := {AAA: 11,  BBB: 22,  CCC: 33,  DDD: 44}
+		{c: CCC, a: AAA} := dict
 		c
 	}, =>, 33,
 
 	{
-		const dict = {AAA: 11,  BBB: 22,  CCC: 33,  DDD: 44}
+		dict := {AAA: 11,  BBB: 22,  CCC: 33,  DDD: 44}
 
 		func extractCCC({c: CCC}) {
 			c
@@ -98,15 +88,13 @@ test.fact("can destructure",
 	}, =>, 33,
 
 	{
-		const (
-			planets = [
-				{NAME: "Mercury", RADIUS_KM: 2440},
-				{NAME: "Venus",   RADIUS_KM: 6052},
-				{NAME: "Earth",   RADIUS_KM: 6371},
-				{NAME: "Mars",    RADIUS_KM: 3390}
-			]
-			[_, _, {earthRadiusKm: RADIUS_KM}, _] = planets
-		)
+		planets := [
+			{NAME: "Mercury", RADIUS_KM: 2440},
+			{NAME: "Venus",   RADIUS_KM: 6052},
+			{NAME: "Earth",   RADIUS_KM: 6371},
+			{NAME: "Mars",    RADIUS_KM: 3390}
+		]
+		[_, _, {earthRadiusKm: RADIUS_KM}, _] := planets
 		earthRadiusKm
 	}, =>, 6371
 )
@@ -118,7 +106,7 @@ test.fact("Looping with tail recursion",
 			if isEmpty(vec) {
 				0
 			} else {
-				const x = first(vec)
+				x := first(vec)
 				x * x + sumSquares(rest(vec))
 			}
 		}
@@ -132,7 +120,7 @@ test.fact("Looping with tail recursion",
 				if isEmpty(v) {
 					accum
 				} else {
-					const x = first(v)
+					x := first(v)
 					recur(accum + x * x, rest(v))
 				}
 			}
@@ -147,7 +135,7 @@ test.fact("Looping with tail recursion",
 				if isEmpty(v) {
 					accum
 				} else {
-					const x int = first(v)
+					x int := first(v)
 					recur(accum + x * x, rest(v))
 				}
 			}
@@ -157,7 +145,7 @@ test.fact("Looping with tail recursion",
 
 	loop(vec=[], count = 0) {
 		if count < 10 {
-			const v = vec  conj  count
+			v := vec  conj  count
 			recur(v, count + 1)
 		} else {
 			vec
@@ -168,7 +156,7 @@ test.fact("Looping with tail recursion",
 
 test.fact("Curly Brace Blocks",
 	{
-		const product = {
+		product := {
 			log->info("doing the multiplication")
 			100 * 100
 		}
@@ -204,13 +192,11 @@ test.fact("Type switch",
 	]
 )
 
-test.fact("select",
+test.fact("select (1)",
 
 	{
-		const (
-			c1 = make(chan, 1)
-			c2 = make(chan, 1)
-		)
+		c1 := make(chan, 1)
+		c2 := make(chan, 1)
 		thread {
 			Thread::sleep(10)
 			c1 <- 111
@@ -225,10 +211,8 @@ test.fact("select",
 	}, =>, 22200,
 
 	{
-		const (
-			c1 = make(chan, 1)
-			c2 = make(chan, 1)
-		)
+		c1 := make(chan, 1)
+		c2 := make(chan, 1)
 		go func(){
 			Thread::sleep(10)
 			c1 <- 111
@@ -240,15 +224,15 @@ test.fact("select",
 		case x = <-c2:
 			x * 100
 		}
-	}, =>, 22200,
+	}, =>, 22200
+)
 
+test.fact("select (2)",
 	{
-		const (
-			c1 = make(chan, 1)
-			c2 = make(chan, 1)
-		)
+		c1 := make(chan, 1)
+		c2 := make(chan, 1)
 		go {
-			for i := times(10000) { x := i }
+			for i := times(10000) { var x = i }
 			c1 <: 111
 		}
 		go {
@@ -265,10 +249,8 @@ test.fact("select",
 	}, =>, 22200,
 
 	{
-		const (
-			c1 = make(chan)
-			c2 = make(chan)
-		)
+		c1 := make(chan)
+		c2 := make(chan)
 		go func(){
 			Thread::sleep(10)
 			<-c1
@@ -284,19 +266,18 @@ test.fact("select",
 		}
 	}, =>, "wrote to c2",
 
+)
+
+test.fact("select (3)",
 	{
-		const (
-			c1 = make(chan, 1)
-			c2 = make(chan, 1)
-		)
-		go {
-			withOutStr(
-				for i := times(1000000000) { println(i) }
-			)
-			<:c1
-		}
+		c1 := make(chan, 1)
+		c2 := make(chan, 1)
 		go {
 			<:c2
+		}
+		go {
+			Thread::sleep(10)
+			<:c1
 		}
 		<-go {
 			select {
@@ -309,10 +290,8 @@ test.fact("select",
 	}, =>, "wrote to c2",
 
 	{
-		const (
-			c1 = make(chan, 1)
-			c2 = make(chan)
-		)
+		c1 := make(chan, 1)
+		c2 := make(chan)
 		thread {
 			Thread::sleep(20)
 			c1 <- 111
@@ -385,12 +364,14 @@ test.fact("operators",
 	truthTable(func{$1 || $2}), =>, [false,  true,  true, true]
 )
 
-a := randInt(100)
-b := randInt(100)
-c := randInt(100)
-p := randInt(2) == 0
-q := randInt(2) == 0
-r := randInt(2) == 0
+var (
+	a = randInt(100)
+	b = randInt(100)
+	c = randInt(100)
+	p = randInt(2) == 0
+	q = randInt(2) == 0
+	r = randInt(2) == 0
+)
 
 test.fact("precedence",
 	^a * b         , =>, (^a) * b,
@@ -431,24 +412,22 @@ test.fact("vars",
 test.fact("for",
 
 	{
-		const (
-			fib = [1, 1, 2, 3, 5, 8]
-			fibSquared = for x := lazy fib {
-				x * x
-			}
-		)
+		fib := [1, 1, 2, 3, 5, 8]
+		fibSquared := for x := lazy fib {
+			x * x
+		}
 		fibSquared
 	}, =>, [1, 1, 4, 9, 25, 64],
 
 	withOutStr({
-		const fib = [1, 1, 2, 3, 5, 8]
+		fib := [1, 1, 2, 3, 5, 8]
 		for x := lazy fib {
 			print(" ", x)
 		}
 	}), =>, "",
 
 	withOutStr({
-		const fib = [1, 1, 2, 3, 5, 8]
+		fib := [1, 1, 2, 3, 5, 8]
 		for x := range fib {
 			print(" ", x)
 		}

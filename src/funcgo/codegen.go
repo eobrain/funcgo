@@ -17,9 +17,9 @@ import (
 	insta "instaparse/core"
 	symbols "funcgo/symboltable"
 )
-//import type (
-//	java.math.BigInteger
-//)
+import type (
+	java.util.List
+)
 
 const kAsyncRules = set{
 	GOROUTINE,
@@ -396,6 +396,7 @@ func codeGenerator(symbolTable, isGoscript) {
 		EXPRESSIONLIST: blankJoin,
 		EXPRESSIONS:	blankJoin,
 		CONSTS:	blankJoin,
+		ASSIGNS:	blankJoin,
 		COMMACONSTS:	blankJoin,
 		BLOCK: func (expr){
 			expr
@@ -407,10 +408,28 @@ func codeGenerator(symbolTable, isGoscript) {
 		TAKESLICE: func(xs, i){ listStr("take", i, xs) },
 		DROPSLICE: func(xs, i){ listStr("drop", i, xs) },
 		TOPWITHCONST: declBlockFunc("let"),
+		TOPWITHASSIGN: declBlockFunc("let"),
 		WITHCONST: declBlockFunc("let"),
+		WITHASSIGN: declBlockFunc("let"),
 		LOOP:	   declBlockFunc("loop"),
 		CONST: func(identifier, expression) {
 			str(identifier, " ", expression)
+		},
+		ASSIGN: func(args...) {
+			const (
+				vArgs List = vec(args)
+				opPos = vArgs->indexOf(":=")
+				n = vArgs->size()
+			)
+			if  n % 2 != 1 || (n - 1) / 2 != opPos {
+				throw(new Exception(
+					"LHS and RHS of := do not  match" str blankJoin(vArgs)
+				))
+			} else {
+				" " s.join (for i := lazy \`range`(opPos) {
+					str(vArgs[i], " ", vArgs[opPos + 1 + i])
+				})
+			}
 		},
 		VECDESTRUCT: vecStr,
 		DICTDESTRUCT: func{str('{', (" " s.join $*), "}")},

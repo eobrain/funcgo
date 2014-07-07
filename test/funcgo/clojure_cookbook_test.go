@@ -91,11 +91,7 @@ test.fact("Concatenate strings",
 
 test.fact("Can concatenate consts.",
 	{
-		const(
-			firstName = "John"
-			lastName = "Doe"
-			age = 42
-		)
+		firstName, lastName, age := "John", "Doe", 42
 		str(lastName, ", ", firstName, " - age: ", age)
 	},
         =>, "Doe, John - age: 42"
@@ -118,7 +114,7 @@ test.fact("turn characters into a string",
 
 test.fact("make file from lines (with newlines)",
 	{
-		const lines = [
+		lines := [
 			"#! /bin/bash\n",
 			"du -a ./ | sort -n -r\n"
 		]
@@ -129,13 +125,11 @@ test.fact("make file from lines (with newlines)",
 
 test.fact("Making CSV from header vector of rows",
 	{
-		const(
-			header = "first_name,last_name,employee_number\n"
-			rows = [
-				"luke,vanderhart,1",
-				"ryan,neufeld,2"
-			]
-		)
+		header := "first_name,last_name,employee_number\n"
+		rows := [
+			"luke,vanderhart,1",
+			"ryan,neufeld,2"
+		]
 		str(header, ...("\n" interpose rows))
 	},
         =>, `first_name,last_name,employee_number
@@ -228,9 +222,9 @@ test.fact("char function does the opposite",
 
 
 test.fact("str is the easiest way of formatting values into a string",
-	
+
 	{
-		const me = {FIRST_NAME: "Eamonn", FAVORITE_LANGUAGE: "Funcgo"}
+		me := {FIRST_NAME: "Eamonn", FAVORITE_LANGUAGE: "Funcgo"}
 		str("My name is ", me(FIRST_NAME),
 			", and I really like to program in ", me(FAVORITE_LANGUAGE))
 	},
@@ -323,14 +317,14 @@ test.fact("Extract strings from a larger string using reSeq",
 		func mentions(tweet) {
 			/(@|#)(\w+)/ reSeq tweet
 		}
-		
+
 		mentions("So long, @earth, and thanks for all the #fish. #goodbyes")
 	},
         =>, [["@earth", "@", "earth"], ["#fish", "#", "fish"], ["#goodbyes", "#", "goodbyes"]],
 
         {
 		// Capture and decompose a phone number and its title
-		const rePhoneNumber = /(\w+): \((\d{3})\) (\d{3}-\d{4})/  
+		rePhoneNumber := /(\w+): \((\d{3})\) (\d{3}-\d{4})/
 		rePhoneNumber reSeq "Home: (919) 555-1234, Work: (191) 555-1234"
 	},
         =>, [["Home: (919) 555-1234", "Home", "919", "555-1234"],
@@ -341,7 +335,7 @@ test.fact("Extract strings from a larger string using reSeq",
 
 test.fact("simple string replacement via string.replace",
 	{
-		const aboutMe = "My favorite color is green!"
+		aboutMe := "My favorite color is green!"
 		string.replace(aboutMe, "green", "red")
 	},
 	=>, "My favorite color is red!",
@@ -624,7 +618,7 @@ test.fact("Easy to implement fuzzy equality",
 
 	{
 		func fuzzyEq(tolerance, x double, y double) {
-			const diff = Math::abs(x - y)
+			diff := Math::abs(x - y)
 			diff < tolerance
 		}
 		fuzzyEq(0.01, 10, 10.000000000001)
@@ -681,7 +675,7 @@ test.fact("Can do trig",
 
 	{
 		// Calculating the distance in kilometers between two points on Earth
-		const earthRadius = 6371.009
+		earthRadius := 6371.009
 
 		func degreesToRadians(point) {
 			func(x){Math::toRadians(x)} mapv point
@@ -692,10 +686,8 @@ test.fact("Can do trig",
 		func distanceBetween(p1, p2) {
 			distanceBetween(p1, p2, earthRadius)
 		} (p1, p2, radius) {
-			const(
-				[lat1, long1] = degreesToRadians(p1)
-				[lat2, long2] = degreesToRadians(p2)
-			)
+			[lat1, long1] := degreesToRadians(p1)
+			[lat2, long2] := degreesToRadians(p2)
 			radius * Math::acos(
 				Math::sin(lat1) * Math::sin(lat2)
 				+
@@ -723,7 +715,7 @@ test.fact("Can convert numbers to various bases",
 	{
 		func toBase(radix, n) { n Integer::toString radix }
 		{
-			const baseTwo = toBase partial 2
+			baseTwo := toBase partial 2
 			baseTwo(9001)
 		}
 	},
@@ -734,10 +726,8 @@ test.fact("Doing statistics",
 
 	{
 		func mean(coll) {
-			const(
-				sum = +(...coll)
-				count = count(coll)
-			)
+			sum := +(...coll)
+			count := count(coll)
 			if isPos(count) {
 				sum / count
 			} else {
@@ -756,19 +746,15 @@ test.fact("Doing statistics",
 
 	{
 		func median(coll) {
-			const(
-				sorted  = sort(coll)
-				cnt     = count(sorted)
-				halfway = int(cnt / 2)
-			)
+			sorted  := sort(coll)
+			cnt     := count(sorted)
+			halfway := int(cnt / 2)
 			if isOdd(cnt) {
 				sorted[halfway]
 			} else {
-				const(
-					bottom    = halfway - 1
-					bottomVal = sorted[bottom]
-					topVal    = sorted[halfway]
-				)
+				bottom    := halfway - 1
+				bottomVal := sorted[bottom]
+				topVal    := sorted[halfway]
 				mean([bottomVal, topVal])
 			}
 		}

@@ -38,22 +38,22 @@ func primes(c) {
 test.fact("can read and write channels in parallel",
 
 	{
-		const c = make(chan)
+		c := make(chan)
 		go sum(3, 4, c)
 		<-c
 	}, =>, 7,
 
 	{
-		const c = make(chan)
+		c := make(chan)
 		go primes(c)
 		[<-c, <-c, <-c, <-c]
 	}, =>, [2, 3, 5, 7],
 
 	{
-		const c = make(chan)
+		c := make(chan)
 		go primes(c)
 		{
-			const c2 = make(chan)
+			c2 := make(chan)
 			go func{
 				c2 <- [<-c, <-c, <-c, <-c]
 			}()
@@ -66,22 +66,22 @@ test.fact("can read and write channels in parallel",
 test.fact("can read and write channels in parallel using buffered channels",
 
 	{
-		const c = make(chan, 10)
+		c := make(chan, 10)
 		go sum(3, 4, c)
 		<-c
 	}, =>, 7,
 
 	{
-		const c = make(chan, 10)
+		c := make(chan, 10)
 		go primes(c)
 		[<-c, <-c, <-c, <-c]
 	}, =>, [2, 3, 5, 7],
 
 	{
-		const c = make(chan, 10)
+		c := make(chan, 10)
 		go primes(c)
 		{
-			const c2 = make(chan, 10)
+			c2 := make(chan, 10)
 			go func{
 				c2 <- [<-c, <-c, <-c, <-c]
 			}()
@@ -94,13 +94,13 @@ test.fact("can read and write channels in parallel using buffered channels",
 test.fact("can read and write channels in parallel using lightweight processes",
 
 	{
-		const c = make(chan, 10)
+		c := make(chan, 10)
 		go { c <: 3 + 4 }
 		<-c
 	}, =>, 7,
 
 	{
-		const c = make(chan, 10)
+		c := make(chan, 10)
 		go {
 			c <: 2
 			c <: 3
@@ -112,10 +112,10 @@ test.fact("can read and write channels in parallel using lightweight processes",
 	}, =>, [2, 3, 5, 7],
 
 	{
-		const c = make(chan, 10)
+		c := make(chan, 10)
 		go primes(c)
 		{
-			const c2 = make(chan, 10)
+			c2 := make(chan, 10)
 			go {
 				c2 <: [<:c, <:c, <:c, <:c]
 			}
@@ -141,10 +141,8 @@ func fibonacci(c, quit) {
 test.fact("can use select to block on multiple things",
 
 	withOutStr({
-		const(
-			c = make(chan int)
-			quit = make(chan int)
-		)
+		c := make(chan int)
+		quit := make(chan int)
 		go func() {
 			for i := 0; i < 10; i++ {
 				println(<-c)
@@ -166,10 +164,8 @@ quit
 `,
 
 	withOutStr({
-		const(
-			c = make(chan int)
-			quit = make(chan int)
-		)
+		c := make(chan int)
+		quit := make(chan int)
 		go {
 			for i := 0; i < 10; i++ {
 				println(<:c)

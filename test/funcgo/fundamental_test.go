@@ -29,3 +29,12 @@ test.fact("if",
 test.fact("const",
 	parse("{const(a=b;c=d)e;f}"), =>, parse("let([a,b,c,d],e,f)")
 )
+
+test.fact(":=",
+	parse("{a:=b;c:=d;e;f}"),      =>, parse("let([a,b, c,d],  e,f)"),
+	parse("{x,y:=a,b;e}"),         =>, parse("let([x,a, y,b],  e)"),
+	parse("{x,y,z:=a,b,c;e}"),     =>, parse("let([x,a, y,b, z,c],  e)"),
+	parse("{x,y,z,w:=a,b,c,d;e}"), =>, parse("let([x,a, y,b, z,c, w,d],  e)"),
+	parse("{a,b,c,d,e,f,g,h,i,j:=1,2,3,4,5,6,7,8,9,10;v}"),
+	=>, parse("let([a,1, b,2, c,3, d,4, e,5, f,6, g,7, h,8, i,9, j,10],  v)"),
+)
