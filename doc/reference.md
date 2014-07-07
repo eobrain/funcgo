@@ -272,6 +272,7 @@ First, lets look at an ordinary (non-tail) recursion
 				x * x + sumSquares(rest(vec))
 			}
 		}
+		sumSquares([3, 4, 5, 10])
 	=> 150
 ```
 
