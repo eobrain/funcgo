@@ -93,8 +93,7 @@ test.fact("Can concatenate consts.",
 	{
 		firstName, lastName, age := "John", "Doe", 42
 		str(lastName, ", ", firstName, " - age: ", age)
-	},
-        =>, "Doe, John - age: 42"
+	}, =>, "Doe, John - age: 42"
 )
 
 test.fact("Can concatenate vars.",
@@ -227,8 +226,7 @@ test.fact("str is the easiest way of formatting values into a string",
 		me := {FIRST_NAME: "Eamonn", FAVORITE_LANGUAGE: "Funcgo"}
 		str("My name is ", me(FIRST_NAME),
 			", and I really like to program in ", me(FAVORITE_LANGUAGE))
-	},
-        =>, "My name is Eamonn, and I really like to program in Funcgo",
+	},  =>, "My name is Eamonn, and I really like to program in Funcgo",
 
         str(...(" " interpose [1, 2.000, 3/1, 4/9])),
         =>, "1 2.0 3 4/9"
