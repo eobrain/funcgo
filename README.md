@@ -39,10 +39,13 @@ environment is configured correctly.
 
 #### 2. Convert your project into a Functional Go project.
 
-In your favorite text editor, edit the file `project.clj` and
-insert `[org.eamonn.funcgo/funcgo-lein-plugin "0.2.7"]` in *both* the
-dependencies section *and* the plugins section. You should end up with
-something like ...
+[![Clojars Project](http://clojars.org/org.eamonn.funcgo/funcgo-lein-plugin/latest-version.svg)](http://clojars.org/org.eamonn.funcgo/funcgo-lein-plugin)
+
+In your favorite text editor, edit the file `project.clj` and insert
+`[org.eamonn.funcgo/funcgo-lein-plugin "0.3.0"]` (or the latest
+version from clojars shown above) in *both* the dependencies section
+*and* the plugins section. You should end up with something like ...
+
 ```clj
 (defproject hello "0.1.0-SNAPSHOT"
   :description "FIXME: write description"
@@ -50,8 +53,8 @@ something like ...
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.eamonn.funcgo/funcgo-lein-plugin "0.2.7"]]
-  :plugins [ [org.eamonn.funcgo/funcgo-lein-plugin "0.2.7"]]
+                 [org.eamonn.funcgo/funcgo-lein-plugin "0.3.0"]]
+  :plugins [ [org.eamonn.funcgo/funcgo-lein-plugin "0.3.0"]]
   :main ^:skip-aot hello.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
@@ -236,14 +239,9 @@ that can be used without needing an `import` statement.
 
 #### Specifying local (immutable) variables
 ```go
-        const(
-                firstName = "John"
-                lastName  = "Doe"
-                age       = 42
-        )
-        str(lastName, ", ", firstName, " - age: ", age)
-        
-        =>, "Doe, John - age: 42"
+		firstName, lastName, age := "John", "Doe", 42
+		str(lastName, ", ", firstName, " - age: ", age)
+	=> "Doe, John - age: 42"
 ```
 
 In keeping with its orientation as a functional programming language,
@@ -265,16 +263,10 @@ You can create mutable variables using `var`, but these are global and
 changes are not propagated between threads, so you should avoid using
 them if possible.
 
-Note that in the previous two examples there is a single grouped
-`const` declaration but multiple separate individual `var`
-declarations. Actually either type of declaration can be grouped or
-individual, but for `const` it is better to use the grouped version
-for multiple declarations because it generates more efficient Clojure.
-
 #### Using vectors
 ```go
         into([], range(1, 20))
-        
+
         =>  [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
 ```
 
@@ -287,8 +279,8 @@ being passed as the first parameter of `into`.
 
 #### Getting cleaner syntax using infix notation
 ```go
-        [] into range(1, 20)
-        
+        []  into  range(1, 20)
+
         =>,  [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
 ```
 
@@ -300,11 +292,10 @@ sometimes lead to cleaner and more readable code.
 
 #### Specifying keyword and dictionary literals
 ```go
-		const me = {FIRST_NAME: "Eamonn", FAVORITE_LANGUAGE: "Funcgo"}
+		me := {FIRST_NAME: "Eamonn", FAVORITE_LANGUAGE: "Funcgo"}
 		str("My name is ", me(FIRST_NAME),
 			", and I really like to program in ", me(FAVORITE_LANGUAGE))
-    
-        => "My name is Eamonn, and I really like to program in Funcgo",
+	=> "My name is Eamonn, and I really like to program in Funcgo"
 ```
 
 The above example introduces a number of new language features.
@@ -322,8 +313,8 @@ were a function, using the key as the parameter to the function.
 
 #### Combining infix and functional programming
 ```go
-        str apply (" " interpose [1, 2.000, 3/1, 4/9])
-        
+        str  apply  (" "  interpose  [1, 2.000, 3/1, 4/9])
+
         => "1 2.0 3 4/9"
 ```
 
@@ -340,7 +331,7 @@ example of a function that takes a function as a parameter.  Here
 
 #### Calling function variadically
 ```go
-        str(...(" " interpose [1, 2.000, 3/1, 4/9]))
+        str(...(" "  interpose  [1, 2.000, 3/1, 4/9]))
 
         => "1 2.0 3 4/9"
 ```
@@ -383,20 +374,20 @@ for every character in the string.
 In this section are Funcgo versions of some of the Go examples
 from the [A Tour of Go][tour].
 
-#### Placement of `const`
+#### Placement of constant definitions
 ```go
 package main
 
 import "fmt"
 
-const Pi = 3.14
+Pi := 3.14
 
 func main() {
-	const World = "世界"
+	World := "世界"
 	fmt.Println("Hello", World)
 	fmt.Println("Happy", Pi, "Day")
 	{
-		const Truth = true
+		Truth := true
 		fmt.Println("Go rules?", Truth)
 	}
 }
@@ -407,7 +398,7 @@ Happy 3.14 Day
 Go rules? true
 ```
 
-One constraint on `const` expression is that, except for at the to
+One constraint on `:=` definitions is that, except for at the top
 level, they have to be at the beginning of a curly-brace block. So
 above we had to add an extra level of curlies to allow `Truth` to be
 defined at the bottom of the function.
@@ -469,7 +460,7 @@ func main() {
 	fmt.Println(Sqrt(100))
 }
 
-        
+
     => 10.000000000000007
 ```
 

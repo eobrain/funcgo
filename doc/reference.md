@@ -210,8 +210,27 @@ ClojureScript macros
 
 ## Const
 
-In Funcgo you should use `const` declarations for any value that is
+In Funcgo you should use constants for any value that is
 set once and never changed.
+
+```go
+...
+{
+	cljText   := core.Parse(inPath, fgoText, EXPR)
+	strWriter := new StringWriter()
+	writer    := new BufferedWriter(strWriter)
+	cljText writePrettyTo writer
+	strWriter->toString()
+}
+```
+As shown above, constants are defined using the `:=` operator.  
+
+There can only be a single contiguous group of contant declarations in
+each _block_ of expressions, and they must appear at the top of the
+block.  A block is either to top-level code if a file after the
+`import` statements, or some newline-separated expressions surrounded
+in curly braces.  The constants you define in a block can only be used
+inside that block.
 
 ```go
 ...
@@ -226,11 +245,8 @@ set once and never changed.
 }
 ```
 
-There can only be a single `const` section in each _block_ of
-expressions, where a block is either to top-level code if a file after
-the `import` statements, or some newline-separated expressions
-surrounded in curly braces.  The constants you define can only be used
-inside that block.
+As shown above, there is also an alternative syntax using the `const`
+keyword.  It too must be at the beginning of a block.
 
 ```go
 ...
@@ -252,11 +268,10 @@ First, lets look at an ordinary (non-tail) recursion
 			if isEmpty(vec) {
 				0
 			} else {
-				const x = first(vec)
+				x := first(vec)
 				x * x + sumSquares(rest(vec))
 			}
 		}
-		sumSquares([3, 4, 5, 10])
 	=> 150
 ```
 
@@ -272,7 +287,7 @@ could cause an infamous _stack overflow_ exception.
 				if isEmpty(v) {
 					accum
 				} else {
-					const x = first(v)
+					x := first(v)
 					recur(accum + x * x, rest(v))
 				}
 			}
@@ -316,12 +331,11 @@ number of parameters in the `loop`.
 ```go
 	loop(vec=[], count = 0) {
 		if count < 10 {
-			const v = vec  conj  count
+			v := vec  conj  count
 			recur(v, count + 1)
 		} else {
 			vec
 		}
-    }
 	=> [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 ```
 
@@ -335,7 +349,7 @@ sequence of expressions in a curly braces block.  The result of the
 last expression is returned as the result of the block.
 
 ```go
-		const product = {
+		product := {
 			log->info("doing the multiplication")
 			100 * 100
 		}
@@ -354,7 +368,7 @@ There are three forms of switch statement.
 ```go
 				switch count(remaining) {
 				case 1: {
-					const [expr] = remaining
+					[expr] := remaining
 					str(acc, " :else ", expr, ")")
 				}
 				case 2:
@@ -479,26 +493,17 @@ The case of the name is significant.  If it begins with an upper-case
 letter then it is exported and visible globally, otherwise it is
 private to the file it is declared in.
 
-As in Go, there are two different syntaxes for declaring vars.
 
 ```go
-initialBoard := [
+var initialBoard = [
 	[EE, KW, EE],
 	[EE, EE, EE],
 	[EE, KB, EE]
 ]
 ```
-The first syntax uses a the `:=` operator to declare a var and assign it
-a value.
 
-```go
-		aa, bb, cc := 111, 222, 333
-		aa + bb + cc
-	=> 666
-```
-
-You can do multiple assignments, declaring and initializing multiple
-vars as shown above.
+They use a syntax similar to the `const` construct.  They can be
+without parentheses as shown above.
 
 ```go
 		var (
@@ -509,8 +514,7 @@ vars as shown above.
 	=> 333
 ```
 
-The second syntax uses `var` in a way similar to the `const`
-construct.  It can use the grouped version of the syntax as shown
+Or it can use the grouped version of the syntax as shown
 above.
 
 ```go
@@ -532,13 +536,12 @@ a curly-bracket block.
 	=> "foo111"
 ```
 
-The second `var` syntax, unlike the first `:=` syntax allows type
-hints as shown above.
+If you want you can add type hints as shown above.
 
 ## If-Else
 
 ```go
-		filename = if isJvm { "main.go" } else { "main.gos" }
+		filename := if isJvm { "main.go" } else { "main.gos" }
 ```
 The above example shows the if-else expression.
 
@@ -581,44 +584,75 @@ switch expression).
 
 ## For loops
 
+There are three types of `for` expression.
+
 ```go
-		const (
-			fib = [1, 1, 2, 3, 5, 8]
-			fibSquared = for x := lazy fib {
-				x * x
-			}
-		)
+		fib        := [1, 1, 2, 3, 5, 8]
+		fibSquared := for x := lazy fib {
+			x * x
+		}
 		fibSquared
 	=> [1, 1, 4, 9, 25, 64]
 ```
 
+The "lazy" version returns a sequence that is the same length as the
+input sequence (given after `lazy`), with the body of the loop being
+executed for each member of the input sequence.
+
 ```go
-		const fib = [1, 1, 2, 3, 5, 8]
-		for x := range fib {
-			print(" ", x)
-		}
-	=> "  1  1  2  3  5  8"
+		fib        := [1, 1, 2, 3, 5, 8]
+		fibSquared := func(x){ x * x }  map  fib
+		fibSquared
+	=> [1, 1, 4, 9, 25, 64]
 ```
+
+As an aside, you can get the same result as the lazy `for` using the
+`map` function as shown above.
+
 ```go
-		const fib = [1, 1, 2, 3, 5, 8]
+		fib := [1, 1, 2, 3, 5, 8]
 		for x := lazy fib {
 			print(" ", x)
 		}
 	=> ""
 ```
 
+The reason that this construct is called "lazy", is shown in the example
+above where the body of the `for` does not return a value, but instead
+has a side-effect (writing on the console).  In this case the `print`
+is *not* executed.
+
+```go
+		fib := [1, 1, 2, 3, 5, 8]
+		for x := range fib {
+			print(" ", x)
+		}
+	=> "  1  1  2  3  5  8"
+```
+
+To cause such a side-effect body to be executed you can use the
+"range" form of the for loop as shown above.  It is not lazy, but will
+execute the body of the loop for each member of the input sequence.
+
+```go
+		for x := times 10 {
+			print(" ", x)
+		}
+	=> "  0  1  2  3  4  5  6  7  8  9"
+```
+
+The final form of the for loop is the "times" version, which executes
+its body the number of times specified after `times` as shown above.
 
 ## Asynchronous Channels
 
 ```go
-		const (
-			c1 = make(chan, 1)
-			c2 = make(chan, 1)
-		)
-		go func(){
+		c1 := make(chan, 1)
+		c2 := make(chan, 1)
+		thread {
 			Thread::sleep(10)
 			c1 <- 111
-		}()
+		}
 		c2 <- 222
 		select {
 		case x = <-c1:
@@ -643,12 +677,10 @@ JavaScript is single-threaded, instead you have to use a different
 syntax (using `<:` instead of `<-') for channel operations,
 
 ```go
-		const (
-			c1 = make(chan, 1)
-			c2 = make(chan, 1)
-		)
+		c1 := make(chan, 1)
+		c2 := make(chan, 1)
 		go {
-			for i := times(10000) { x := i }
+			for i := times(10000) { var x = i }
 			c1 <: 111
 		}
 		go {
@@ -669,10 +701,8 @@ These operations are restricted to being directly inside a `go {
 ... }` block as shown above.
 
 ```go
-		const (
-			c1 = make(chan, 1)
-			c2 = make(chan)
-		)
+		c1 := make(chan, 1)
+		c2 := make(chan)
 		thread {
 			Thread::sleep(20)
 			c1 <- 111
@@ -751,10 +781,8 @@ and put a vector on the right-hand-side.  Thus "unpacks" the vector
 assigning each element to the corresponding constant.
 
 ```go
-		const (
-			vec = [111, 222, 333, 444]
-			[a, b, c, d] = vec
-		)
+		vec          := [111, 222, 333, 444]
+		[a, b, c, d] := vec
 		b
     => 222
 ```
@@ -774,12 +802,10 @@ This also works for function arguments, where above we have used a
 function to extract the second element from the vector.
 
 ```go
-		const (
-			vec = [111, 222, 333, 444]
-			[first, rest...] = vec
-		)
+		vec              := [111, 222, 333, 444]
+		[first, rest...] := vec
 		rest
-	}, =>, [222, 333, 444]
+	=> [222, 333, 444]
 ```
 
 For variable-length vectors you can use ellipses `...` after the
@@ -788,12 +814,10 @@ example, above `first` gets the the first element in the vector and
 `rest` gets the remaining elements.
 
 ```go
-		const (
-			dict = {AAA: 11,  BBB: 22,  CCC: 33,  DDD: 44}
-			{c: CCC, a: AAA} = dict
-		)
+		dict             := {AAA: 11,  BBB: 22,  CCC: 33,  DDD: 44}
+		{c: CCC, a: AAA} := dict
 		c
-	=> 33,
+	=> 33
 ```
 
 You can also destructure dicts using the syntax shown above, where on
@@ -810,15 +834,13 @@ the left-hand-side each match is specified as _constant_`:` _key_.
 Dict destructuring also works in function parameters as shown above.
 
 ```go
-		const (
-			planets = [
-				{NAME: "Mercury", RADIUS_KM: 2440},
-				{NAME: "Venus",   RADIUS_KM: 6052},
-				{NAME: "Earth",   RADIUS_KM: 6371},
-				{NAME: "Mars",    RADIUS_KM: 3390}
-			]
-			[_, _, {earthRadiusKm: RADIUS_KM}, _] = planets
-		)
+		planets := [
+			{NAME: "Mercury", RADIUS_KM: 2440},
+			{NAME: "Venus",   RADIUS_KM: 6052},
+			{NAME: "Earth",   RADIUS_KM: 6371},
+			{NAME: "Mars",    RADIUS_KM: 3390}
+		]
+		[_, _, {earthRadiusKm: RADIUS_KM}, _] := planets
 		earthRadiusKm
 	=> 6371
 ```
@@ -841,7 +863,7 @@ In practice, you usually only need to add types in a very few places
 in your code.
 
 ```go
-	const consoleReader ConsoleReader = newConsoleReader()
+	consoleReader ConsoleReader := newConsoleReader()
 ```
 
 Above is an example of a constant being declared of `ConsoleReader`

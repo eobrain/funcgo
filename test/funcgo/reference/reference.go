@@ -135,7 +135,7 @@ test.fact("Looping with tail recursion",
 				if isEmpty(v) {
 					accum
 				} else {
-					x int := first(v)
+					const x int = first(v)
 					recur(accum + x * x, rest(v))
 				}
 			}
@@ -270,13 +270,13 @@ test.fact("select (2)",
 
 test.fact("select (3)",
 	{
-		c1 := make(chan, 1)
-		c2 := make(chan, 1)
+		c1 := make(chan)
+		c2 := make(chan)
 		go {
 			<:c2
 		}
 		go {
-			Thread::sleep(10)
+			for i := times(10000) { var x = i }
 			<:c1
 		}
 		<-go {
@@ -384,11 +384,6 @@ test.fact("precedence",
 
 test.fact("vars",
 	{
-		aa, bb, cc := 111, 222, 333
-		aa + bb + cc
-	}, =>, 666,
-
-	{
 		var (
 			pp = 111
 			qq = 222
@@ -412,10 +407,16 @@ test.fact("vars",
 test.fact("for",
 
 	{
-		fib := [1, 1, 2, 3, 5, 8]
+		fib        := [1, 1, 2, 3, 5, 8]
 		fibSquared := for x := lazy fib {
 			x * x
 		}
+		fibSquared
+	}, =>, [1, 1, 4, 9, 25, 64],
+
+	{
+		fib        := [1, 1, 2, 3, 5, 8]
+		fibSquared := func(x){ x * x }  map  fib
 		fibSquared
 	}, =>, [1, 1, 4, 9, 25, 64],
 
@@ -428,9 +429,20 @@ test.fact("for",
 
 	withOutStr({
 		fib := [1, 1, 2, 3, 5, 8]
+		func(x){ print(" ", x) }  map  fib
+	}), =>, "",
+
+	withOutStr({
+		fib := [1, 1, 2, 3, 5, 8]
 		for x := range fib {
 			print(" ", x)
 		}
-	}), =>, "  1  1  2  3  5  8"
+	}), =>, "  1  1  2  3  5  8",
+
+	withOutStr({
+		for x := times 10 {
+			print(" ", x)
+		}
+	}), =>, "  0  1  2  3  4  5  6  7  8  9"
 
 )

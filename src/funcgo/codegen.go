@@ -21,7 +21,7 @@ import type (
 	java.util.List
 )
 
-const kAsyncRules = set{
+kAsyncRules := set{
 	GOROUTINE,
 	GOBLOCK,
 	THREADROUTINE,
@@ -89,11 +89,9 @@ func codeGenerator(symbolTable, isGoscript) {
 	}
 
 	func splitPath(path String) {
-		const(
-			slash = path->lastIndexOf(int('/'))
-			beforeSlash = subs(path, 0, slash + 1)
-			afterSlash = subs(path, slash + 1)
-		)
+		slash       := path->lastIndexOf(int('/'))
+		beforeSlash := subs(path, 0, slash + 1)
+		afterSlash  := subs(path, slash + 1)
 		[
 			s.replace(beforeSlash, '/', '.'),
 			s.replace(afterSlash, /\.gos?$/, "")
@@ -102,10 +100,8 @@ func codeGenerator(symbolTable, isGoscript) {
 
 	func declBlockFunc(typ) {
 		func(xs...){
-			const(
-				consts = butlast(xs)
-				expressions = last(xs)
-			)
+			consts      := butlast(xs)
+			expressions := last(xs)
 			str("(", typ, " [",
 				" " s.join consts,
 				"] ",
@@ -270,15 +266,13 @@ func codeGenerator(symbolTable, isGoscript) {
 		TYPESWITCH: func(x, args...) {
 			loop(acc="(cond", remaining=args) {
 				func typeCase() {
-					const (
-						typ = first(remaining)
-						expr = second(remaining)
-					)
+					typ  := first(remaining)
+					expr := second(remaining)
 					str(acc, " ", listStr("instance?", typ, x), " ", expr)
 				}
 				switch count(remaining) {
 				case 1: {
-					const [expr] = remaining
+					[expr] := remaining
 					str(acc, " :else ", expr, ")")
 				}
 				case 2:
@@ -350,11 +344,11 @@ func codeGenerator(symbolTable, isGoscript) {
 			)
 		},
 		PRIMARRAYVARDECL: func(identifier, number, primtype) {
-			const elements = blankJoin(...(for _ := times readString(number) {"0"}))
+			elements := blankJoin(...(for _ := times readString(number) {"0"}))
 			listStr("def", identifier, listStr("vector-of", ":" str primtype, elements))
 		},
 		ARRAYVARDECL: func(identifier, number, typ) {
-			const elements = blankJoin(...(for _ := times readString(number) {"nil"}))
+			elements := blankJoin(...(for _ := times readString(number) {"nil"}))
 			listStr("def", identifier, listStr("vector", elements))
 		},
 		VARDECL1: vardecl,
@@ -416,11 +410,9 @@ func codeGenerator(symbolTable, isGoscript) {
 			str(identifier, " ", expression)
 		},
 		ASSIGN: func(args...) {
-			const (
-				vArgs List = vec(args)
-				opPos = vArgs->indexOf(":=")
-				n = vArgs->size()
-			)
+			vArgs List := vec(args)
+			opPos      := vArgs->indexOf(":=")
+			n          := vArgs->size()
 			if  n % 2 != 1 || (n - 1) / 2 != opPos {
 				throw(new Exception(
 					"LHS and RHS of := do not  match" str blankJoin(vArgs)
@@ -452,7 +444,7 @@ func codeGenerator(symbolTable, isGoscript) {
 		ADDOP: identity,
 		RELOP: identity,
 		FUNCTIONDECL:	func(identifier, function) {
-			const defn = if isPublic(identifier) { "defn" } else { "defn-" }
+			defn := if isPublic(identifier) { "defn" } else { "defn-" }
 			listStr(defn, identifier, function)
 		},
 		FUNCLIKEDECL:	func(funclike, identifier, function) {
@@ -474,10 +466,8 @@ func codeGenerator(symbolTable, isGoscript) {
 				if isEmpty(fields) {
 					""
 				} else {
-					const(
-						fs = fields[0] s.split / +/
-						fsOnly = func(s String){!s->startsWith("^")} filter fs
-					)
+					fs     := fields[0] s.split / +/
+					fsOnly := func(s String){!s->startsWith("^")} filter fs
 					str(
 						"Object (toString [this] ",
 						listStr("str", `"{"`, ` " " ` s.join fsOnly, `"}"`),
@@ -570,13 +560,11 @@ func codeGenerator(symbolTable, isGoscript) {
 			str(`^`, typ, " ", identifier)
 		},
 		TYPEDIDENTIFIERS: func(args...) {
-			const(
-				typ = last(args)
-				identifiers = butlast(args)
-				decls = for identifier := lazy identifiers {
+			typ         := last(args)
+			identifiers := butlast(args)
+			decls       := for identifier := lazy identifiers {
 					str(`^`, typ, " ", identifier)
-				}
-			)
+			}
 			blankJoin(...decls)
 		},
 		IMPORTED:	  func{"." s.join $*},
@@ -642,7 +630,7 @@ func codeGenerator(symbolTable, isGoscript) {
 		},
 		JAVASTATIC:	 func{"/" s.join $*},
 		TYPENAME:	 func(segments...){
-			const typ = "." s.join segments
+			typ := "." s.join segments
 			if !hasType(typ) {
 				throw(new Exception(format(
 					`type "%s" does not appear in type imports %s`,
@@ -698,29 +686,25 @@ func req(head, tail) {
 }
 
 func packageclauseFunc(symbolTable, path String, isGoscript, isSync) {
-	const (
-		[parent, name] = splitPath(path)
-	)
+	[parent, name] := splitPath(path)
 	if isGoscript {
 		symbolTable symbols.PackageCreated "js"
 	}
 	func(imported, importDecls String) {
-		const (
-			fullImported = parent str imported
-			hasImports = importDecls->contains(":require ")
-			hasMacroImports = importDecls->contains(":require-macros ")
-			xtraImports = if hasImports {
-				[]
-			} else {
-				req(":require", syncImports(isGoscript, isSync))
-			}
-			xtraMacroImports = if hasMacroImports {
-				[]
-			} else {
-				req(":require-macros", macroSyncImports(isGoscript, isSync))
-			}
-			imports = concat([importDecls], xtraMacroImports, xtraImports)
-		)
+		fullImported     := parent str imported
+		hasImports       := importDecls->contains(":require ")
+		hasMacroImports  := importDecls->contains(":require-macros ")
+		xtraImports      := if hasImports {
+			[]
+		} else {
+			req(":require", syncImports(isGoscript, isSync))
+		}
+		xtraMacroImports := if hasMacroImports {
+			[]
+		} else {
+			req(":require-macros", macroSyncImports(isGoscript, isSync))
+		}
+		imports          := concat([importDecls], xtraMacroImports, xtraImports)
 		if imported != name {
 			throw(new Exception(str(
 				`Got package "`, imported, `" instead of expected "`,
@@ -742,7 +726,7 @@ func importDeclFunc(isGoscript, isSync) {
 	func() {
 		""
 	} (importSpecs...) {
-		const imports = importSpecs concat syncImports(isGoscript, isSync)
+		imports := importSpecs concat syncImports(isGoscript, isSync)
 		listStr(":require", ...imports)
 	}
 }
@@ -751,7 +735,7 @@ func macroImportDeclFunc(isGoscript, isSync) {
 	func() {
 		""
 	} (importSpecs...) {
-		const imports = importSpecs concat macroSyncImports(isGoscript, isSync)
+		imports := importSpecs concat macroSyncImports(isGoscript, isSync)
 		listStr(":require-macros", ...imports)
 	}
 }
@@ -761,7 +745,7 @@ func usesAsync(parsed) {
 		if isEmpty(vector) {
 			false
 		} else {
-			const f = first(vector)
+			f := first(vector)
 			if isVector(f) && usesAsync(f) {
 				true
 			} else {
@@ -778,17 +762,15 @@ func usesAsync(parsed) {
 
 // Return the Clojure code generated from the given parse tree.
 func Generate(path String, parsed, isSync) {
-	const (
-		symbolTable = symbols.New()
-		isGoscript  = path->endsWith(".gos")
-		isSync = !usesAsync(parsed)
-		codeGen = codeGenerator(symbolTable, isGoscript) += {
-			PACKAGECLAUSE:   packageclauseFunc(symbolTable, path, isGoscript, isSync),
-			IMPORTDECL:      importDeclFunc(isGoscript, isSync) ,
-			MACROIMPORTDECL: macroImportDeclFunc(isGoscript, isSync)
-		}
-		clj = insta.transform(codeGen, parsed)
-	)
+	symbolTable := symbols.New()
+	isGoscript  := path->endsWith(".gos")
+	isSync      := !usesAsync(parsed)
+	codeGen     := codeGenerator(symbolTable, isGoscript) += {
+		PACKAGECLAUSE:   packageclauseFunc(symbolTable, path, isGoscript, isSync),
+		IMPORTDECL:      importDeclFunc(isGoscript, isSync) ,
+		MACROIMPORTDECL: macroImportDeclFunc(isGoscript, isSync)
+	}
+	clj         := insta.transform(codeGen, parsed)
 	symbols.CheckAllUsed(symbolTable)
 	clj
 }

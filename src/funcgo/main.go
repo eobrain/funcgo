@@ -27,7 +27,7 @@ import type (
 	jline.console.ConsoleReader
 )
 
-const commandLineOptions = [
+commandLineOptions := [
         ["-r", "--repl",  "start a Funcgo interactive console"],
         ["-s", "--sync", "No asynchronous channel constructs"],
         ["-n", "--nodes", "print out the parse tree that the parser produces"],
@@ -39,7 +39,7 @@ const commandLineOptions = [
 // A version of pprint that preserves type hints.
 // See https://groups.google.com/forum/#!topic/clojure/5LRmPXutah8
 func prettyPrint(obj, writer) {
-        const origDispatch = \`pprint/*print-pprint-dispatch*`
+        origDispatch := \`pprint/*print-pprint-dispatch*`
         pprint.withPprintDispatch(
                 func(o) {
 			if met := meta(o); met {
@@ -76,28 +76,26 @@ func writePrettyTo(cljText, writer BufferedWriter) {
 
 
 func compileExpression(inPath, fgoText) {
-	const (
-		cljText = core.Parse(inPath, fgoText, EXPR)
-		strWriter = new StringWriter()
-		writer = new BufferedWriter(strWriter)
-	)
+	cljText   := core.Parse(inPath, fgoText, EXPR)
+	strWriter := new StringWriter()
+	writer    := new BufferedWriter(strWriter)
 	cljText writePrettyTo writer
 	strWriter->toString()
 }
 
 func newConsoleReader() {
-	const consoleReader = new ConsoleReader()
+	consoleReader := new ConsoleReader()
 	consoleReader->setPrompt("fgo=>     ")
 	consoleReader
 }
 
 func repl(){
-	const consoleReader ConsoleReader = newConsoleReader()
+	consoleReader ConsoleReader := newConsoleReader()
 	loop(){
-		const fgoText = consoleReader->readLine()
+		fgoText := consoleReader->readLine()
 		if !string.isBlank(fgoText) {
 			try{
-				const cljText = first(core.Parse("repl.go", fgoText, EXPR))
+				cljText := first(core.Parse("repl.go", fgoText, EXPR))
 				println("Clojure: ", cljText)
 				println("Result:  ", eval(readString(cljText)))
 			} catch Exception e {
@@ -112,19 +110,17 @@ func repl(){
 }
 
 func CompileString(inPath, fgoText) {
-	const (
-		cljText = core.Parse(inPath, fgoText)
-		strWriter = new StringWriter()
-		writer = new BufferedWriter(strWriter)
-	)
+	cljText   := core.Parse(inPath, fgoText)
+	strWriter := new StringWriter()
+	writer    := new BufferedWriter(strWriter)
 	cljText writePrettyTo writer
 	strWriter->toString()
 }
 
 func compileFile(inFile File, root File, opts) {
-	const splitRoot = reMatches(/([^\.]+)(\.[a-z]+)?(\.gos?)/, inFile->getPath)
+	splitRoot := reMatches(/([^\.]+)(\.[a-z]+)?(\.gos?)/, inFile->getPath)
 	if !isNil(splitRoot) {
-		const [_, inPath, suffixExtra, suffix] = splitRoot
+		[_, inPath, suffixExtra, suffix] := splitRoot
 		compileFile(
 			inFile,
 			root,
@@ -134,28 +130,23 @@ func compileFile(inFile File, root File, opts) {
 		)
 	}
 } (inFile File, root File, inPath, opts, suffixExtra) {
-        const(
-                outFile = io.file(string.replace(inPath, /\.go(s?)$/, ".clj$1" str suffixExtra))
-        )
+	outFile := io.file(string.replace(inPath, /\.go(s?)$/, ".clj$1" str suffixExtra))
         if opts(FORCE) || outFile->lastModified() < inFile->lastModified() {
-		const(
-			prefixLen = root->getAbsolutePath()->length()
-			relative = subs(inFile->getAbsolutePath(), prefixLen + 1)
-		)
+		prefixLen := root->getAbsolutePath()->length()
+		relative  := subs(inFile->getAbsolutePath(), prefixLen + 1)
                 print("  ", relative, " ")
 		{
-			const(
-				fgoText = slurp(inFile)
-				start = if suffixExtra == "" {SOURCEFILE} else {NONPKGFILE}
-				cljText String = core.Parse(
+			fgoText        := slurp(inFile)
+			start          := if suffixExtra == "" {SOURCEFILE} else {NONPKGFILE}
+			cljText String := core.Parse(
 					relative,
 					fgoText,
 					start,
 					opts(NODES), opts(SYNC)
 				)
-				// TODO(eob) open using with-open
-				writer = io.writer(outFile)
-			)
+			// TODO(eob) open using with-open
+			writer         := io.writer(outFile)
+
 			writer->write(str(";; Compiled from ", inFile, "\n"))
 			if opts(UGLY) {
 				writer->write(cljText)
@@ -181,7 +172,7 @@ func compileFile(inFile File, root File, opts) {
 func compileTree(root File, opts) {
 	println(root->getName())
 	for f := range fileSeq(root) {
-		const inFile File = f
+		inFile File := f
 		try {
 			compileFile(inFile, root, opts)
 		} catch Exception e {
@@ -203,12 +194,11 @@ func printError(cmdLine) {
 // Convert Funcgo files to clojure files, using the commandLineOptions
 // to parse the arguments.
 func Compile(args...) {
-	const(
-		cmdLine   = args cli.parseOpts commandLineOptions
-		otherArgs = cmdLine(ARGUMENTS)
-		opts      = cmdLine(OPTIONS)
-		here      = io.file(".")
-	)
+	cmdLine   := args cli.parseOpts commandLineOptions
+	otherArgs := cmdLine(ARGUMENTS)
+	opts      := cmdLine(OPTIONS)
+	here      := io.file(".")
+
 	if cmdLine(ERRORS) || opts(HELP){
 		println(cmdLine(SUMMARY))
 	}else{
