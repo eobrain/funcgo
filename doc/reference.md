@@ -645,6 +645,57 @@ execute the body of the loop for each member of the input sequence.
 The final form of the for loop is the "times" version, which executes
 its body the number of times specified after `times` as shown above.
 
+## Exceptions
+
+Funcgo supports exceptions in a way similar to Java.
+
+```go
+		eval := try{
+			main := loadString(clj(id))
+			withOutStr(main())
+		} catch Throwable e {
+			str(e)
+		}
+```
+
+The above example shows an example of catching an exception.  A
+difference from Java is that try-catch is an expression, thus in the
+above case if the exception is caught the `eval` constant will be set
+to the value of `str(e)`.
+
+```go
+		try {
+
+			throw(new AssertionError("foo"))
+
+		} catch OutOfMemoryError e {
+			"out of memory"
+		} catch AssertionError e {
+			"assertion failed: "  str  e->getMessage()
+		} finally {
+			"useless"
+		}
+	=> "assertion failed: foo"
+```
+
+The above example shows a more complete example, including how you can
+throw your own exceptions.  Note, that although the `finally`
+expression is evaluated, its result is ignored so it is not useful in
+this case.
+
+```go
+				<-mutex   // grab mutex
+				try {
+					i := dangerous->get(0)
+					dangerous->set(0, i + 1)
+				} finally {
+					mutex <- true   // release mutex
+				}
+```
+
+Above is an example of a more useful applicaton of `finally` where we
+are depending on the side-effect of evaluating its expression.
+
 ## Asynchronous Channels
 
 ```go
@@ -850,6 +901,36 @@ You can nest these destructurings to any depth.  For example the above
 example plucks the `earthRadiusKm` constant from two-levels down inside
 a vector of dicts.  We are using the convention of using the `_`
 identifier for unused values.
+
+## Mutable State
+
+## Quoting and Unquoting
+
+## Invoking Functions
+
+## Java Object Fields and Methods
+
+## Defining Functions
+
+## Closures
+
+## Function-Like Macros
+
+## Interfaces
+
+## Structs
+
+## new
+
+## Labels
+
+## Literals
+
+## Regular Expressions
+
+## Vectors
+
+## Dictionaries
 
 ## Type Hints
 

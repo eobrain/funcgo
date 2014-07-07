@@ -4,13 +4,14 @@ import (
 	test "midje/sweet"
 )
 import type (
+	java.util.ArrayList
 	java.util.logging.Logger
 	java.lang.Iterable
 )
 
-a := 55
-b := 66
-log := Logger::getLogger(str(\`*ns*`))
+var a = 55
+var b = 66
+var log Logger = Logger::getLogger(str(\`*ns*`))
 
 test.fact("Most things are Expression",
 
@@ -445,4 +446,39 @@ test.fact("for",
 		}
 	}), =>, "  0  1  2  3  4  5  6  7  8  9"
 
+)
+
+
+test.fact("exceptions",
+	{
+		try {
+			throw(new AssertionError("foo"))
+		} catch OutOfMemoryError e {
+			"out of memory"
+		} catch AssertionError e {
+			"assertion failed: "  str  e->getMessage()
+		} finally {
+			"useless"
+		}
+	}, =>, "assertion failed: foo",
+
+	{
+		mutex     := make(chan, 1)
+		dangerous := new ArrayList()
+		dangerous->add(0)
+		mutex <- true  // initialize mutex
+		for _ := times 1000 {
+			thread {
+				<-mutex   // grab mutex
+				try {
+					i := dangerous->get(0)
+					dangerous->set(0, i + 1)
+				} finally {
+					mutex <- true   // release mutex
+				}
+			}
+		}
+		Thread::sleep(100)
+		dangerous->get(0)
+	}, =>, 1000
 )
