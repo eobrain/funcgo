@@ -101,6 +101,10 @@ looking at the Functional Go code there, you can also examine the
 `project.clj` file which is a working example of using the Leiningen
 plugin.
 
+If you want to see a complete web app, that generates both
+Clojurescript and Clojure, see
+[the source for www.funcgo.org][fgosite].
+
 There is also do `lein fgoc --repl` to bring up the beginnings of a
 REPL that you can use to explore...
 ```
