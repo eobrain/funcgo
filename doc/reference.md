@@ -314,7 +314,7 @@ There is also an equivalent way of getting the same result using the
 				if isEmpty(v) {
 					accum
 				} else {
-					const x int = first(v)
+					x int := first(v)
 					recur(accum + x * x, rest(v))
 				}
 			}
@@ -660,7 +660,7 @@ Funcgo supports exceptions in a way similar to Java.
 
 The above example shows an example of catching an exception.  A
 difference from Java is that try-catch is an expression, thus in the
-above case if the exception is caught the `eval` constant will be set
+above case if the exception is caught the `eval` constant will be set 
 to the value of `str(e)`.
 
 ```go

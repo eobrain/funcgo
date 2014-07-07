@@ -136,7 +136,7 @@ test.fact("Looping with tail recursion",
 				if isEmpty(v) {
 					accum
 				} else {
-					const x int = first(v)
+					x int := first(v)
 					recur(accum + x * x, rest(v))
 				}
 			}
