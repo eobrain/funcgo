@@ -1,3 +1,5 @@
+> [Tour][fgotour] - [FAQ][faq] - [Reference][ref]
+
 # funcgo
 
 Funcgo is a compiler that converts Functional Go into Clojure, to run
@@ -553,3 +555,4 @@ version 1.0 or (at your option) any later version.
 [fgosite]: https://github.com/eobrain/fgosite
 [fgotour]: http://tour.funcgo.org
 [ref]: doc/reference.md
+[faq]: doc/FAQ.md
