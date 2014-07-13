@@ -5,7 +5,7 @@
 The Funcgo compiler is likely to only ever emit Clojure.  However,
 that means it already has good support for the JVM and JavaScript
 targets, and in addition there are projects to have Clojure target
-Android and the CLR. and perhaps there will be more targets in future.
+Android and the CLR, and perhaps there will be more targets in future.
 If there is enough interest, Funcgo can tweak its Clojure output
 appropriately for new targets, as it already does for Clojure versus
 ClojureScript.
