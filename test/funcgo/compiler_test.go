@@ -230,8 +230,10 @@ test.fact("can create vectors",
 )
 
 test.fact("can escape identifier that are not legal Funcgo identifiers",
-        parse(`\range`), =>, parsed("range"),
-        parse(`\for`), =>, parsed("for")
+        parse(`\range\`), =>, parsed("range"),
+        parse(`\for\`), =>, parsed("for"),
+        parse(`\+>*&%%*&$\`), =>, parsed(`+>*&%%*&$`),
+        parse(`5 + \+>*&%%*&$\ * 3`), =>, parsed(`(+ 5 (* +>*&%%*&$ 3))`),
 )
 
 test.fact("can have multiple expressions inside func",
@@ -242,8 +244,10 @@ test.fact("can have multiple expressions inside func",
 
 test.fact("operator functions",
 	parse(`func ^(x, y) { Math::pow(x, y)}`), =>, parsed(`(defn- bit-xor [x y] (Math/pow x y))`),
-	parse(`func +(x, y) {x  str  y}`), =>, parsed(`(defn- + [x y] (str x y))`)
-//	parse(`func **(x, y) { Math::pow(x, y)}`), =>, parsed(`(defn- ** [x y] (Math/pow x y))`),
+	parse(`func +(x, y) {x  str  y}`), =>, parsed(`(defn- + [x y] (str x y))`),
+	parse(`func ∈(elem, coll) { coll  isContains  elem}`),
+	=>, parsed(`(defn- ∈ [elem coll] (contains? coll elem))`),
+	parse(`a ∈ b`), =>, parsed(`(∈ a b)`),
 )
 
 
@@ -267,11 +271,11 @@ test.fact("Can destructure vectors using const",
         =>,
         parsed(`(let [[a b] ab] (f a b))`),
 
-        parse(`{const([x, more...] = indexes) f(x, more)}`), 
+        parse(`{const([x, more...] = indexes) f(x, more)}`),
         =>,
         parsed(`(let [[x & more] indexes] (f x more))`),
 
-        parse(`{const [x, more...] = indexes; f(x, more)}`), 
+        parse(`{const [x, more...] = indexes; f(x, more)}`),
         =>,
         parsed(`(let [[x & more] indexes] (f x more))`),
 
@@ -322,7 +326,7 @@ test.fact("can destructure dicts using const and func",
         =>,
         parsed(`(let [{the-x :x, the-y :y} point] (f the-x the-y))`),
 
-        parse(`{const({name: NAME, {[pages, \isbn10]: KEYS}: DETAILS} = book) f(name,pages,\isbn10)}`),
+        parse(`{const({name: NAME, {[pages, \isbn10\]: KEYS}: DETAILS} = book) f(name,pages,\isbn10\)}`),
         =>,
         parsed(`(let [{name :name, {[pages isbn10] :keys} :details} book] (f name pages isbn10))`),
 
@@ -348,7 +352,7 @@ test.fact("can destructure dicts using :=",
         =>,
         parsed(`(let [{the-x :x, the-y :y} point] (f the-x the-y))`),
 
-        parse(`{{name: NAME, {[pages, \isbn10]: KEYS}: DETAILS} := book; f(name,pages,\isbn10)}`),
+        parse(`{{name: NAME, {[pages, \isbn10\]: KEYS}: DETAILS} := book; f(name,pages,\isbn10\)}`),
         =>,
         parsed(`(let [{name :name, {[pages isbn10] :keys} :details} book] (f name pages isbn10))`),
 

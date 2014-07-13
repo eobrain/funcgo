@@ -140,17 +140,18 @@ nonpkgfile = NL? (expressions|topwithconst|topwithassign) _
                    bitand = !and <'&'>
                    bitandnot = !and <'&^'>
 	   javastatic = typename _ <'::'> _ JavaIdentifier
-	     <JavaIdentifier> = #'\b[\p{L}_][\p{L}_\p{Digit}]*\b'
+	     <JavaIdentifier> = #'\b[\p{L}_][\p{L}_\p{Nd}]*\b'
                               | underscorejavaidentifier
                underscorejavaidentifier = <'_'> JavaIdentifier
 	   <Identifier> = !Keyword  (identifier | dashidentifier | isidentifier | mutidentifier |
 			  escapedidentifier)
              Keyword = '\bconst\b' | '\bfor\b' | '\bnew\b' | '\bpackage\b' | '\brange\b' | '\bif\b'
-	     identifier = #'\b[\p{L}_][\p{L}_\p{Digit}]*\b'
+	     identifier = #'[\p{L}_[\p{S}&&[^\p{Punct}]]][\p{L}_[\p{S}&&[^\p{Punct}]]\p{Nd}]*'
 	     dashidentifier = <'_'> identifier
 	     isidentifier = <'is'> #'\p{L}' identifier
 	     mutidentifier = <'mutate'> #'\p{L}' identifier
-	     escapedidentifier = <'\\'> #'\b[\p{L}_][\p{L}_\p{Digit}]*\b'
+	     (* escapedidentifier = <'\\'> #'\b[\p{L}_\p{Sm}][\p{L}_\p{Sm}\p{Nd}]*\b' *)
+	     escapedidentifier = <'\\'> #'[^\\]+' <'\\'>
      (*shortvardecl =  identifier _ <':='> _ expr
                    | identifier _ <','> _ identifier _ <':='> _ expr  _ <','> _ expr
                    | identifier _ <','> _ identifier _<','> _ identifier _
@@ -275,8 +276,8 @@ nonpkgfile = NL? (expressions|topwithconst|topwithassign) _
                    variadic = Identifier Ellipsis
                    <ReturnBlock> = <'{'> _ <'return'> _ expr _ <'}'>
          <Operand> = Literal | OperandName | label | islabel | new  | <'('> expr <')'>       (*|MethodExpr*)
-           label = #'\b\p{Lu}[\p{Lu}_0-9#\.]*\b'
-	   islabel = <'IS_'> #'\b\p{Lu}[\p{Lu}_0-9#\.]*\b'
+           label = #'\b\p{Lu}[\p{Lu}_\p{Nd}#\.]*\b'
+	   islabel = <'IS_'> #'\b\p{Lu}[\p{Lu}_\p{Nd}#\.]*\b'
            <Literal> = BasicLit | veclit | dictlit | setlit | structlit | functionlit | shortfunctionlit
              functionlit = <'func'> _ Function
              shortfunctionlit = <'func'> _ <'{'> _ expr _ <'}'>

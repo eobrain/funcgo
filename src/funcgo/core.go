@@ -27,7 +27,10 @@ func Parse(path, fgo) {
 } (path, fgo, startRule) {
 	Parse(path, fgo, startRule, false, false)
 } (path, fgo, startRule, isNodes, isSync) {
-        const parsed = parser.Parse(string.replace(fgo, /\t/, "        "), START, startRule)
+        parsed := parser.Parse(
+		string.replace(fgo, /\t/, "        "),
+		START, startRule
+	)
         if insta.isFailure(parsed) {
 		throw(new Exception(str(withOutStr(failure.pprintFailure(parsed)))))
         } else {

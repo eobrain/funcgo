@@ -480,23 +480,23 @@ test.fact("Can convert between different types of language things (note Funcgo m
 
 	// If you only want the name part of a keyword.
 	// (We have to escape into Clojure for this.)
-	name(\`:user/valid?`),
+	name(\:user/valid?\),
 	=>, "valid?",
 
 	// If you only want the namespace
-	namespace(\`:user/valid?`),
+	namespace(\:user/valid?\),
 	=>, "user",
 
-	str(\`:user/valid?`),
+	str(\:user/valid?\),
 	=>, ":user/valid?",
 
-	str(\`:user/valid?`)->substring(1),
+	str(\:user/valid?\)->substring(1),
 	=>, "user/valid?",
 
 	keyword(quote(produce.onions)),
-	=>, \`:produce/onions`,
+	=>, \:produce/onions\,
 
-	symbol(str(\`:produce/onions`)->substring(1)),
+	symbol(str(\:produce/onions\)->substring(1)),
 	=>, quote(produce.onions),
 
 	// keyword and symbol also have 2-argument (infix) versions
@@ -504,7 +504,7 @@ test.fact("Can convert between different types of language things (note Funcgo m
 		var shoppingArea = "bakery"
 		shoppingArea keyword "bagels"
 	},
-	=>, \`:bakery/bagels`,
+	=>, \:bakery/bagels\,
 
 	shoppingArea symbol "cakes",
 	=>, quote(bakery.cakes)
@@ -540,7 +540,7 @@ test.fact("Funcgo has numbers",
 
 	// Result of integer division is a ratio type
 	type(1 / 3),
-	=>, \`clojure.lang.Ratio`,
+	=>, \clojure.lang.Ratio\,
 
 	3 * (1 / 3),
 	=>, 1N,
@@ -601,7 +601,7 @@ test.fact("Can coerce numbers.",
 	1 withPrecision (7M / 9),
 	=>, 0.8M,
 
-	withPrecision(1, ROUNDING, \FLOOR, (7M / 9)),
+	withPrecision(1, ROUNDING, \FLOOR\, (7M / 9)),
 	=>, 0.7M,
 
 	// note non-big arithmetic not effected by withPrecision
