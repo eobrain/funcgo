@@ -443,6 +443,7 @@ func codeGenerator(symbolTable, isGoscript) {
 		MULOP: identity,
 		ADDOP: identity,
 		RELOP: identity,
+		OPERATOR: identity,
 		FUNCTIONDECL:	func(identifier, function) {
 			defn := if isPublic(identifier) { "defn" } else { "defn-" }
 			listStr(defn, identifier, function)

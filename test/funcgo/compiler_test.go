@@ -224,9 +224,9 @@ test.fact("can create vectors",
         parse("[a,b]"), =>, parsed("[a b]"),
         parse("[a,b,c]"), =>, parsed("[a b c]"),
         parse("[foo,bar]"), =>, parsed("[foo bar]"),
-        parse(" [ a, b, c ]"), =>, parsed("[a b c]"),
-        parse(" [ a , b , c  ]"), =>, parsed("[a b c]"),
-        parse(" [   a  , b,     c ]  "), =>, parsed("[a b c]")
+        parse(" [ d, e, f ]"), =>, parsed("[d e f]"),
+        parse(" [ g , h , i  ]"), =>, parsed("[g h i]"),
+        parse(" [   j  , k,     l ]  "), =>, parsed("[j k l]")
 )
 
 test.fact("can escape identifier that are not legal Funcgo identifiers",
@@ -239,6 +239,13 @@ test.fact("can have multiple expressions inside func",
         parse(`func(){b;c}`),         =>, parsed(`(fn [] (do b c))`),
         parse(`func(){b;if c {d}}`), =>, parsed(`(fn [] (do b (when c d)))`)
 )
+
+test.fact("operator functions",
+	parse(`func ^(x, y) { Math::pow(x, y)}`), =>, parsed(`(defn- bit-xor [x y] (Math/pow x y))`),
+	parse(`func +(x, y) {x  str  y}`), =>, parsed(`(defn- + [x y] (str x y))`)
+//	parse(`func **(x, y) { Math::pow(x, y)}`), =>, parsed(`(defn- ** [x y] (Math/pow x y))`),
+)
+
 
 test.fact("can have nested consts",
         parse(`{const(a=1)x;{const(b=2)y}}`), =>, parsed(`(let [a 1] x (let [b 2] y))`),

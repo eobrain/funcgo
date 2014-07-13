@@ -103,6 +103,13 @@ nonpkgfile = NL? (expressions|topwithconst|topwithassign) _
 	   constswitchcase = <'case'> _ constantlist | <'default'>
 	     constantlist = expr {_ <','> _ expr}
 	       <Constant> = label | BasicLit | veclit | dictlit | setlit | structlit
+     operator =
+                 or
+                |and
+                |'<-'|'<:'|equals|noteq|'<'|'<='|'>='|'>'
+                |'+'|'-'|bitor|bitxor
+                |'*'|'/'|mod|shiftleft|shiftright|bitand|bitandnot
+                |'+='|'-='
      precedence0 = precedence1
                  | precedence0 _nonNL symbol _nonNL precedence1
        symbol = ( Identifier <'.'> )? Identifier
@@ -254,7 +261,7 @@ nonpkgfile = NL? (expressions|topwithconst|topwithassign) _
                                    (ReturnBlock|Blocky)
              typedmethodimpl = Identifier _ <'('>  _ parameters? _ <')'> _ typename _
                                    (ReturnBlock|Blocky)
-         functiondecl = <'func'> _ Identifier _ Function
+         functiondecl = <'func'> _ (Identifier|operator) _ Function
          funclikedecl = <'func'> _ <'<'> _ symbol _ <'>'> _ Identifier _ Function
            <Function> = FunctionPart | functionparts
              functionparts = FunctionPart _ FunctionPart {_ FunctionPart}
@@ -314,7 +321,7 @@ nonpkgfile = NL? (expressions|topwithconst|topwithassign) _
 	     dictlit = '{' _ ( dictelement _ {<','> _ dictelement} )? (_ <','>)? _ '}'
                dictelement = expr _ <':'> _ expr
              NotType = 'func' | 'set'
-             structlit = !NotType typename _ <'{'> ( _ expr _ {<','> _ expr} )? _ (<','> _)? <'}'> 
+             structlit = !NotType typename _ <'{'> ( _ expr _ {<','> _ expr} )? _ (<','> _)? <'}'>
              setlit = <'set'> _ <'{'> ( _ expr _ {<','> _ expr} )? _ <'}'>
            new = <'new'> <__> typename
            <OperandName> = symbol | NonAlphaSymbol                           (*| QualifiedIdent*)
