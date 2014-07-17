@@ -1,18 +1,19 @@
 // Operations on matrices, stored as sequences of row vectors
-
 package matrix
+import "clojure/core"
 exclude ( +, * )
-import (
-	"funcgo/reference/contract"
-	r "funcgo/reference/row"
-)
 
-rowCount := count
+// Begin private functions
+
 func colCount(m) { count(first(m)) }
-
-func +(m1, m2) {
-	map(r.+, m1, m2)
+func dotProduct(v1, v2) {
+	core.+  reduce  map(core.*, v1, v2)
 }
+func vecSum(a, b) { map(core.+, a, b) }
+
+// Begin exported functions
+
+func +(m1, m2) { map(vecSum, m1, m2) }
 
 func Transpose(m) {
 	firstColumnT := first map m
@@ -23,18 +24,10 @@ func Transpose(m) {
 	 }
 }
 
-
-
-
 func *(m1, m2) {
-	contract.Require(func{ colCount(m1) == rowCount(m2) })
-	contract.Ensure(
-		func{ rowCount($1)==rowCount(m1) && colCount($1)==colCount(m2) },
-
-		for m1row := lazy m1 {
-			for m2col := lazy Transpose(m2) {
-				m1row  r.*  m2col
-			}
+	for m1row := lazy m1 {
+		for m2col := lazy Transpose(m2) {
+			m1row  dotProduct  m2col
 		}
-	)
+	}
 }

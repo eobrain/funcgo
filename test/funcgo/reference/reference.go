@@ -487,15 +487,17 @@ test.fact("exceptions",
 test.fact("you can transpose matrices",
 	{
 		m := [
-			[1.0, 2.0, 3.0],
-			[4.0, 5.0, 6.0]  ]
+			[1, 2, 3],
+			[4, 5, 6]
+		]
 
 		matrix.Transpose(m)
 
 	}, =>, [
-		[1.0, 4.0],
-		[2.0, 5.0],
-		[3.0, 6.0]  ]
+		[1, 4],
+		[2, 5],
+		[3, 6]
+	]
 )
 
 
@@ -509,7 +511,7 @@ test.fact("you can multiply matrices together",
 
 		a  matrix.*  b
 
-	}, =>, [[15 + 24]],
+	}, =>, [[39]],
 
 	{
 		m := [
@@ -525,8 +527,8 @@ test.fact("you can multiply matrices together",
 		m  matrix.*  mT
 
 	}, =>, [
-		[1 + 4 + 9,   4 + 10 + 18 ],
-		[4 + 10 + 18, 16 + 25 + 36 ]
+		[14, 32],
+		[32, 77]
 	]
 )
 

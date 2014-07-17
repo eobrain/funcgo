@@ -225,7 +225,7 @@ set once and never changed.
 ```
 As shown above, constants are defined using the `:=` operator.  
 
-There can only be a single contiguous group of contant declarations in
+There can only be a single contiguous group of constant declarations in
 each _block_ of expressions, and they must appear at the top of the
 block.  A block is either to top-level code if a file after the
 `import` statements, or some newline-separated expressions surrounded
@@ -475,15 +475,140 @@ However, identifiers referring to Java entities are *not* mangled.
 These are any identifiers in `import type` statements, anything before
 or after a `::` and anything after a `->`.
 
-And finally you can avoid mangling by using a backslash and back-quotes:
+You can avoid mangling by surrounding arbitrary closure code in
+backslashes:
 
 ```go
-        const origDispatch = \`pprint/*print-pprint-dispatch*`
+        origDispatch := \pprint/*print-pprint-dispatch*\
 ```
 
 The above example uses this escaped identifier syntax to refer to the
 `pprint/*print-pprint-dispatch*` Clojure identifier which has the
 "earmuff" characters not allowed by Funcgo.
+
+### Operator Overloading
+
+You can redefine any of the built-in operators.
+
+```go
+package operator
+import test "midje/sweet"
+exclude ( ^, + )
+
+func ^(x, y) {
+	Math::pow(x, y)
+}
+
+func +(x, y) {
+	x  str  y
+}
+
+test.fact("Can redefine existing operators",
+	2 ^ 3,         =>, 8.0,
+	10 ^ 2,        =>, 100.0,
+	"foo" + "bar", =>, "foobar"
+)
+```
+
+The above example shows how you can simply use an operator as the name
+of a two-parameter function. The precedence of the built-in operator
+is preserved when you use it in the normal infix way.
+
+Note above the use of the `exclude` directive, which prevents
+importing the given operators from the built-in package.  Without the
+exclude you will get warnings about functions being redefined.
+
+```go
+func \**\(x, y) {
+    Math::pow(x, y)
+}
+
+test.fact("Can use new operators",
+     2 \**\ 3,  =>, 8.0,
+    10 \**\ 2,  =>, 100.0
+)
+```
+
+If you want to define your own operators that are not existing
+built-in operators then you will have to use the Clojure escape syntax
+to define and use them, as shown above.
+
+```go
+// Operations on matrices, stored as sequences of row vectors
+package matrix
+import "clojure/core"
+exclude ( +, * )
+
+// Begin private functions
+
+func colCount(m) { count(first(m)) }
+func dotProduct(v1, v2) {
+	core.+  reduce  map(core.*, v1, v2)
+}
+func vecSum(a, b) { map(core.+, a, b) }
+
+// Begin exported functions
+
+func +(m1, m2) { map(vecSum, m1, m2) }
+
+func Transpose(m) {
+	firstColumnT := first map m
+	if colCount(m) == 1 {
+		 [firstColumnT]
+	 } else {
+		 firstColumnT cons Transpose(rest map m)
+	 }
+}
+
+func *(m1, m2) {
+	for m1row := lazy m1 {
+		for m2col := lazy Transpose(m2) {
+			m1row  dotProduct  m2col
+		}
+	}
+}
+```
+
+Above is an example of a simple matrix package supporting matrix
+addition, transpose, and multiplication.  The operators are exported
+in the same way as capitalized functions for use in other packages.
+However, note that in other packages they must be qualified by the
+package as shown below.
+
+```go
+import (
+	...
+	"funcgo/reference/matrix"
+)
+...
+		a := [[3, 4]]
+		b := [
+			[5],
+			[6]
+		]
+
+		a  matrix.*  b
+
+	=>  [[39]],
+
+	{
+		m := [
+			[1, 2, 3],
+			[4, 5, 6]
+		]
+		mT := [
+			[1, 4],
+			[2, 5],
+			[3, 6]
+		]
+
+		m  matrix.*  mT
+
+	=>  [
+		[14, 32],
+		[32, 77]
+	]
+```
 
 ## Vars
 
@@ -693,7 +818,7 @@ this case.
 				}
 ```
 
-Above is an example of a more useful applicaton of `finally` where we
+Above is an example of a more useful application of `finally` where we
 are depending on the side-effect of evaluating its expression.
 
 ## Asynchronous Channels
