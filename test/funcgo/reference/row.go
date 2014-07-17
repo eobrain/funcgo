@@ -2,7 +2,7 @@
 
 package row
 
-exclude +, *
+exclude (+, *)
 import (
 	"clojure/core"
 	"funcgo/reference/contract"
