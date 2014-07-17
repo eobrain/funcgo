@@ -280,7 +280,7 @@ The above example shows the `sumSquares` function that returns the sum
 of squares of a vector of numbers.  It is implemented as the square of
 the first element plus the recursive sum of squares of the rest of the
 vector.  This works fine for small vectors but for large vectors it
-could cause an infamous _stack overflow_ exception.
+could cause one of the infamous _stack overflow_ exception.
 
 ```go
 		func sumSquares(vec) {
@@ -302,11 +302,11 @@ The above example avoids this stack overflow by using the special
 `recur` syntax to recursively call the containing function.  However
 `recur` must be in _tail position_, which means that the function
 needs to be re-arranged to add an inner recursive function that passes
-down as accumulator variable.  This version can be called on
+down an accumulator variable.  This version can be called on
 arbitrarily long vectors without blowing your stack.
 
-There is also an equivalent way of getting the same result using the
-`loop` construct.
+There is also an equivalent way of getting the same result without
+using an inner function by using instead the `loop` construct.
 
 ```go
 		func sumSquares(vec) {

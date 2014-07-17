@@ -76,6 +76,18 @@ b.xxx
 )
 
 
+test.fact("can exclude built-ins",
+        compileString("foo.go", `
+package foo
+exclude ( +, * )
+a
+`),
+        =>, str(
+		`(ns foo (:gen-class) (:refer-clojure :exclude [+ *])) (set! *warn-on-reflection* true) a`
+	)
+)
+
+
 func parse(expr) {
 	parse(expr, [], [])
 } (expr, pkgs) {
@@ -243,11 +255,12 @@ test.fact("can have multiple expressions inside func",
 )
 
 test.fact("operator functions",
-	parse(`func ^(x, y) { Math::pow(x, y)}`), =>, parsed(`(defn- bit-xor [x y] (Math/pow x y))`),
-	parse(`func +(x, y) {x  str  y}`), =>, parsed(`(defn- + [x y] (str x y))`),
+	parse(`func ^(x, y) { Math::pow(x, y)}`), =>, parsed(`(defn bit-xor [x y] (Math/pow x y))`),
+	parse(`func +(x, y) {x  str  y}`), =>, parsed(`(defn + [x y] (str x y))`),
 	parse(`func ∈(elem, coll) { coll  isContains  elem}`),
-	=>, parsed(`(defn- ∈ [elem coll] (contains? coll elem))`),
+	=>, parsed(`(defn ∈ [elem coll] (contains? coll elem))`),
 	parse(`a ∈ b`), =>, parsed(`(∈ a b)`),
+	parse(`func \**\(x, y) { Math::pow(x, y)}`), =>, parsed(`(defn ** [x y] (Math/pow x y))`),
 )
 
 
@@ -397,7 +410,7 @@ test.fact("bit expressions are supported",
 test.fact("quoting",
 	parse("quote(foo(a))"),           =>, parsed("'(foo a)"),
 	parseNoPretty("syntax foo(a)"),     =>, parsedNoPretty("`(foo a)"),
-	parseNoPretty("syntax \\`(foo a)`"), =>, parsedNoPretty("`(foo a)"),
+	parseNoPretty("syntax \\(foo a)\\"), =>, parsedNoPretty("`(foo a)"),
 
 	parseNoPretty(`syntax fred(x, unquote x, lst, unquotes lst, 7, 8, NINE)`),
 	=>,

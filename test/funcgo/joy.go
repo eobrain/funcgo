@@ -6,6 +6,7 @@ import type (
 	java.util.concurrent.{ExecutorService, Executors}
 )
 
+
 var matrix = [
 	[1,2,3],
 	[4,5,6],
@@ -123,26 +124,29 @@ func fakeShuffle(xs) {
 	}
 }
 
-// Fake shuffle to make test deterministic
-var shuffle = fakeShuffle
+{
+	// Fake shuffle to make test deterministic
+	shuffle := fakeShuffle
 
-test.fact("fake shuffle is actually rotate",
-	shuffle([111,222,333,444]), =>, [222,333,444,111],
-	shuffle([111,222,333,444]), =>, [333,444,111,222],
-	shuffle([111,222,333,444]), =>, [444,111,222,333],
-	shuffle([111,222,333,444]), =>, [111,222,333,444],
-	shuffle([111,222,333,444]), =>, [222,333,444,111],
-	shuffle([111,222,333,444]), =>, [333,444,111,222],
-	shuffle([111,222,333,444]), =>, [444,111,222,333],
-	shuffle([111,222,333,444]), =>, [111,222,333,444]
-)
+	test.fact("fake shuffle is actually rotate",
+		shuffle([111,222,333,444]), =>, [222,333,444,111],
+		shuffle([111,222,333,444]), =>, [333,444,111,222],
+		shuffle([111,222,333,444]), =>, [444,111,222,333],
+		shuffle([111,222,333,444]), =>, [111,222,333,444],
+		shuffle([111,222,333,444]), =>, [222,333,444,111],
+		shuffle([111,222,333,444]), =>, [333,444,111,222],
+		shuffle([111,222,333,444]), =>, [444,111,222,333],
+		shuffle([111,222,333,444]), =>, [111,222,333,444]
+	)
 
 
-func chooseMove([[mover, mpos], [_, enemyPos]]) {
-	[
-		mover,
-		func{$1 isGoodMove enemyPos} some shuffle(kingMoves(mpos))
-	]
+	func chooseMove([[mover, mpos], [_, enemyPos]]) {
+		[
+			mover,
+			func{$1 isGoodMove enemyPos} some shuffle(kingMoves(mpos))
+		]
+	}
+
 }
 
 doReset()

@@ -2,6 +2,7 @@ package reference
 
 import (
 	test "midje/sweet"
+	"funcgo/reference/matrix"
 )
 import type (
 	java.util.ArrayList
@@ -11,7 +12,7 @@ import type (
 
 var a = 55
 var b = 66
-var log Logger = Logger::getLogger(str(\`*ns*`))
+var log Logger = Logger::getLogger(str(\*ns*\))
 
 test.fact("Most things are Expression",
 
@@ -482,3 +483,53 @@ test.fact("exceptions",
 		dangerous->get(0)
 	}, =>, 1000
 )
+
+test.fact("you can transpose matrices",
+	{
+		m := [
+			[1.0, 2.0, 3.0],
+			[4.0, 5.0, 6.0]  ]
+
+		matrix.Transpose(m)
+
+	}, =>, [
+		[1.0, 4.0],
+		[2.0, 5.0],
+		[3.0, 6.0]  ]
+)
+
+
+test.fact("you can multiply matrices together",
+	{
+		a := [[3, 4]]
+		b := [
+			[5],
+			[6]
+		]
+
+		a  matrix.*  b
+
+	}, =>, [[15 + 24]],
+
+	{
+		m := [
+			[1, 2, 3],
+			[4, 5, 6]
+		]
+		mT := [
+			[1, 4],
+			[2, 5],
+			[3, 6]
+		]
+
+		m  matrix.*  mT
+
+	}, =>, [
+		[1 + 4 + 9,   4 + 10 + 18 ],
+		[4 + 10 + 18, 16 + 25 + 36 ]
+	]
+)
+
+
+
+

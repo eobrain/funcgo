@@ -79,8 +79,8 @@ func codeGenerator(symbolTable, isGoscript) {
 
 	// Capitalized
 	func isPublic(identifier) {
-		// TODO(eob) handle general Unicode
-		(/^[A-Z]/ reFind identifier) || identifier == "main"
+		// not lowercode
+		!(/^\p{Ll}/ reFind identifier) || identifier == "main" ||(/^bit-/ reFind identifier)
 	}
 
 	// Return a function that always returns the given constant string.
@@ -169,6 +169,9 @@ func codeGenerator(symbolTable, isGoscript) {
 		IMPORTDECLS: blankJoin,
 		IMPORTSPEC: importSpec,
 		EXTERNIMPORTSPEC: externImportSpec,
+		EXCLUDE: func(symbols...) {
+			listStr(":refer-clojure", ":exclude", vecStr(...symbols))
+		},
 		TYPEIMPORTDECL: func() {
 			""
 		} (importSpecs...) {

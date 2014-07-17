@@ -9,7 +9,7 @@ func parse(expr) {
 }
 
 test.fact("func",
-	parse("func foo(b,c){d;e}"),       =>, parse("\\`defn-`(foo,[b,c],do(d,e))"),
+	parse("func foo(b,c){d;e}"),       =>, parse("\\defn-\\(foo,[b,c],do(d,e))"),
 	parse("func Foo(b,c){d;e}"),       =>, parse("defn(Foo,[b,c],do(d,e))"),
 	parse("func<defn> Foo(b,c){d;e}"), =>, parse("func Foo(b,c){d;e}")
 )

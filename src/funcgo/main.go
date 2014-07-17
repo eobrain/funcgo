@@ -39,7 +39,7 @@ commandLineOptions := [
 // A version of pprint that preserves type hints.
 // See https://groups.google.com/forum/#!topic/clojure/5LRmPXutah8
 func prettyPrint(obj, writer) {
-        origDispatch := \`pprint/*print-pprint-dispatch*`
+        origDispatch := \pprint/*print-pprint-dispatch*\
         pprint.withPprintDispatch(
                 func(o) {
 			if met := meta(o); met {

@@ -5,21 +5,14 @@
 Funcgo is a compiler that converts Functional Go into Clojure, to run
 on the JVM or as JavaScript.
 
-## Status
-
-The compiler and language is still in alpha. You are welcome to try
-it, and any feedback would be more than welcome, but be aware that the
-language is not yet stable and it is likely there will be
-non-backward-compatible changes before the 1.0 release.
-
 ## Try It Out
 
 Without installing anything you can try the [online tour][fgotour]
-where you can type Functional Go and see how it converts to Clojure
+where you can type Funcgo and see how it converts to Clojure
 and evaluates.
 
 (By the way the online tour is itself an example web application that
-[uses Functional Go][fgosite] for both it server side (JVM) and its
+[uses Funcgo][fgosite] for both it server side (JVM) and its
 client side (JS).
 
 ## Quick Start
@@ -37,7 +30,7 @@ lein run
 This should print out `Hello, World!`, showing that your Clojure
 environment is configured correctly.
 
-#### 2. Convert your project into a Functional Go project.
+#### 2. Convert your project into a Funcgo project.
 
 [![Clojars Project](http://clojars.org/org.eamonn.funcgo/funcgo-lein-plugin/latest-version.svg)](http://clojars.org/org.eamonn.funcgo/funcgo-lein-plugin)
 
@@ -62,14 +55,14 @@ version from clojars shown above) in *both* the dependencies section
 
 Delete the existing Clojure file `src/hello/core.clj`
 
-#### 3. Write Functional Go
+#### 3. Write Funcgo
 
-Create a new Functional Go file `src/hello/core.go` containing ...
+Create a new Funcgo file `src/hello/core.go` containing ...
 ```go
 package core
 
 func _main(args...) {
-	println("Hello, World from Functional Go")
+	println("Hello, World from Funcgo")
 }
 ```
 
@@ -79,10 +72,10 @@ file) do ...
 lein fgoc
 lein run
 ```
-This should print out `Hello, World from Functional Go`.
+This should print out `Hello, World from Funcgo`.
 
 Congratulations, you have just written and executed your first
-Functional Go program!
+Funcgo program!
 
 ## Next Steps
 
@@ -92,12 +85,12 @@ to the Funcgo Language section below.
 To dive deeper, see [Funcgo Reference][ref] doc.
 
 To browse some actual working code, the biggest and most complex
-program so far written in Functional Go is its own compiler. (Turtles
+program so far written in Funcgo is its own compiler. (Turtles
 all the way down!)  You might start at the `main.go` file in
 [the source directory][src].
 
 A smaller set of working code is [fgolib][fgolib].  In addition to
-looking at the Functional Go code there, you can also examine the
+looking at the Funcgo code there, you can also examine the
 `project.clj` file which is a working example of using the Leiningen
 plugin.
 
@@ -122,7 +115,6 @@ Result:   (10 20 30 40 50 60)
 
 fgo=>
 ```
-(Warning, the REPL still has poor error handling.)
 
 ### Not Using Leiningen?
 
@@ -491,7 +483,7 @@ func main() {
     => {1 2}
 ```
 
-You can go a long way in Functional Go just using the built in
+You can go a long way in Funcgo just using the built in
 dictionary and vector types, but you can also create data structures
 that are implemented as Java classes.
 

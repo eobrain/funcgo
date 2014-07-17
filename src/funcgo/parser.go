@@ -26,7 +26,8 @@ nonpkgfile = NL? (expressions|topwithconst|topwithassign) _
  packageclause = <'package'> <__> imported NL importdecls
    __ =  #'[ \t\x0B\f\r\n]+' | comment+     (* whitespace *)
    importdecls = (AnyImportDecl NL)*
-     <AnyImportDecl> = importdecl | macroimportdecl | externimportdecl | typeimportdecl
+     <AnyImportDecl> = importdecl | macroimportdecl | externimportdecl | typeimportdecl | exclude
+     exclude = <'exclude'> _ <'('> _ (Identifier|operator) { _ <','> _ (Identifier|operator) } _ <')'>
      importdecl = <'import'> _ <'('>  _ {ImportSpec _} <')'>
                 | <'import'>  _ ImportSpec
      macroimportdecl = <'import'> _ <'macros'> _ <'('>  _ {ImportSpec _} <')'>
@@ -112,7 +113,9 @@ nonpkgfile = NL? (expressions|topwithconst|topwithassign) _
                 |'+='|'-='
      precedence0 = precedence1
                  | precedence0 _nonNL symbol _nonNL precedence1
-       symbol = ( Identifier <'.'> )? Identifier
+       symbol = Identifier
+              | Identifier <'.'>  Identifier
+              | Identifier <'.'>  operator
               | javastatic
        precedence1 = precedence2
                    | precedence1 _ or _ precedence2
