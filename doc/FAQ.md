@@ -17,6 +17,10 @@ programming or linking in C++ code to the same extent that Java does.
 It can also of course directly use any Clojure numerical programming
 library such as [core.matrix][1].
 
+## Does it support operator overoading?
+
+Yes, it supports [limited operator overloading][4].
+
 ## Is this a full implementation of Go as the "Functional Go" name implies?
 
 No.  Perhaps it would be better named "Glojure".  The language is
@@ -62,3 +66,4 @@ Some of these questions are paraphrased from some threads on
 [1]: https://github.com/mikera/core.matrix
 [2]: https://news.ycombinator.com/item?id=8017588
 [3]: https://github.com/eobrain/funcgo/issues/19
+[4]: reference.md#operator-overloading
