@@ -845,13 +845,17 @@ the operation `<-c` is taking from a channel (blocking if necessary
 until input arrives) and `c <- x` is sending the value `x` to the
 channel.
 
+The `thread` construct executes its contents in a separate thread,
+running in parallel with the code following the thread construct.
+
 The `select` construct allows you to block on multiple asynchronous
 channel operations, such that the first one that unblocks will
 activate.
 
 When targeting JavaScript however we are restricted because
 JavaScript is single-threaded, instead you have to use a different
-syntax (using `<:` instead of `<-') for channel operations,
+syntax (using `<:` instead of `<-') for channel operations, and `go`
+instead of `thread`:
 
 ```go
 		c1 := make(chan, 1)
@@ -874,8 +878,15 @@ syntax (using `<:` instead of `<-') for channel operations,
 	=> 22200
 ```
 
-These operations are restricted to being directly inside a `go {
+All the operations that use `<:` must be lexicallyinside a `go {
 ... }` block as shown above.
+
+The `go` block has an effect similar to `thread` except that on the
+JVM it shares a pool of threads, and in JavaScript it is implemented
+with some clever code reorganization rather than with threads.  Even
+on JVM where `thread` is supported, `go` is often a better choice
+because it is more lightweigth and you can feel free to invoke a large
+number of `go` blocks.
 
 ```go
 		c1 := make(chan, 1)
@@ -899,10 +910,7 @@ These operations are restricted to being directly inside a `go {
 	=> "nothing ready"
 ```
 
-Finally the example above shows some more features.  The `thread`
-block is like a `go` block except that it fires up a real thread
-rather than a goroutine, thus it can only be used when targeting the
-JVM.
+Finally the example above shows some more features.
 
 If there is a `default` clause in the `select` and all the `case`
 clauses are blocked, then it will execute instead.

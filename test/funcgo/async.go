@@ -1,5 +1,11 @@
 package async
-import test "midje/sweet"
+import (
+	test "midje/sweet"
+	"clojure/tools/logging"
+	"cljLoggingConfig/log4j"
+)
+log4j.mutateSetLogger(LEVEL, WARN)
+
 
 func printAfterDelay(s) {
 	Thread::sleep(100)
@@ -197,3 +203,43 @@ func goFibonacci(c, quit) {
 		}
 	}
 }
+
+func elapsedTimeMs(f) {
+	start := System::currentTimeMillis()
+	f()
+	System::currentTimeMillis() - start
+}
+
+func doSomeWork() {
+	var r = 10
+}
+
+test.fact("go blocks are more lightweight than thread blocks",
+
+	{
+		n := 10000
+		threadMs := elapsedTimeMs(func(){
+			c := make(chan, n)
+			for _ := times n {
+				thread {
+					doSomeWork()
+					c <- true
+				}
+			}
+			for _ := times n { <-c }
+		})
+		goMs := elapsedTimeMs(func(){
+			c := make(chan, n)
+			for _ := times n {
+				go {
+					doSomeWork()
+					c <- true
+				}
+			}
+			for _ := times n { <-c }
+		})
+		logging.infof("thread: %dms -- go: %dms", threadMs, goMs)
+		goMs < threadMs
+	}, =>, true
+
+)

@@ -3,16 +3,17 @@ package reference
 import (
 	test "midje/sweet"
 	"funcgo/reference/matrix"
+	"clojure/tools/logging"
+	"cljLoggingConfig/log4j"
 )
 import type (
 	java.util.ArrayList
-	java.util.logging.Logger
 	java.lang.Iterable
 )
+log4j.mutateSetLogger(LEVEL, WARN)
 
 var a = 55
 var b = 66
-var log Logger = Logger::getLogger(str(\*ns*\))
 
 test.fact("Most things are Expression",
 
@@ -159,7 +160,7 @@ test.fact("Looping with tail recursion",
 test.fact("Curly Brace Blocks",
 	{
 		product := {
-			log->info("doing the multiplication")
+			logging.info("doing the multiplication")
 			100 * 100
 		}
 		product
