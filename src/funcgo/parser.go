@@ -335,4 +335,6 @@ nonpkgfile = NL? (expressions|topwithconst|topwithassign) _
                percentvaradic = <'$*'>
   <Ellipsis> = <'...'> | <'…'>
   <QQ> = <'"'> | <'“'>  | <'”'>
-`)
+`,
+	NO_SLURP, true,  // for App Engine compatibility
+)

@@ -35,7 +35,7 @@ environment is configured correctly.
 [![Clojars Project](http://clojars.org/org.eamonn.funcgo/funcgo-lein-plugin/latest-version.svg)](http://clojars.org/org.eamonn.funcgo/funcgo-lein-plugin)
 
 In your favorite text editor, edit the file `project.clj` and insert
-`[org.eamonn.funcgo/funcgo-lein-plugin "0.3.0"]` (or the latest
+`[org.eamonn.funcgo/funcgo-lein-plugin "0.4.1"]` (or the latest
 version from clojars shown above) in *both* the dependencies section
 *and* the plugins section. You should end up with something like ...
 

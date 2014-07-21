@@ -3,7 +3,7 @@ import sh "clojure/java/shell"
 
 func fgoc(project, args...) {
 	cmdLine := [
-		"java", "-jar", "bin/funcgo-compiler-0.4.0-standalone.jar",
+		"java", "-jar", "bin/funcgo-compiler-0.4.1-standalone.jar",
 		"src", "test", "tasks"
 	]  concat  args
 	result  := sh.sh  apply  cmdLine
