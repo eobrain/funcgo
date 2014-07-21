@@ -1,0 +1,23 @@
+#!/bin/sh
+
+PROJECT=funcgo-compiler
+
+if [ $# != 1 ]; then
+    echo "USAGE:    $0 tag"
+    exit 1
+fi
+
+dir=/tmp/deploy-$PROJECT-$$
+mkdir -p $dir
+
+set -x
+cd $dir
+git clone git@github.com:eobrain/funcgo.git
+cd funcgo
+git pull --tags
+git checkout $1
+git status
+java -jar bin/$PROJECT-$1-standalone.jar -f src/ test test-cljs/ tasks/
+
+read -p "<ENTER> to deploy, or <CTRL>-C to abort" dummy
+lein deploy clojars
