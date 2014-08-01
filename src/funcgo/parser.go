@@ -154,7 +154,7 @@ nonpkgfile = NL? (expressions|topwithconst|topwithassign) _
 	     isidentifier = <'is'> #'\p{L}' identifier
 	     mutidentifier = <'mutate'> #'\p{L}' identifier
 	     (* escapedidentifier = <'\\'> #'\b[\p{L}_\p{Sm}][\p{L}_\p{Sm}\p{Nd}]*\b' *)
-	     escapedidentifier = <'\\'> #'[^\\]+' <'\\'>
+	     escapedidentifier = #'\\[^\\]+\\'
      (*shortvardecl =  identifier _ <':='> _ expr
                    | identifier _ <','> _ identifier _ <':='> _ expr  _ <','> _ expr
                    | identifier _ <','> _ identifier _<','> _ identifier _
@@ -296,11 +296,12 @@ nonpkgfile = NL? (expressions|topwithconst|topwithassign) _
 		 <octal_lit>  = #'0[0-7]+'
 		 hexlit    = <'0x'> #'[0-9a-fA-F]+'
                bigintlit = int_lit 'N'
-	       regex = <'/'> ( #'[^/\n]' | escapedslash )+ <'/'>
-                 escapedslash = <'\\/'>
+	       (* regex = <'/'> ( #'[^/\n]' | escapedslash )+ <'/'> *)
+               regex =  !comment #'/([^/\\]*(\\.[^/\\]*)*)/'
+                 (* escapedslash = <'\\/'> *)
 	       <string_lit> = rawstringlit | interpretedstringlit | clojureescape
-                 rawstringlit = <#'\x60'> #'[^\x60]*' <#'\x60'>     (* \x60 is back quote character *)
-                 interpretedstringlit = QQ {#'[^\"]' | '\\"'} QQ
+                 rawstringlit = #'\x60[^\x60]*\x60'                 (* \x60 is back quote character *)
+                 interpretedstringlit = #'["“”]([^"\\]*(\\.[^"\\]*)*)["“”]'
                  clojureescape = <'\\'> <#'\x60'> #'[^\x60]*' <#'\x60'>       (* \x60 is back quote *)
 	       <rune_lit> = <'\''> ( unicode_value | byte_value ) <'\''>
 		 <unicode_value> = unicodechar | littleuvalue | escaped_char

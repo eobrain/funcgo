@@ -521,6 +521,9 @@ test.fact("can have raw strings",
 test.fact("can have strings",
       parse(`"one two"`)    ,=>, parsed(`"one two"`)
 )
+test.fact("can have double-quotes in strings",
+	parse(`"one \"two\" three"`), =>, parsed(`"one \"two\" three"`)
+)
 test.fact("characters in raw",
 	parse("`\n'\b`")   ,=>, parsed(`"\n'\b"`),
 	parse(str("`", `"`, "`"))   ,=>, parsed(`"\""`)
@@ -565,8 +568,18 @@ test.fact("comment",
 )
 test.fact("regex",
 	parse("/aaa/")          ,=>, parsed(`#"aaa"`),
-	parse("/[0-9]+/")       ,=>, parsed(`#"[0-9]+"`)
+	parse("/[0-9]+/")       ,=>, parsed(`#"[0-9]+"`),
+	parse(`/aaa\nbbb/`)     ,=>, parsed(`#"aaa\nbbb"`),
 )
+test.fact("Regex excaping",
+	parse(`/aaa\/bbb/`)         ,=>, parsed(`#"aaa/bbb"`),
+	parse(`/aaa'bbb/`)          ,=>, parsed(`#"aaa'bbb"`),
+	parse(`/aaa"bbb/`)          ,=>, parsed(`#"aaa\"bbb"`),
+	parse(`/aaa\p{Ll}bbb/`)     ,=>, parsed(`#"aaa\p{Ll}bbb"`),
+	parse(`/aaa\s+bbb/`)        ,=>, parsed(`#"aaa\s+bbb"`),
+
+)
+
 //   parse("/aaa\/bbb/"       ,=>, parsed("#\"aaa/bbb"")) TODO implement
 test.fact("if",
 	parse("if a {b}") ,=>, parsed("(when a b)"),
@@ -935,10 +948,6 @@ func FooBar(iii, jjj) {
 
 test.fact("Escaped string terminator",
       parse(`"aaa\"aaa"`), =>, parsed(`"aaa\"aaa"`)
-)
-
-test.fact("Escaped regex terminator",
-	parse(`/aaa\/bbb/`)          ,=>, parsed(`#"aaa/bbb"`)
 )
 
 test.fact("tail recursion",

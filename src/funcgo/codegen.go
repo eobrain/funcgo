@@ -162,6 +162,10 @@ func codeGenerator(symbolTable, isGoscript) {
 		"do"  listStr  expressions
 	}
 
+	func stripQuotes(literal string) string{
+		literal->substring(1, literal->length() - 1)
+	}
+
 	// Mapping from parse tree to generators of CLJ code.
 	{
 		SOURCEFILE:  blankJoin,
@@ -581,9 +585,16 @@ func codeGenerator(symbolTable, isGoscript) {
 		},
 		DECIMALS:      identity,
 		EXPONENT:      str,
-		REGEX:	       func{str(`#"`,  s.escape(str(...$*), {'"':`\"`}),  `"`)},
-		ESCAPEDSLASH: constantFunc(`/`),
-		INTERPRETEDSTRINGLIT: func{str(`"`,  str(...$*),  `"`)},
+		REGEX:	func(regex string){
+			str(
+				`#"`,
+				stripQuotes(regex)->replace(`\/`, `/`)->replace(`"`, `\"`),
+				`"`
+			)
+		},
+		INTERPRETEDSTRINGLIT: func(literal) {
+			str(`"`, stripQuotes(literal), `"`)
+		},
 		CLOJUREESCAPE: identity,
 		LITTLEUVALUE:  func(d1,d2,d3,d4){str(`\u`,d1,d2,d3,d4)},
 		OCTALBYTEVALUE:	 func(d1,d2,d3){str(`\o`,d1,d2,d3)},
@@ -598,7 +609,9 @@ func codeGenerator(symbolTable, isGoscript) {
 		DQUOTECHAR:    constantFunc(`\"`),
 		HEXDIGIT:      identity,
 		OCTALDIGIT:    identity,
-		RAWSTRINGLIT:  func{str(`"`, s.escape($1, charEscapeString), `"`)},
+		RAWSTRINGLIT:  func(literal) {
+			str(`"`, s.escape(stripQuotes(literal), charEscapeString), `"`)
+		},
 		DASHIDENTIFIER: func{ "-" str $1},
 		ISIDENTIFIER:	func(initial, identifier) {
 			str( s.lowerCase(initial), identifier, "?")
@@ -609,7 +622,7 @@ func codeGenerator(symbolTable, isGoscript) {
 		MUTIDENTIFIER:	func(initial, identifier) {
 			str( s.lowerCase(initial), identifier, "!")
 		},
-		ESCAPEDIDENTIFIER:  identity,
+		ESCAPEDIDENTIFIER:  func{ stripQuotes($1) },
 		UNARYEXPR: func(operator, expression) { listStr(operator, expression) },
 		NOTEQ:	     constantFunc("not="),
 		BITAND:	     constantFunc("bit-and"),
