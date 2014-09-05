@@ -412,20 +412,20 @@ test.fact("bit expressions are supported",
 )
 
 test.fact("quoting",
-        // \x60 is backtick
+        // \\u0060 is backtick
 	parse("quote(foo(a))"),           =>, parsed("'(foo a)"),
-	parseNoPretty("syntax foo(a)"),     =>, parsedNoPretty("\x60(foo a)"),
-	parseNoPretty("syntax \\(foo a)\\"), =>, parsedNoPretty("\x60(foo a)"),
+	parseNoPretty("syntax foo(a)"),     =>, parsedNoPretty("\u0060(foo a)"),
+	parseNoPretty("syntax \\(foo a)\\"), =>, parsedNoPretty("\u0060(foo a)"),
 
 	parseNoPretty(`syntax fred(x, unquote x, lst, unquotes lst, 7, 8, NINE)`),
 	=>,
-	parsedNoPretty("\x60(fred x ~x lst ~@lst 7 8 :nine)")
+	parsedNoPretty("\u0060(fred x ~x lst ~@lst 7 8 :nine)")
 )
 
 test.fact("symbol beginning with underscore",
 	parse(`_main`), =>, parsed(`-main`),
 	parse(`_foo`),  =>, parsed(`-foo`),
-	parseJs(`mutateSet( js.window->_onload, start)`), 
+	parseJs(`mutateSet( js.window->_onload, start)`),
 	=>, parsedJs(`(set! (. js/window -onload) start)`)
 )
 
@@ -723,6 +723,12 @@ test.fact("channel",
 test.fact("bug4",
 	parse(`foo(<-go { b })`), =>,
 	parsedAsync("(foo (<!! (go b)))")
+)
+
+test.fact("bug5",
+	parse(`{a
+foo(b)}`), =>,
+	parsedAsync("(do a (foo b))")
 )
 
 test.fact("select",
@@ -1264,6 +1270,15 @@ test.fact("Calling function variadically",
 	parse(`foo(...args)`), =>, parsed(`(apply foo args)`),
 	parse(`foo(a, b, ...args)`), =>, parsed(`(apply foo a b args)`)
 )
+
+test.fact("Can have comment delimiter in string",
+	parse(`"aaa//bbb"`), =>, parsed(`"aaa//bbb"`)
+)
+
+test.fact("Can have double-quotes in backtick string",
+	parse(`"aaa//bbb"`), =>, parsed(`"aaa//bbb"`)
+)
+
 
 //test.fact("type assertion",
 //	parse(`a.(string)`), =>, parsed(`[x (instance? String x)]`)

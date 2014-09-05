@@ -131,8 +131,7 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
 	   and = <'&&'>
 	   precedence3 = precedence4
                        | precedence3 relop  precedence4
-             chanops = '<-' | '<:'
-             relop = equals | noteq | (!chanops '<') | '<=' | '>=' | '>'
+             relop = equals | noteq | (!SendOp '<') | '<=' | '>=' | '>'
 	       equals = <'=='>
                noteq  = <'!='>
 	     precedence4 = precedence5
@@ -152,7 +151,7 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
 	     <JavaIdentifier> = #'\b[\p{L}_][\p{L}_\p{Nd}]*\b'
                               | underscorejavaidentifier
                underscorejavaidentifier = <'_'> JavaIdentifier
-	   <Identifier> = !Keyword !hexlit (identifier | dashidentifier | isidentifier | mutidentifier |
+	   <Identifier> = !(Keyword | hexlit) (identifier | dashidentifier | isidentifier | mutidentifier |
 			  escapedidentifier)
              Keyword = '\bconst\b' | '\bfor\b' | '\bnew\b' | '\bpackage\b' | '\brange\b' | '\bif\b'
 	     identifier = #'[\p{L}_[\p{S}&&[^\p{Punct}]]][\p{L}_[\p{S}&&[^\p{Punct}]]\p{Nd}]*'
@@ -190,7 +189,7 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
 	 associnpath = expr expr {expr}
        unaryexpr = unary_op unaryexpr
                  | PrimaryExpr | javafield | ReaderMacro | assoc | dissoc | associn | prefixedblock
-	 <unary_op> = '+' | !'->' '-' | '!' | not | (!and '&') | bitnot | take | takeingo
+	 <unary_op> = '+' | !'->' '-' | '!' | not | bitnot | take | takeingo
 	   bitnot = <'^'>
 	   not    = <'!'>
            takeingo = <'<:'>
@@ -282,12 +281,12 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
              functionlit = <'func'> Function
              shortfunctionlit = <'func' '{'> expr <'}'>
              <BasicLit> = int_lit | bigintlit | regex | string_lit | rune_lit | floatlit | bigfloatlit (*| imaginary_lit *)
-               floatlit = #'([0-9]+\.[0-9]*([eE]?[\+\-]?[0-9]+)?|[0-9]+[eE]?[\+\-]?[0-9]+|\.[0-9]+[eE]?[\+\-]?[0-9]*)'
-               (*floatlit = decimals '.' decimals? exponent?
-                        | decimals exponent
-                        | '.' decimals exponent?
-                 decimals  = #'[0-9]+'
-                 exponent  = ( 'e' | 'E' ) ( '+' | !'->' '-' )? decimals*)
+
+               (* http://stackoverflow.com/a/2509752/978525 *)
+               floatlit = FloatLitA | FloatLitB
+               <FloatLitA> = #'([0-9]+\.[0-9]*|\.[0-9]+)([eE][+-]?[0-9]+)?'
+               <FloatLitB> = #'(0|([1-9][0-9]*))[eE][+-]?[0-9]+'
+
                bigfloatlit = (floatlit | int_lit) 'M'
                <int_lit> = decimallit | octal_lit | hexlit
 		 decimallit = #'[1-9][0-9]*' | #'[0-9]'
