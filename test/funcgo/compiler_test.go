@@ -248,6 +248,10 @@ test.fact("can escape identifier that are not legal Funcgo identifiers",
         parse(`5 + \+>*&%%*&$\ * 3`), =>, parsed(`(+ 5 (* +>*&%%*&$ 3))`),
 )
 
+test.fact("one plus one",
+	parse("1+1"), =>, parsed("(+ 1 1)")
+)
+
 test.fact("can have multiple expressions inside func",
         parse(`func(){if c {d}}`),    =>, parsed(`(fn [] (when c d))`),
         parse(`func(){b;c}`),         =>, parsed(`(fn [] (do b c))`),
@@ -408,13 +412,14 @@ test.fact("bit expressions are supported",
 )
 
 test.fact("quoting",
+        // \x60 is backtick
 	parse("quote(foo(a))"),           =>, parsed("'(foo a)"),
-	parseNoPretty("syntax foo(a)"),     =>, parsedNoPretty("`(foo a)"),
-	parseNoPretty("syntax \\(foo a)\\"), =>, parsedNoPretty("`(foo a)"),
+	parseNoPretty("syntax foo(a)"),     =>, parsedNoPretty("\x60(foo a)"),
+	parseNoPretty("syntax \\(foo a)\\"), =>, parsedNoPretty("\x60(foo a)"),
 
 	parseNoPretty(`syntax fred(x, unquote x, lst, unquotes lst, 7, 8, NINE)`),
 	=>,
-	parsedNoPretty("`(fred x ~x lst ~@lst 7 8 :nine)")
+	parsedNoPretty("\x60(fred x ~x lst ~@lst 7 8 :nine)")
 )
 
 test.fact("symbol beginning with underscore",
@@ -534,8 +539,10 @@ test.fact("backslash in raw",
 test.fact("characters in strings",
 	parse( `"\n"`)    ,=>,  parsed(`"\n"`)
 )
-// test.fact("quotes in strings",
-// parse("\"foo\"bar\"")   ,=>, parsed("\"foo\"bar\""))  TODO implement
+test.fact("quotes in strings",
+	parse(`"foo\"bar"`)   ,=>, parsed(`"foo\"bar"`),
+	//parse("\"foo\"bar\"")   ,=>, parsed("\"foo\"bar\"")
+)
 test.fact("multiple expr ",
 	parse("1;2;3")          ,=>, parsed("1 2 3"),
 	parse("1\n2\n3")        ,=>, parsed("1 2 3")
@@ -543,7 +550,10 @@ test.fact("multiple expr ",
 test.fact("const",
 	parse("{const(a = 2)a}"),=>, parsed("(let [a 2] a)"),
 	parse("{ const(  a = 2 ) a}"),=>, parsed("(let [a 2] a)"),
-	parse("{const(\nb = 2\n)\na}"),=>, parsed("(let [b 2] a)"),
+	parse(`{const(
+b = 2
+)
+a}`),=>, parsed("(let [b 2] a)"),
 	parse("{ const(\n  c = 2\n )\n a}"),=>, parsed("(let [c 2] a)"),
 	parse("{const(a = 2)f(a,b)}"),=>, parsed("(let [a 2] (f a b))")
 )
@@ -566,10 +576,41 @@ test.fact("comment",
 	parse("\n\n//////\n// This file is part of the Funcgo compiler.\naaa8")  ,=>, parsed("aaa8"),
 	parse("///////\naaa9")                ,=>, parsed("aaa9")
 )
+test.fact("bug1",
+	parse(`{
+		// Words ending in 'ox' pluralize with 'en' (and not 'es')
+		/(ox)(?i)$/ mutatePlural "$1en"
+
+		plural("box")
+	}`), =>, parsed(`(do (plural! #"(ox)(?i)$" "$1en") (plural "box"))`)
+)
+test.fact("bug2",
+	parseNoPretty(`func HasPackage(st, pkg) {
+	dosync{
+           st alter func{$1 += {
+		UNUSED_PACKAGES: (*st)(UNUSED_PACKAGES) disj pkg
+	  }}
+        }
+
+	(*st)(pkg) == PACKAGE
+}`), =>, parsedNoPretty(`(defn Has-package [st pkg] (do (dosync (alter st #(assoc %1 :unused-packages (disj (@st :unused-packages) pkg)))) (= (@st pkg) :package)))`)
+)
+
+test.fact("bug3",
+	parse(`try {
+					i := dangerous->get(0)
+					dangerous->set(0, i + 1)
+				} finally {
+					mutex <- true   // release mutex
+				}`),
+	=>, parsedAsync(`(try (let [i (. dangerous (get 0))] (. dangerous (set 0 (+ i 1)))) (finally (>!! mutex true)))`)
+)
 test.fact("regex",
 	parse("/aaa/")          ,=>, parsed(`#"aaa"`),
 	parse("/[0-9]+/")       ,=>, parsed(`#"[0-9]+"`),
 	parse(`/aaa\nbbb/`)     ,=>, parsed(`#"aaa\nbbb"`),
+	parse(`/(ox)(?i)$/`)     ,=>, parsed(`#"(ox)(?i)$"`),
+	parse("/a/")          ,=>, parsed(`#"a"`),
 )
 test.fact("Regex excaping",
 	parse(`/aaa\/bbb/`)         ,=>, parsed(`#"aaa/bbb"`),
@@ -679,6 +720,11 @@ test.fact("channel",
 	parse("make(chan int, 10)"), =>, parsedAsync("(chan 10)")
 )
 
+test.fact("bug4",
+	parse(`foo(<-go { b })`), =>,
+	parsedAsync("(foo (<!! (go b)))")
+)
+
 test.fact("select",
 	parse(`
 select {
@@ -752,10 +798,31 @@ default:
 
 	parse(`
 	select {
-	case c <: 0:  // note: no statement, no fallthrough, no folding of cases
-	case c <: 1:
+	case c <- 0:
+	case c <- 2:
 	}
-`), =>, parsedAsync("(alt! [[c 0]] nil [[c 1]] nil)")
+`), =>, parsedAsync("(alt!! [[c 0]] nil [[c 2]] nil)"),
+
+	parse(`
+	select {
+	case c <- 0:  ;
+	case c <- 3:
+	}
+`), =>, parsedAsync("(alt!! [[c 0]] nil [[c 3]] nil)"),
+
+	parse(`
+	select {
+	case c <- 0:  // note: no statement, no fallthrough, no folding of cases
+	case c <- 4:
+	}
+`), =>, parsedAsync("(alt!! [[c 0]] nil [[c 4]] nil)"),
+
+	parse(`
+	select {
+	case c <: 0:  // note: no statement, no fallthrough, no folding of cases
+	case c <: 5:
+	}
+`), =>, parsedAsync("(alt! [[c 0]] nil [[c 5]] nil)")
 
 // 	parse(`
 // for {  // send random sequence of bits to c

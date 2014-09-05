@@ -16,137 +16,143 @@ package parser
 import insta "instaparse/core"
 
 var Parse = insta.parser(`
-sourcefile = NL? packageclause (expressions|topwithconst|topwithassign) _
-nonpkgfile = NL? (expressions|topwithconst|topwithassign) _
- <_> =      <#'[ \t\x0B\f\r\n]*'> | comment+                                 (* optional whitespace *)
- <_nonNL> = <#'[ \t\x0B\f\r]+'>                                  (* non-newline whitespace *)
- <NL> = nl | comment+
-   <nl> = <#'\s*[\n;]\s*'>                     (* whitespace with at least one newline or semicolon *)
-   <comment> = <#'[;\s]*//[^\n]*\n\s*'>
- packageclause = <'package'> <__> imported NL importdecls
-   __ =  #'[ \t\x0B\f\r\n]+' | comment+     (* whitespace *)
-   importdecls = (AnyImportDecl NL)*
+sourcefile = packageclause (expressions|topwithconst|topwithassign)
+nonpkgfile = (expressions|topwithconst|topwithassign)
+ packageclause = <'package'> imported <NL>
+                 importdecls
+   <NL> = ';' | '\n'
+   importdecls = {AnyImportDecl}
      <AnyImportDecl> = importdecl | macroimportdecl | externimportdecl | typeimportdecl | exclude
-     exclude = <'exclude'> _ <'('> _ (Identifier|operator) { _ <','> _ (Identifier|operator) } _ <')'>
-     importdecl = <'import'> _ <'('>  _ {ImportSpec _} <')'>
-                | <'import'>  _ ImportSpec
-     macroimportdecl = <'import'> _ <'macros'> _ <'('>  _ {ImportSpec _} <')'>
-                     | <'import'> _ <'macros'> _ ImportSpec
-     <externimportdecl> = <'import'> _ <'extern'> _ <'('>  _ {externimportspec _} <')'>
-                     | <'import'> _ <'extern'> _ externimportspec
+     exclude = <'exclude' '('>
+                  (Identifier|operator) { <','> (Identifier|operator) } <')'>
+     importdecl = <'import' '('>
+                    ImportSpec {ImportSpec}
+                  <')'>
+                | <'import'>  ImportSpec
+     macroimportdecl = <'import' 'macros' '('>
+                         ImportSpec {ImportSpec} <')'>
+                     | <'import' 'macros'> ImportSpec
+     <externimportdecl> = <'import' 'extern' '('>
+                              externimportspec {externimportspec} <')'>
+                     | <'import' 'extern'> externimportspec
        externimportspec = identifier
-     typeimportdecl = <'import'> _ <'type'> _ <'('>  _ {typeimportspec _} <')'>
-                     | <'import'> _ <'type'> _ typeimportspec
-       typeimportspec = typepackageimportspec <'.'> _ (
+     typeimportdecl = <'import' 'type' '('>
+                        typeimportspec {typeimportspec} <')'>
+                     | <'import' 'type'> typeimportspec
+       typeimportspec = typepackageimportspec <'.'> (
                                           JavaIdentifier
-                                        | <'{'> _ JavaIdentifier _ (<','> _ JavaIdentifier)* _ <'}'>
+                                        | <'{'> JavaIdentifier {<','> JavaIdentifier}  <'}'>
                          )
          typepackageimportspec = JavaIdentifier {<'.'>  JavaIdentifier}
      <ImportSpec> = importspec
-       importspec = ( Identifier _ )?  QQ imported QQ
+       importspec = ( Identifier )?  QQ imported QQ
          imported = Identifier {<'/'> Identifier}
- expressions = expr | expressions NL expr
-   <expr>  = precedence0 | Vars | (*shortvardecl |*) ifelseexpr | letifelseexpr | tryexpr | forrange |
-                   forlazy | fortimes | forcstyle | Blocky | ExprSwitchStmt | sendstmt
-                                                                            | sendstmtingo
+ expressions = expr | expressions <NL> expr
+   <expr>  = precedence00 | Vars | (*shortvardecl |*) ifelseexpr | letifelseexpr | tryexpr | forrange |
+                   forlazy | fortimes | forcstyle | Blocky | ExprSwitchStmt
+
 
      <Blocky> = block | withconst | withassign | loop
-       withconst  = <'{'> _ <'const'> _ ( const NL | <'('> _ consts _ <')'> )  _ expressions _ <'}'>
-       withassign = <'{'> _ assigns NL expressions _ <'}'>
-         consts  = ( const  {NL const} )?
-         assigns = assign {NL assign}
-           const  = Destruct _ <'='> _ expr
-           assign = Destruct (_ <','> _ Destruct)* _ ':=' _ expr (_ <','> _ expr)*
+       withconst  = <'{' 'const'> ( const <NL> | <'('> consts <')'> ) expressions <'}'>
+       withassign = <'{'> assigns <NL> expressions <'}'>
+         consts  = ( const {<NL> const} )?
+         assigns = assign {<NL> assign}
+           const  = Destruct <'='> expr
+           assign = Destruct {<','> Destruct} ':=' expr {<','> expr}
 	     <Destruct> = Identifier | typedidentifier | vecdestruct | dictdestruct
-	       typedidentifiers = Identifier ({_ <','> _ Identifier })? _ typename
-	       typedidentifier = Identifier _ typename
+	       typedidentifiers = Identifier ({ <','> Identifier })? typename
+	       typedidentifier = Identifier typename
 		 typename = JavaIdentifier {<'.'>  JavaIdentifier} | primitivetype | string
                    <primitivetype> = long | double | 'byte' | 'short' | 'char' | 'boolean'
                      long = <'int'> | <'long'>
                      double = <'float'> | <'float64'>
                    string = <'string'>
-	       vecdestruct = <'['> _ VecDestructElem _ {<','> _ VecDestructElem _ } <']'>
+	       vecdestruct = <'['> VecDestructElem {<','> VecDestructElem } <']'>
 		 <VecDestructElem> = Destruct | variadicdestruct | label
 		   variadicdestruct = Destruct Ellipsis
-	       dictdestruct = <'{'> dictdestructelem { _ <','> _ dictdestructelem} <'}'>
-		 dictdestructelem = Destruct _ <':'> _ expr
-       loop = <'loop'> _  <'('> _ commaconsts _ <')'> _ ImpliedDo
-         commaconsts = ( const { _ <','> _ const} )?
-       <ImpliedDo> =  <'{'> _ expressions _ <'}'> | withconst | withassign
-       block = <'{'> _ expr {NL expr} _ <'}'>
-       topwithconst  =  <'const'> _ ( const NL | <'('> _ consts _ <')'> )  _ expressions
-       topwithassign =  assigns NL expressions
+	       dictdestruct = <'{'> dictdestructelem { <','> dictdestructelem} <'}'>
+		 dictdestructelem = Destruct <':'> expr
+       loop = <'loop' '('> commaconsts <')'> ImpliedDo
+         commaconsts = ( const { <','> const} )?
+       <ImpliedDo> =  <'{'> expressions <'}'> | withconst | withassign
+       block = <'{'> expr {<NL> expr} <'}'>
+       topwithconst  =  <'const'> ( const | <'('> consts <')'> )  expressions
+       topwithassign =  assigns expressions
      <ExprSwitchStmt> = boolswitch | constswitch | letconstswitch | typeswitch
                         | selectstmtingo | selectstmt
-       selectstmt = <'select'> _ <'{'> _ { CommClause _ } <'}'>
+       selectstmt = <'select' '{'> (CommClause {<NL> CommClause})? <'}'>
          <CommClause> = sendclause | recvclause | recvvalclause | defaultclause
-           sendclause       = <'case'> _ expr _ <'<-'> _ expr                _ <':'> (_ expressions)?
-           recvclause       = <'case'> _                       <'<-'> _ expr _ <':'> (_ expressions)?
-           recvvalclause    = <'case'> _  identifier _ <'='> _ <'<-'> _ expr _ <':'>  _ expressions
-           defaultclause    = <'default'>                                    _ <':'> (_ expressions)?
-       selectstmtingo = <'select'> _ <'{'> _ { CommClauseInGo _ } <'}'>
+           sendclause       = <'case'> UnaryExpr        <    '<-'> UnaryExpr <':'> expressions?
+           recvclause       = <'case'                   '<-'> expr <':'> expressions?
+           recvvalclause    = <'case'>  identifier <'=' '<-'> expr <':'> expressions
+           defaultclause    = <'default'                            ':'> expressions?
+       selectstmtingo = <'select' '{'> CommClauseInGo {<NL> CommClauseInGo} <'}'>
          <CommClauseInGo> = sendclauseingo | recvclauseingo | recvvalclauseingo | defaultclause
-           sendclauseingo    = <'case'> _ expr _ <'<:'> _ expr           _ <':'> (_ expressions)?
-           recvclauseingo    = <'case'> _                       <'<:'> _ expr _ <':'> (_ expressions)?
-           recvvalclauseingo = <'case'> _  identifier _ <'='> _ <'<:'> _ expr _ <':'>  _ expressions
-       typeswitch = <'switch'> _ PrimaryExpr _ <'.'> _ <'('> _ <'type'> _ <')'> _  <'{'>
-                         _   <'case'> _ typename _ <':'> _ expressions
-                         {NL <'case'> _ typename _ <':'> _ expressions}
-                         (NL <'default'>         _ <':'> _ expressions )?
-                    _ <'}'>
-       boolswitch = <'switch'> _ <'{'>  _ boolcaseclause { NL boolcaseclause } _ <'}'>
-       constswitch = <'switch'> _ expr _ <'{'> _ constcaseclause { NL constcaseclause } _ <'}'>
-       letconstswitch = <'switch'> _ Destruct _ <':='> _ expr _ <';'>
-                                   _ expr _ <'{'> _ constcaseclause { NL constcaseclause } _ <'}'>
-	 boolcaseclause = boolswitchcase _ <':'> _ expressions
-	 constcaseclause = constswitchcase _ <':'> _ expressions
-	   boolswitchcase = <'case'> _ expressionlist | <'default'>
-	   constswitchcase = <'case'> _ constantlist | <'default'>
-	     constantlist = expr {_ <','> _ expr}
+           sendclauseingo    = <'case'> UnaryExpr        <    '<:'> UnaryExpr <':'> expressions?
+           recvclauseingo    = <'case'                   '<:'> expr <':'> expressions?
+           recvvalclauseingo = <'case'>  identifier <'=' '<:'> expr <':'> expressions
+       typeswitch = <'switch'> PrimaryExpr <'.' '(' 'type' ')' '{'
+                           'case'> typename <':'> expressions
+                         {<NL 'case'> typename <':'> expressions}
+                         (<NL 'default'          ':'> expressions )? <'}'>
+       boolswitch = <'switch' '{'> boolcaseclause {<NL> boolcaseclause} <'}'>
+       constswitch = <'switch'> expr <'{'> constcaseclause {<NL> constcaseclause} <'}'>
+       letconstswitch = <'switch'> Destruct <':='> expr <NL>
+                                   expr <'{'> constcaseclause {<NL> constcaseclause} <'}'>
+	 boolcaseclause = boolswitchcase <':'> expressions
+	 constcaseclause = constswitchcase <':'> expressions
+	   boolswitchcase = <'case'> expressionlist | <'default'>
+	   constswitchcase = <'case'> constantlist | <'default'>
+	     constantlist = expr { <','> expr}
 	       <Constant> = label | BasicLit | veclit | dictlit | setlit | structlit
      operator =
                  or
                 |and
                 |'<-'|'<:'|equals|noteq|'<'|'<='|'>='|'>'
-                |'+'|'-'|bitor|bitxor
+                |'+'|!'->' '-'|bitor|bitxor
                 |'*'|'/'|mod|shiftleft|shiftright|bitand|bitandnot
                 |'+='|'-='
+     precedence00 = precedence0
+                 | precedence00 SendOp precedence0
+       <SendOp> = sendop | sendopingo
+         sendop     = <'<-'>
+         sendopingo = <'<:'>
      precedence0 = precedence1
-                 | precedence0 _nonNL symbol _nonNL precedence1
+                 | precedence0 symbol precedence1
        symbol = Identifier
               | Identifier <'.'>  Identifier
               | Identifier <'.'>  operator
               | javastatic
        precedence1 = precedence2
-                   | precedence1 _ or _ precedence2
+                   | precedence1 or precedence2
 	 or = <'||'>
 	 precedence2 = precedence3
-                     | precedence2 _ and _ precedence3
+                     | precedence2 and precedence3
 	   and = <'&&'>
 	   precedence3 = precedence4
-                       | precedence3 _ relop  _ precedence4
+                       | precedence3 relop  precedence4
              chanops = '<-' | '<:'
              relop = equals | noteq | (!chanops '<') | '<=' | '>=' | '>'
 	       equals = <'=='>
                noteq  = <'!='>
 	     precedence4 = precedence5
-                         | precedence4 _ addop _ precedence5
-	       addop = '+' | '-' | ( !or bitor ) | bitxor
+                         | precedence4 addop precedence5
+	       addop = '+' | !'->' '-' | ( !or bitor ) | bitxor
                  bitor = <'|'>
                  bitxor = <'^'>
 	       precedence5 = UnaryExpr
-                           | precedence5 _ mulop _ UnaryExpr
-	         mulop = '*' | (!comment '/') | mod | shiftleft | shiftright | bitand | bitandnot
+                           | precedence5 mulop UnaryExpr
+	         mulop = '*' | (!'//' '/') | mod | shiftleft | shiftright | bitand | bitandnot
                    shiftleft = <'<<'>
                    shiftright = <'>>'>
                    mod = <'%'>
                    bitand = !and <'&'>
                    bitandnot = !and <'&^'>
-	   javastatic = typename _ <'::'> _ JavaIdentifier
+	   javastatic = typename <'::'> JavaIdentifier
 	     <JavaIdentifier> = #'\b[\p{L}_][\p{L}_\p{Nd}]*\b'
                               | underscorejavaidentifier
                underscorejavaidentifier = <'_'> JavaIdentifier
-	   <Identifier> = !Keyword  (identifier | dashidentifier | isidentifier | mutidentifier |
+	   <Identifier> = !Keyword !hexlit (identifier | dashidentifier | isidentifier | mutidentifier |
 			  escapedidentifier)
              Keyword = '\bconst\b' | '\bfor\b' | '\bnew\b' | '\bpackage\b' | '\brange\b' | '\bif\b'
 	     identifier = #'[\p{L}_[\p{S}&&[^\p{Punct}]]][\p{L}_[\p{S}&&[^\p{Punct}]]\p{Nd}]*'
@@ -155,57 +161,48 @@ nonpkgfile = NL? (expressions|topwithconst|topwithassign) _
 	     mutidentifier = <'mutate'> #'\p{L}' identifier
 	     (* escapedidentifier = <'\\'> #'\b[\p{L}_\p{Sm}][\p{L}_\p{Sm}\p{Nd}]*\b' *)
 	     escapedidentifier = #'\\[^\\]+\\'
-     (*shortvardecl =  identifier _ <':='> _ expr
-                   | identifier _ <','> _ identifier _ <':='> _ expr  _ <','> _ expr
-                   | identifier _ <','> _ identifier _<','> _ identifier _
-                                   <':='> _ expr  _ <','> _ expr  _ <','> _ expr *)
-               (*   | Identifier _ ',' _ shortvardecl _ ',' _ expr *)
-     sendstmtingo = expr _nonNL <'<:'> _ expr
-     sendstmt     = expr _nonNL <'<-'> _ expr
-     <Vars> = <'var'> _ ( <'('> _ VarDecl {NL VarDecl} _ <')'> | VarDecl )
+     <Vars> = <'var'> ( <'('> VarDecl {VarDecl} <')'> | VarDecl )
      <VarDecl> = primarrayvardecl | arrayvardecl | vardecl1 | vardecl2
-       primarrayvardecl = Identifier _ <'['> _ int_lit  _ <']'> _ primitivetype
-       arrayvardecl = Identifier _ <'['> _ int_lit  _ <']'> _ typename
-       vardecl1 = Identifier ( _ typename )? _ <'='> _ expr
-       vardecl2 = Identifier  _ <','> _ Identifier ( _ typename )? _ <'='> _ expr _ <','> _ expr
-     ifelseexpr = <'if'> _ expr _ Blocky ( _ <'else'> _ Blocky )?
-     letifelseexpr = <'if'> _ Destruct _ <':='> _ expr _ <';'>
-                            _ expr _ Blocky ( _ <'else'> _ Blocky )?
-     forrange = <'for'> <__> Destruct _ <':='> _ <'range'> <_> expr _  Blocky
-     forlazy = <'for'> <__> Destruct _ <':='> _ <'lazy'> <_> expr
-               ( <__> <'if'> <__> expr )? _ Blocky
-     fortimes = <'for'> <__> Identifier _ <':='> _ <'times'> <_> expr _ Blocky
-     forcstyle = <'for'> <__> Identifier _ <':='> _ <'0'> _ <';'>
-                         _ Identifier _ <'<'> _ expr _ <';'>
-                         _ Identifier _ <'++'>
-                         _ Blocky
-     tryexpr = <'try'> _ ImpliedDo _ catches ( _ finally )?
-       catches = ( catch {_ catch} )?
-         catch = <'catch'> _ typename _ Identifier _ ImpliedDo
-       finally = <'finally'> _ Blocky
-     <UnaryExpr> = PrimaryExpr | javafield | ReaderMacro | assoc | dissoc | associn | unaryexpr
-       assoc = expr _ <'+='> _ <'{'> _ associtem _ { <','> _ associtem _ } <'}'>
-       dissoc = expr _ <'-='> _ <'{'> _ associtem _ { <','> _ associtem _ } <'}'>
-	 associtem = expr _ <':'> _ expr
-       associn = expr _ <'+='> _ <'{'> _ associnpath _ <':'> _ expr _ <'}'>
-	 associnpath = expr _ expr {_ expr}
-       unaryexpr = unary_op _ UnaryExpr
-	 <unary_op> = '+' | '-' | '!' | not | (!and '&') | bitnot | take | takeingo
+       primarrayvardecl = Identifier <'['> int_lit  <']'> primitivetype
+       arrayvardecl = Identifier <'['> int_lit  <']'> typename
+       vardecl1 = Identifier ( typename )? <'='> expr
+       vardecl2 = Identifier  <','> Identifier ( typename )? <'='> expr <','> expr
+     ifelseexpr = <'if'> expr Blocky ( <'else'> Blocky )?
+     letifelseexpr = <'if'> Destruct <':='> expr <NL>
+                            expr Blocky ( <'else'> Blocky )?
+     forrange = <'for'> Destruct <':=' 'range'> expr  Blocky
+     forlazy = <'for'> Destruct <':=' 'lazy'> expr
+               (<'if'> expr )? Blocky
+     fortimes = <'for'> Identifier <':=' 'times'> expr Blocky
+     forcstyle = <'for'> Identifier <':=' '0' ';'>
+                         Identifier <'<'> expr <';'>
+                         Identifier <'++'>
+                         Blocky
+     tryexpr = <'try'> ImpliedDo catches ( finally )?
+       catches = ( catch {catch} )?
+         catch = <'catch'> typename Identifier ImpliedDo
+       finally = <'finally'> Blocky
+     <UnaryExpr> = unaryexpr  (* TODO(eob) remove this indirection *)
+       assoc = expr <'+=' '{'> associtem { <','> associtem } <'}'>
+       dissoc = expr <'-=' '{'> associtem { <','> associtem } <'}'>
+	 associtem = expr <':'> expr
+       associn = expr <'+=' '{'> associnpath <':'> expr <'}'>
+	 associnpath = expr expr {expr}
+       unaryexpr = unary_op unaryexpr
+                 | PrimaryExpr | javafield | ReaderMacro | assoc | dissoc | associn | prefixedblock
+	 <unary_op> = '+' | !'->' '-' | '!' | not | (!and '&') | bitnot | take | takeingo
 	   bitnot = <'^'>
 	   not    = <'!'>
            takeingo = <'<:'>
            take     = <'<-'>
        <ReaderMacro> = deref | syntaxquote | unquote | unquotesplicing
-       deref           = <'*'>               _ UnaryExpr
-       syntaxquote     = <'syntax'>     _ UnaryExpr
-       unquote         = <'unquote'>         _ UnaryExpr
-       unquotesplicing = <'unquotes'> _ UnaryExpr
-       javafield  = UnaryExpr _ <'->'> _ JavaIdentifier
+       deref           = <'*'>               UnaryExpr
+       syntaxquote     = <'syntax'>     UnaryExpr
+       unquote         = <'unquote'>         UnaryExpr
+       unquotesplicing = <'unquotes'> UnaryExpr
+       javafield  = UnaryExpr <'->'> JavaIdentifier
        <PrimaryExpr> = Routine
-                     | goroutine
-                     | goblock
-                     | threadroutine
-                     | threadblock
+                     | prefixedroutine
                      | chan
                      | Operand
                      | functiondecl
@@ -220,76 +217,77 @@ nonpkgfile = NL? (expressions|topwithconst|topwithassign) _
                                                                 PrimaryExpr Selector |
                                                                 PrimaryExpr Slice |
                                                                 PrimaryExpr TypeAssertion | *)
-         goroutine = <'go'> _ Routine
-         threadroutine = <'thread'> _ Routine
-         goblock = <'go'> _ ImpliedDo
-         threadblock = <'thread'> _ ImpliedDo
-         chan      = <'make'> _ <'('> _ <'chan'> (_ <typename>)? (_ <','> _ expr)? _ <')'>
+         prefixedroutine = prefix Routine
+         prefixedblock   = prefix ImpliedDo
+           prefix = asyncprefix | 'dosync'
+             asyncprefix = 'go' | 'thread'
+         threadblock = <'thread'> ImpliedDo
+         chan      = <'make' '(' 'chan'> ( <typename>)? ( <','> expr)? <')'>
          <Routine> = functioncall
                      | MappedFunctionCall
                      | variadiccall
                      | typeconversion
                      | javamethodcall
-         typeconversion = primitivetype _ <'('> _ expr _ <')'>
-         indexed = PrimaryExpr _ <'['> _ expr _ <']'>
-         takeslice = PrimaryExpr _ <'['> _ <':'> _ expr _ <']'>
-         dropslice = PrimaryExpr _ <'['>  _ expr _ <':'> _ <']'>
+         typeconversion = primitivetype <'('> expr <')'>
+         indexed = PrimaryExpr <'['> expr <']'>
+         takeslice = PrimaryExpr <'[' ':'> expr <']'>
+         dropslice = PrimaryExpr <'['>  expr <':' ']'>
          variadiccall = PrimaryExpr
-                           <'('> _ ( ArgumentList _ <','> _ )? _ Ellipsis _ PrimaryExpr _ <')'>
+                           <'('> ( ArgumentList <','> )? Ellipsis PrimaryExpr <')'>
          functioncall = PrimaryExpr Call
          <MappedFunctionCall> = len
            len = <'len'> Call
-         javamethodcall = UnaryExpr _ <'->'> _ JavaIdentifier _ Call
-           <Call> =  <'('> _ ( ArgumentList _ )? <')'>
-             <ArgumentList> = expressionlist                                         (* [ _ Ellipsis ] *)
-               expressionlist = expr {_ <','> _ expr} (_ <','>)?
-         <TypeDecl> = <'type'> _ ( TypeSpec | <'('> _ ( TypeSpec NL )* <')'> )
+         javamethodcall = UnaryExpr <'->'> JavaIdentifier Call
+           <Call> =  <'('> ArgumentList? <')'>
+             <ArgumentList> = expressionlist                                         (* [ Ellipsis ] *)
+               expressionlist = expr { <','> expr} ( <','>)?
+         <TypeDecl> = <'type'> ( TypeSpec | <'('> {TypeSpec} <')'> )
 	   <TypeSpec> = interfacespec | structspec
-             structspec = JavaIdentifier _ <'struct'> _ <'{'>  _ (fields _)? <'}'>
+             structspec = JavaIdentifier <'struct' '{'> (fields )? <'}'>
                fields = Field
-                        | fields NL Field
+                        | fields <NL> Field
                  <Field> = Identifier | typedidentifiers
-	     interfacespec = JavaIdentifier _ <'interface'> _ <'{'> _ ( MethodSpec NL )* <'}'>
+	     interfacespec = JavaIdentifier <'interface' '{'> {MethodSpec} <'}'>
 	       <MethodSpec> = voidmethodspec | typedmethodspec
-	       voidmethodspec = Identifier _ <'('> _ methodparameters? _ <')'>
-	       typedmethodspec = Identifier _ <'('> _ methodparameters? _ <')'> _ typename
+	       voidmethodspec = Identifier <'('> methodparameters? <')'>
+	       typedmethodspec = Identifier <'('> methodparameters? <')'> typename
 		 methodparameters = methodparam
-				  | methodparameters _ <','> _ methodparam
-		   methodparam = symbol (_ Identifier)?
-         implements = <'implements'> _ typename _
-                        <'func'> _ <'('> _ JavaIdentifier <')'> _ (
-                          MethodImpl | <'('> _ MethodImpl ( NL MethodImpl )* _ <')'>
+				  | methodparameters <','> methodparam
+		   methodparam = symbol ( Identifier)?
+         implements = <'implements'> typename <'func' '('> JavaIdentifier <')'> (
+                          MethodImpl | <'('>  MethodImpl {<NL> MethodImpl}   <')'>
                         )
            <MethodImpl> = typedmethodimpl | untypedmethodimpl
-             untypedmethodimpl = Identifier _ <'('>  _ parameters? _ <')'> _
+             untypedmethodimpl = Identifier <'('>  parameters? <')'>
                                    (ReturnBlock|Blocky)
-             typedmethodimpl = Identifier _ <'('>  _ parameters? _ <')'> _ typename _
+             typedmethodimpl = Identifier <'('>  parameters? <')'> typename
                                    (ReturnBlock|Blocky)
-         functiondecl = <'func'> _ (Identifier|operator) _ Function
-         funclikedecl = <'func'> _ <'<'> _ symbol _ <'>'> _ Identifier _ Function
+         functiondecl = <'func'> (Identifier|operator) Function
+         funclikedecl = <'func' '<'> symbol <'>'> Identifier Function
            <Function> = FunctionPart | functionparts
-             functionparts = FunctionPart _ FunctionPart {_ FunctionPart}
+             functionparts = FunctionPart FunctionPart { FunctionPart}
                <FunctionPart> = functionpart0 | functionpartn | vfunctionpart0 | vfunctionpartn
-                 functionpart0 = <'('> _ <')'>  ( _ typename )? _ (ReturnBlock|Blocky)
-		 vfunctionpart0 = <'('> _ variadic _ <')'> ( _ typename )? _ (ReturnBlock|Blocky)
-		 functionpartn  = <'('> _ parameters _ <')'> ( _ typename )? _ (ReturnBlock|Blocky)
-		 vfunctionpartn = <'('> _ parameters _  <','> _ variadic _ <')'> ( _ typename )? _
+                 functionpart0 = <'(' ')'>  ( typename )? (ReturnBlock|Blocky)
+		 vfunctionpart0 = <'('> variadic <')'> ( typename )? (ReturnBlock|Blocky)
+		 functionpartn  = <'('> parameters <')'> ( typename )? (ReturnBlock|Blocky)
+		 vfunctionpartn = <'('> parameters  <','> variadic <')'> ( typename )?
                                  (ReturnBlock|Blocky)
-                   parameters = Destruct {<','> _ Destruct}
+                   parameters = Destruct {<','> Destruct}
                    variadic = Identifier Ellipsis
-                   <ReturnBlock> = <'{'> _ <'return'> _ expr _ <'}'>
+                   <ReturnBlock> = <'{' 'return'> expr <'}'>
          <Operand> = Literal | OperandName | label | islabel | new  | <'('> expr <')'>       (*|MethodExpr*)
            label = #'\b\p{Lu}[\p{Lu}_\p{Nd}#\.]*\b'
 	   islabel = <'IS_'> #'\b\p{Lu}[\p{Lu}_\p{Nd}#\.]*\b'
            <Literal> = BasicLit | veclit | dictlit | setlit | structlit | functionlit | shortfunctionlit
-             functionlit = <'func'> _ Function
-             shortfunctionlit = <'func'> _ <'{'> _ expr _ <'}'>
-             <BasicLit> = int_lit | bigintlit | string_lit | regex  | rune_lit | floatlit | bigfloatlit (*| imaginary_lit *)
-               floatlit = decimals '.' decimals? exponent?
+             functionlit = <'func'> Function
+             shortfunctionlit = <'func' '{'> expr <'}'>
+             <BasicLit> = int_lit | bigintlit | regex | string_lit | rune_lit | floatlit | bigfloatlit (*| imaginary_lit *)
+               floatlit = #'([0-9]+\.[0-9]*([eE]?[\+\-]?[0-9]+)?|[0-9]+[eE]?[\+\-]?[0-9]+|\.[0-9]+[eE]?[\+\-]?[0-9]*)'
+               (*floatlit = decimals '.' decimals? exponent?
                         | decimals exponent
                         | '.' decimals exponent?
                  decimals  = #'[0-9]+'
-                 exponent  = ( 'e' | 'E' ) ( '+' | '-' )? decimals
+                 exponent  = ( 'e' | 'E' ) ( '+' | !'->' '-' )? decimals*)
                bigfloatlit = (floatlit | int_lit) 'M'
                <int_lit> = decimallit | octal_lit | hexlit
 		 decimallit = #'[1-9][0-9]*' | #'[0-9]'
@@ -297,12 +295,11 @@ nonpkgfile = NL? (expressions|topwithconst|topwithassign) _
 		 hexlit    = <'0x'> #'[0-9a-fA-F]+'
                bigintlit = int_lit 'N'
 	       (* regex = <'/'> ( #'[^/\n]' | escapedslash )+ <'/'> *)
-               regex =  !comment #'/([^/\\]*(\\.[^/\\]*)*)/'
+               regex =  #'/[^/\\]+(\\.[^/\\]*)*/' | #'/[^/\\]*(\\.[^/\\]*)+/'
                  (* escapedslash = <'\\/'> *)
-	       <string_lit> = rawstringlit | interpretedstringlit | clojureescape
-                 rawstringlit = #'\x60[^\x60]*\x60'                 (* \x60 is back quote character *)
-                 interpretedstringlit = #'["“”]([^"\\]*(\\.[^"\\]*)*)["“”]'
-                 clojureescape = <'\\'> <#'\x60'> #'[^\x60]*' <#'\x60'>       (* \x60 is back quote *)
+	       <string_lit> = interpretedstringlit | clojureescape
+                 interpretedstringlit = #'["“”](?:[^"\\]|\\.)*["“”]'
+                 clojureescape = <'\\' #'\x60'> #'[^\x60]*' <#'\x60'>       (* \x60 is back quote *)
 	       <rune_lit> = <'\''> ( unicode_value | byte_value ) <'\''>
 		 <unicode_value> = unicodechar | littleuvalue | escaped_char
                    unicodechar = #'[^\n ]'
@@ -321,14 +318,14 @@ nonpkgfile = NL? (expressions|topwithconst|topwithassign) _
                      octaldigit = #'[0-7]'
                    littleuvalue = <'\\u'> hexdigit hexdigit hexdigit hexdigit
                      hexdigit = #'[0-9a-fA-F]'
-	     veclit =                               <'['> _ ( expr {_ <','> _ expr _} )? <']'>
-                     |  <'['> _  <']'> _ <typename> <'{'> _ ( expr {_ <','> _ expr _} )? <'}'>
-	     dictlit = '{' _ ( dictelement _ {<','> _ dictelement} )? (_ <','>)? _ '}'
-               dictelement = expr _ <':'> _ expr
-             NotType = 'func' | 'set'
-             structlit = !NotType typename _ <'{'> ( _ expr _ {<','> _ expr} )? _ (<','> _)? <'}'>
-             setlit = <'set'> _ <'{'> ( _ expr _ {<','> _ expr} )? _ <'}'>
-           new = <'new'> <__> typename
+	     veclit =                               <'['> ( expr {<','> expr} )? <']'>
+                     |  <'[' ']' typename '{'> ( expr { <','> expr } )? <'}'>
+	     dictlit = '{' ( dictelement {<','> dictelement} )? ( <','>)? '}'
+               dictelement = expr <':'> expr
+             NotType = 'func' | 'set' | prefix
+             structlit = !NotType typename <'{'> ( expr {<','> expr} )? (<','> )? <'}'>
+             setlit = <'set' '{'> ( expr {<','> expr} )? <'}'>
+           new = <'new'> typename
            <OperandName> = symbol | NonAlphaSymbol                           (*| QualifiedIdent*)
              <NonAlphaSymbol> = '=>' | '->>' | relop | addop | mulop | unary_op
                               | percentnum | percentvaradic
@@ -337,5 +334,6 @@ nonpkgfile = NL? (expressions|topwithconst|topwithassign) _
   <Ellipsis> = <'...'> | <'…'>
   <QQ> = <'"'> | <'“'>  | <'”'>
 `,
+	AUTO_WHITESPACE, STANDARD, //whitespace,
 	NO_SLURP, true,  // for App Engine compatibility
 )

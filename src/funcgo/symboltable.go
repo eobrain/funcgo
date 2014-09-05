@@ -17,6 +17,7 @@
 
 package symboltable
 import "clojure/string"
+import type java.io.IOException
 
 // Return a new symbol table.
 func New() {
@@ -105,11 +106,11 @@ func CheckAllUsed(st) {
 	)
 	if notEmpty(pkgs) {
 		const pkgsS = ", " string.join pkgs
-		throw(new Exception(str("Packages imported but never used: [", pkgsS, "]")))
+		throw(new IOException(str("Packages imported but never used: [", pkgsS, "]")))
 	}
 	if notEmpty(typs) {
 		const typsS = ", " string.join typs
-		throw(new Exception(str("Types imported but never used: [", typsS, "]")))
+		throw(new IOException(str("Types imported but never used: [", typsS, "]")))
 	}
 
 }

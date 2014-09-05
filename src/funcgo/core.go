@@ -20,6 +20,25 @@ import (
 	"funcgo/parser"
 	"funcgo/codegen"
 )
+import type java.io.IOException
+
+
+func escapeRawString(s){
+	string.replace(
+		s,
+		/\x60([^\x60]*)\x60/,
+		func(matched){
+			raw := matched[1]
+			newlines := string.replace(raw, /[^\n]/, "")
+			escaped := str(`"`, raw  string.escape  charEscapeString, '"')
+			escaped str newlines
+		}
+	)
+	// println("escaped=", str("<<",escaped,">>"), "newlines=",str("<<",newlines,">>"))
+}
+// Strip trailing comments and whitespace
+func stripTrailing(s){ string.replace(s, /([ \t]*\/\/[^\n]*|[ \t]+)\n/, "\n") }
+func untabify(s){      string.replace(s, /\t/,           "        ") }
 
 
 func Parse(path, fgo) {
@@ -27,12 +46,11 @@ func Parse(path, fgo) {
 } (path, fgo, startRule) {
 	Parse(path, fgo, startRule, false, false)
 } (path, fgo, startRule, isNodes, isSync) {
-        parsed := parser.Parse(
-		string.replace(fgo, /\t/, "        "),
-		START, startRule
-	)
+	preprocessed := untabify(stripTrailing(escapeRawString(fgo)))
+        parsed := parser.Parse(preprocessed, START, startRule)
         if insta.isFailure(parsed) {
-		throw(new Exception(str(withOutStr(failure.pprintFailure(parsed)))))
+		"__preprocessed.go"  spit  preprocessed
+		throw(new IOException(str(withOutStr(failure.pprintFailure(parsed)))))
         } else {
 		if isNodes {
 			pprint.pprint(parsed)

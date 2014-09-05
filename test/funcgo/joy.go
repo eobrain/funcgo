@@ -74,9 +74,7 @@ var pool ExecutorService = Executors::newFixedThreadPool(
 
 func mutateDothreads(f, {threadCount:THREADS, execCount:TIMES} ) {
 	for _ := times threadCount {
-		multipleCalls Runnable := func{
-			for _ := times execCount { f() }
-		}
+		multipleCalls Runnable := func{ for _ := times execCount { f() } }
 		pool->submit(multipleCalls)
 	}
 }

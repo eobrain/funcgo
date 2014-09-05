@@ -19,13 +19,11 @@ import (
 )
 import type (
 	java.util.List
+	java.io.IOException
 )
 
 kAsyncRules := set{
-	GOROUTINE,
-	GOBLOCK,
-	THREADROUTINE,
-	THREADBLOCK,
+	ASYNCPREFIX,
 	CHAN,
 	TAKE,
 	TAKEINGO,
@@ -40,7 +38,6 @@ kAsyncRules := set{
 func codeGenerator(symbolTable, isGoscript) {
 
 	func noDot(s String) {
-		//s->indexOf(".") == -1
 		!(/\./ reFind s)
 	}
 
@@ -191,6 +188,7 @@ func codeGenerator(symbolTable, isGoscript) {
 			"." s.join $*
 		},
 		TYPECLASSESIMPORTSPEC: blankJoin,
+		PRECEDENCE00: infix,
 		PRECEDENCE0: infix,
 		PRECEDENCE1: infix,
 		PRECEDENCE2: infix,
@@ -322,7 +320,7 @@ func codeGenerator(symbolTable, isGoscript) {
 		},
 		FORCSTYLE: func(ident, identAgain, count, identYetAgain, expressions) {
 			if ident != identAgain || ident != identYetAgain {
-				throw(new Exception(
+				throw(new IOException(
 					`cannot mix different identifiers in c-style for loop`
 				))
 			}
@@ -370,18 +368,10 @@ func codeGenerator(symbolTable, isGoscript) {
 				vardecl(identifier2, typ, expression2)
 			)
 		},
-		GOROUTINE: func(routine) {
-			"go"  listStr  routine
-		},
-		GOBLOCK: func(expr) {
-			"go"  listStr  expr
-		},
-		THREADROUTINE: func(routine) {
-			"thread"  listStr  routine
-		},
-		THREADBLOCK: func(expr) {
-			"thread"  listStr  expr
-		},
+		PREFIXEDROUTINE: listStr,
+		PREFIXEDBLOCK: listStr,
+		PREFIX: identity,
+		ASYNCPREFIX: identity,
 		VARIADICCALL: func(function, params...) {
 			listStr("apply", function, ...params)
 		},
@@ -421,7 +411,7 @@ func codeGenerator(symbolTable, isGoscript) {
 			opPos      := vArgs->indexOf(":=")
 			n          := vArgs->size()
 			if  n % 2 != 1 || (n - 1) / 2 != opPos {
-				throw(new Exception(
+				throw(new IOException(
 					"LHS and RHS of := do not  match" str blankJoin(vArgs)
 				))
 			} else {
@@ -440,7 +430,7 @@ func codeGenerator(symbolTable, isGoscript) {
 			identifier
 		} (pkg, identifier) {
 			if !(symbolTable symbols.HasPackage pkg) {
-				throw(new Exception(format(
+				throw(new IOException(format(
 					`package "%s" in %s.%s does not appear in imports %s`,
 					pkg, pkg, identifier, symbols.Packages(symbolTable))))
 			}
@@ -579,12 +569,10 @@ func codeGenerator(symbolTable, isGoscript) {
 		DECIMALLIT:    identity,
 		BIGINTLIT:     str,
 		BIGFLOATLIT:   str,
-		FLOATLIT:      str,
+		FLOATLIT:      identity, //str,
 		HEXLIT:        func(s string){
 				Integer::parseInt(s, 16)
 		},
-		DECIMALS:      identity,
-		EXPONENT:      str,
 		REGEX:	func(regex string){
 			str(
 				`#"`,
@@ -609,9 +597,6 @@ func codeGenerator(symbolTable, isGoscript) {
 		DQUOTECHAR:    constantFunc(`\"`),
 		HEXDIGIT:      identity,
 		OCTALDIGIT:    identity,
-		RAWSTRINGLIT:  func(literal) {
-			str(`"`, s.escape(stripQuotes(literal), charEscapeString), `"`)
-		},
 		DASHIDENTIFIER: func{ "-" str $1},
 		ISIDENTIFIER:	func(initial, identifier) {
 			str( s.lowerCase(initial), identifier, "?")
@@ -623,7 +608,11 @@ func codeGenerator(symbolTable, isGoscript) {
 			str( s.lowerCase(initial), identifier, "!")
 		},
 		ESCAPEDIDENTIFIER:  func{ stripQuotes($1) },
-		UNARYEXPR: func(operator, expression) { listStr(operator, expression) },
+		UNARYEXPR: func(e) {
+			e
+		} (operator, expression){
+			listStr(operator, expression)
+		},
 		NOTEQ:	     constantFunc("not="),
 		BITAND:	     constantFunc("bit-and"),
 		BITANDNOT:	     constantFunc("bit-and-not"),
@@ -632,8 +621,8 @@ func codeGenerator(symbolTable, isGoscript) {
 		BITNOT:	     constantFunc("bit-not"),
 		TAKE:	     constantFunc("<!!"),
 		TAKEINGO:    constantFunc("<!"),
-		SENDSTMT:     func(channel, expr) { listStr(">!!", channel, expr) },
-		SENDSTMTINGO: func(channel, expr) { listStr(">!", channel, expr) },
+		SENDOP:      constantFunc(">!!"),
+		SENDOPINGO:  constantFunc(">!"),
 		SHIFTLEFT:   constantFunc("bit-shift-left"),
 		SHIFTRIGHT:  constantFunc("bit-shift-right"),
 		NOT:	     constantFunc("not"),
@@ -649,7 +638,7 @@ func codeGenerator(symbolTable, isGoscript) {
 		TYPENAME:	 func(segments...){
 			typ := "." s.join segments
 			if !hasType(typ) {
-				throw(new Exception(format(
+				throw(new IOException(format(
 					`type "%s" does not appear in type imports %s`,
 					typ, symbols.Types(symbolTable))))
 			}
@@ -723,7 +712,7 @@ func packageclauseFunc(symbolTable, path String, isGoscript, isSync) {
 		}
 		imports          := concat([importDecls], xtraMacroImports, xtraImports)
 		if imported != name {
-			throw(new Exception(str(
+			throw(new IOException(str(
 				`Got package "`, imported, `" instead of expected "`,
 				name, `" in "`, path, `"`
 			)))

@@ -23,7 +23,7 @@ import (
         "funcgo/core"
 )
 import type (
-	java.io.{BufferedWriter, File, StringWriter}
+	java.io.{BufferedWriter, File, StringWriter, IOException}
 	jline.console.ConsoleReader
 )
 
@@ -39,7 +39,7 @@ commandLineOptions := [
 // A version of pprint that preserves type hints.
 // See https://groups.google.com/forum/#!topic/clojure/5LRmPXutah8
 func prettyPrint(obj, writer) {
-        origDispatch := \pprint/*print-pprint-dispatch*\
+        origDispatch := \pprint/*print-pprint-dispatch*\  // */
         pprint.withPprintDispatch(
                 func(o) {
 			if met := meta(o); met {
@@ -134,36 +134,40 @@ func compileFile(inFile File, root File, opts) {
         if opts(FORCE) || outFile->lastModified() < inFile->lastModified() {
 		prefixLen := root->getAbsolutePath()->length()
 		relative  := subs(inFile->getAbsolutePath(), prefixLen + 1)
-                print("  ", relative, " ")
+                println("  ", relative, "...")
 		{
 			fgoText        := slurp(inFile)
 			start          := if suffixExtra == "" {SOURCEFILE} else {NONPKGFILE}
-			cljText String := core.Parse(
+			try {
+				cljText String := core.Parse(
 					relative,
 					fgoText,
 					start,
 					opts(NODES), opts(SYNC)
 				)
-			// TODO(eob) open using with-open
-			writer         := io.writer(outFile)
+				// TODO(eob) open using with-open
+				writer         := io.writer(outFile)
 
-			writer->write(str(";; Compiled from ", inFile, "\n"))
-			if opts(UGLY) {
-				writer->write(cljText)
-				writer->close()
-			} else {
-				cljText writePrettyTo writer
-			}
-			if outFile->length() == 0 {
-				outFile->delete()
-				println("\t\tERROR: No output created.")
-			} else {
-				println("\t\t-->", outFile->getPath())
-				if (outFile->length) / (inFile->length) < 0.4 {
-					println("WARNING: Output file is only",
-						int(100 * (outFile->length) / (inFile->length)),
-						"% the size of the input file")
+				writer->write(str(";; Compiled from ", inFile, "\n"))
+				if opts(UGLY) {
+					writer->write(cljText)
+					writer->close()
+				} else {
+					cljText writePrettyTo writer
 				}
+				if outFile->length() == 0 {
+					outFile->delete()
+					println("\t\tERROR: No output created.")
+				} else {
+					println("\t\t-->", outFile->getPath())
+					if (outFile->length) / (inFile->length) < 0.4 {
+						println("WARNING: Output file is only",
+							int(100 * (outFile->length) / (inFile->length)),
+							"% the size of the input file")
+					}
+				}
+			} catch IOException e {
+				println("Parsing ", relative, " failed:\n", e->getMessage())
 			}
 		}
         }
@@ -175,8 +179,10 @@ func compileTree(root File, opts) {
 		inFile File := f
 		try {
 			compileFile(inFile, root, opts)
+		} catch IOException e {
+			println(e->getMessage())
 		} catch Exception e {
-			println("\n    Compile failed: ", e->getMessage())
+			e->printStackTrace()
 		}
 	}
 }

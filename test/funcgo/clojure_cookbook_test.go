@@ -433,7 +433,7 @@ test.fact("can use inf.pluralize to with word labelling counts",
 	{
 		// Words ending in 'ox' pluralize with 'en' (and not 'es')
 		/(ox)(?i)$/ inf.mutatePlural "$1en"
-		
+
 		inf.plural("box")
 	},
 	=>, "boxen",
@@ -480,23 +480,23 @@ test.fact("Can convert between different types of language things (note Funcgo m
 
 	// If you only want the name part of a keyword.
 	// (We have to escape into Clojure for this.)
-	name(\:user/valid?\),
+	name( \:user/valid?\ ),
 	=>, "valid?",
 
 	// If you only want the namespace
-	namespace(\:user/valid?\),
+	namespace( \:user/valid?\ ),
 	=>, "user",
 
-	str(\:user/valid?\),
+	str( \:user/valid?\ ),
 	=>, ":user/valid?",
 
-	str(\:user/valid?\)->substring(1),
+	str( \:user/valid?\ )->substring(1),
 	=>, "user/valid?",
 
 	keyword(quote(produce.onions)),
 	=>, \:produce/onions\,
 
-	symbol(str(\:produce/onions\)->substring(1)),
+	symbol(str( \:produce/onions\ )->substring(1)),
 	=>, quote(produce.onions),
 
 	// keyword and symbol also have 2-argument (infix) versions
@@ -547,7 +547,6 @@ test.fact("Funcgo has numbers",
 
 	(1 / 3) + 0.3,
 	=>, 0.6333333333333333,
-
 	// Avoid losing precision
 	rationalize(0.3),
 	=>, 3/10,
@@ -687,8 +686,7 @@ test.fact("Can do trig",
 			[lat1, long1] := degreesToRadians(p1)
 			[lat2, long2] := degreesToRadians(p2)
 			radius * Math::acos(
-				Math::sin(lat1) * Math::sin(lat2)
-				+
+				Math::sin(lat1) * Math::sin(lat2) +
 				Math::cos(lat1) * Math::cos(lat2) * Math::cos(long1 - long2)
 			)
 		}
