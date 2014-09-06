@@ -118,7 +118,7 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
          sendop     = <'<-'>
          sendopingo = <'<:'>
      precedence0 = precedence1
-                 | precedence0 symbol precedence1
+                 | precedence0 <#'\s'> symbol <#'\s'> precedence1
        symbol = Identifier
               | Identifier <'.'>  Identifier
               | Identifier <'.'>  operator
@@ -145,7 +145,7 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
                    shiftleft = <'<<'>
                    shiftright = <'>>'>
                    mod = <'%'>
-                   bitand = !and <'&'>
+                   bitand = !and !bitandnot <'&'>
                    bitandnot = !and <'&^'>
 	   javastatic = typename <'::'> JavaIdentifier
 	     <JavaIdentifier> = #'\b[\p{L}_][\p{L}_\p{Nd}]*\b'
@@ -285,7 +285,7 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
                (* http://stackoverflow.com/a/2509752/978525 *)
                floatlit = FloatLitA | FloatLitB
                <FloatLitA> = #'([0-9]+\.[0-9]*|\.[0-9]+)([eE][+-]?[0-9]+)?'
-               <FloatLitB> = #'(0|([1-9][0-9]*))[eE][+-]?[0-9]+'
+               <FloatLitB> = #'[0-9]+[eE][+-]?[0-9]+'
 
                bigfloatlit = (floatlit | int_lit) 'M'
                <int_lit> = decimallit | octal_lit | hexlit

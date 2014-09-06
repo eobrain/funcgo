@@ -521,7 +521,7 @@ test.fact("anon varadic",
 	parse("func(a,b,c...){d}"),=>,parsed("(fn [a b & c] d)")
 )
 test.fact("can have raw strings",
-      parse("`one two`")      ,=>, parsed(`"one two"`)
+      parse("\u0060one two\u0060")      ,=>, parsed(`"one two"`)
 )
 test.fact("can have strings",
       parse(`"one two"`)    ,=>, parsed(`"one two"`)
