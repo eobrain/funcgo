@@ -10,7 +10,7 @@ var (
 func Require(precondition) {
     if CheckPreconditions {
 	    if !precondition() {
-		    throw(new AssertionError("Precondition failed for " str precondition))
+		    throw(new AssertionError("Precondition failed for "  str  precondition))
 	    }
     }
 }

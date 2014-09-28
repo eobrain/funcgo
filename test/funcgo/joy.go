@@ -14,7 +14,7 @@ var matrix = [
 ]
 
 test.fact("getIn",
-	matrix getIn [1,2],
+	matrix  getIn  [1,2],
 	=>,  6
 )
 
@@ -50,7 +50,7 @@ test.fact("updateIn",
 
 func onBoard(size) {
 	func(yx) {
-		func{-1 < $1 && $1 < size} isEvery yx
+		func{-1 < $1 && $1 < size}  isEvery  yx
 	}
 }
 
@@ -58,12 +58,12 @@ func neighbors(size, yx) {
 	neighbors([[-1,0], [1,0], [0,-1], [0,1]], size, yx)
 } (deltas, size, yx) {
 	addYx := func{map(+, yx, $1)}
-	unfiltered := addYx map deltas
-	onBoard(size) filter unfiltered
+	unfiltered := addYx  map  deltas
+	onBoard(size)  filter  unfiltered
 }
 
 test.fact("neighbors works",
-	func{matrix getIn $1} map neighbors(3, [0,0]),
+	func{matrix  getIn  $1}  map  neighbors(3, [0,0]),
 	=>, [4,2]
 )
 
@@ -87,7 +87,7 @@ var initialBoard = [
 
 func boardMap(f, bd) {
 	vec(
-		func{vec(for s := lazy $1 { f(s) })} map bd
+		func{vec(for s := lazy $1 { f(s) })}  map  bd
 	)
 }
 
@@ -115,10 +115,10 @@ func isGoodMove(to, enemySq){
 
 var rotateCount = ref(0)
 func fakeShuffle(xs) {
-	dosync(rotateCount alter inc)
+	dosync(rotateCount  alter  inc)
 	{
 		shift := (*rotateCount) % count(xs)
-		(shift drop xs) concat (shift take xs)
+		(shift  drop  xs)  concat  (shift  take  xs)
 	}
 }
 
@@ -141,7 +141,7 @@ func fakeShuffle(xs) {
 	func chooseMove([[mover, mpos], [_, enemyPos]]) {
 		[
 			mover,
-			func{$1 isGoodMove enemyPos} some shuffle(kingMoves(mpos))
+			func{$1  isGoodMove  enemyPos}  some  shuffle(kingMoves(mpos))
 		]
 	}
 
@@ -164,7 +164,7 @@ test.fact("initial state",
 
 
 test.fact("Coordinated, synchronous change using alter",
-	5 take repeatedly(func{chooseMove(*toMove)}),
+	5  take  repeatedly(func{chooseMove(*toMove)}),
 	=>,  [  // starting at [KB, [2,1]]
 		[KB, [2,2]],
 		[KB, [1,0]],
@@ -179,13 +179,13 @@ test.fact("Coordinated, synchronous change using alter",
 func place(from, to){to}
 
 func movePiece([piece, dest], [[_, src], _]) {
-	getIn(board, dest) alter func{place($1, piece)}
-	getIn(board, src) alter func{place($1, EE)}
-	numMoves alter inc
+	getIn(board, dest)  alter  func{place($1, piece)}
+	getIn(board, src)  alter  func{place($1, EE)}
+	numMoves  alter  inc
 }
 
 func updateToMove(move) {
-	toMove alter func{vector(second($1), move)}
+	toMove  alter  func{vector(second($1), move)}
 }
 
 func makeMove() {

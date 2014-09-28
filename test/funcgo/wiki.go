@@ -13,10 +13,10 @@ test.fact("Anonymous Functions",
 	map(func(x, y){list(x, inc(y))}, [1, 2, 3], [1, 2, 3]),
 	[[1, 2], [2, 3], [3, 4]],
 
-	func{list($1, inc($1))} map [1, 2, 3],
+	func{list($1, inc($1))}  map  [1, 2, 3],
 	=>, [[1, 2], [2, 3], [3, 4]],
 
-	func(x){list(x, inc(x))} map [1, 2, 3],
+	func(x){list(x, inc(x))}  map  [1, 2, 3],
 	=>, [[1, 2], [2, 3], [3, 4]],
 
 	func{str(...$*)}("Hello"),

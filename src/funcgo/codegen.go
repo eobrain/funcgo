@@ -29,8 +29,8 @@ kAsyncRules := set{
 	TAKEINGO,
 	SENDSTMT,
 	SENDSTMTINGO,
-        SENDOP,
-        SENDOPINGO,
+	SENDOP,
+	SENDOPINGO,
 	SELECTSTMT,
 	SELECTSTMTINGO
 }
@@ -549,9 +549,13 @@ func codeGenerator(symbolTable, isGoscript) {
 		},
 		LABEL:		func{":" str s.replace(s.lowerCase($1), /_/, "-")},
 		ISLABEL:	func{str(":", s.replace(s.lowerCase($1), /_/, "-"), "?")},
-		IDENTIFIER:	func(string) {
+		IDENTIFIER:	func(idf string) {
 			s.replace(
-				string,
+				if idf->length() > 1 {
+					s.replace(idf, /^_/, "-")
+				} else {
+					idf
+				},
 				/\p{Ll}\p{Lu}/,
 				func{str(first($1), "-", s.lowerCase(last($1)))}
 			)
@@ -585,6 +589,7 @@ func codeGenerator(symbolTable, isGoscript) {
 		INTERPRETEDSTRINGLIT: func(literal) {
 			str(`"`, stripQuotes(literal), `"`)
 		},
+		RAWSTRINGLIT: func{str(`"`, s.escape($1, charEscapeString), `"`)},
 		CLOJUREESCAPE: identity,
 		LITTLEUVALUE:  func(d1,d2,d3,d4){str(`\u`,d1,d2,d3,d4)},
 		OCTALBYTEVALUE:	 func(d1,d2,d3){str(`\o`,d1,d2,d3)},
@@ -599,7 +604,6 @@ func codeGenerator(symbolTable, isGoscript) {
 		DQUOTECHAR:    constantFunc(`\"`),
 		HEXDIGIT:      identity,
 		OCTALDIGIT:    identity,
-		DASHIDENTIFIER: func{ "-" str $1},
 		ISIDENTIFIER:	func(initial, identifier) {
 			str( s.lowerCase(initial), identifier, "?")
 		},
@@ -646,7 +650,7 @@ func codeGenerator(symbolTable, isGoscript) {
 			}
 			typ
 		},
-		UNDERSCOREJAVAIDENTIFIER: func{ "-" str $1},
+		UNDERSCOREJAVAIDENTIFIER: func(s string){ "-"  str  s->substring(1)},
 		JAVAMETHODCALL: func(expression, identifier) {
 			str("(. ", expression, " (", identifier, "))")
 		} (expression, identifier, call) {

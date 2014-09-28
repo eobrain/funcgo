@@ -26,7 +26,7 @@ em.someMacro
 )
 
 func parse(expr) {
-	fgo.Parse("foo.gos", "package foo;" str expr)
+	fgo.Parse("foo.gos", "package foo;"  str  expr)
 }
 
 func parsed(expr) {

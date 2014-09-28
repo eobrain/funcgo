@@ -97,12 +97,12 @@ func parse(expr) {
 		""
 	} else {
 		lines := for p := lazy pkgs {str(`"`, p, `"`)}
-		str("import(\n", "\n" string.join lines, "\n)\n")
+		str("import(\n", "\n"  string.join  lines, "\n)\n")
 	}
 	importtypes := if count(types) == 0 {
 		""
 	} else {
-		str("import type(\n", "\n" string.join types, "\n)\n")
+		str("import type(\n", "\n"  string.join  types, "\n)\n")
 	}
 	compileString("foo.go",
 		str("package foo\n", imports, importtypes, expr)
@@ -118,12 +118,12 @@ func parseJs(expr) {
 		""
 	} else {
 		lines := for p := lazy pkgs {str(`"`, p, `"`)}
-		str("import(\n", "\n" string.join lines, "\n)\n")
+		str("import(\n", "\n"  string.join  lines, "\n)\n")
 	}
 	importtypes := if count(types) == 0 {
 		""
 	} else {
-		str("import type(\n", "\n" string.join types, "\n)\n")
+		str("import type(\n", "\n"  string.join  types, "\n)\n")
 	}
 	compileString("foo.gos",
 		str("package foo\n", imports, importtypes, expr)
@@ -144,7 +144,7 @@ func parsed(expr) {
 		""
 	} else {
 		lines := for t := lazy types {str("(", t, ")")}
-		str(" (:import ", " " string.join lines, ")")
+		str(" (:import ", " "  string.join  lines, ")")
 	}
 	str("(ns foo (:gen-class)",
 		imports,
@@ -179,13 +179,13 @@ func parsedJs(expr) {
 		""
 	} else {
 		lines := for p := lazy pkgs {str("[", p, " :as ", p, "]")}
-		str(" (:require ", " " string.join lines, ")")
+		str(" (:require ", " "  string.join  lines, ")")
 	}
 	importtypes := if count(types) == 0 {
 		""
 	} else {
 		lines := for t := lazy types {str("(", t, ")")}
-		str(" (:import ", " " string.join lines, ")")
+		str(" (:import ", " "  string.join  lines, ")")
 	}
 	str("(ns foo",
 		imports,
@@ -196,7 +196,7 @@ func parsedJs(expr) {
 }
 
 func parseNoPretty(expr) {
-	fgo.Parse("foo.go", "package foo;" str expr)
+	fgo.Parse("foo.go", "package foo;"  str  expr)
 }
 
 func parsedNoPretty(expr) {
@@ -263,7 +263,7 @@ test.fact("operator functions",
 	parse(`func +(x, y) {x  str  y}`), =>, parsed(`(defn + [x y] (str x y))`),
 	parse(`func ∈(elem, coll) { coll  isContains  elem}`),
 	=>, parsed(`(defn ∈ [elem coll] (contains? coll elem))`),
-	parse(`a ∈ b`), =>, parsed(`(∈ a b)`),
+	parse(`a  ∈  b`), =>, parsed(`(∈ a b)`),
 	parse(`func \**\(x, y) { Math::pow(x, y)}`), =>, parsed(`(defn ** [x y] (Math/pow x y))`),
 )
 
@@ -579,7 +579,7 @@ test.fact("comment",
 test.fact("bug1",
 	parse(`{
 		// Words ending in 'ox' pluralize with 'en' (and not 'es')
-		/(ox)(?i)$/ mutatePlural "$1en"
+		/(ox)(?i)$/  mutatePlural  "$1en"
 
 		plural("box")
 	}`), =>, parsed(`(do (plural! #"(ox)(?i)$" "$1en") (plural "box"))`)
@@ -587,8 +587,8 @@ test.fact("bug1",
 test.fact("bug2",
 	parseNoPretty(`func HasPackage(st, pkg) {
 	dosync{
-           st alter func{$1 += {
-		UNUSED_PACKAGES: (*st)(UNUSED_PACKAGES) disj pkg
+           st  alter  func{$1 += {
+		UNUSED_PACKAGES: (*st)(UNUSED_PACKAGES)  disj  pkg
 	  }}
         }
 
@@ -728,7 +728,7 @@ test.fact("bug4",
 test.fact("bug5",
 	parse(`{a
 foo(b)}`), =>,
-	parsedAsync("(do a (foo b))")
+	parsed("(do a (foo b))")
 )
 
 test.fact("select",
@@ -886,14 +886,14 @@ test.fact("there are some non-alphanumeric symbols",
 	parsed(`(test/fact "interesting" (parse "a") => (parsed "a"))`, "test")
 )
 test.fact("infix",
-	parse("a b c")        ,=>, parsed("(b a c)"),
+	parse("a  b  c")      ,=>, parsed("(b a c)"),
 	parse("22 / 7")       ,=>, parsed("(/ 22 7)"),
 	parse("22 / (7 + 4)") ,=>, parsed("(/ 22 (+ 7 4))")
 )
 
 test.fact("equality",
 	parse("a == b") ,=>, parsed("(= a b)"),
-	parse("a isIdentical b") ,=>, parsed("(identical? a b)")
+	parse("a  isIdentical  b") ,=>, parsed("(identical? a b)")
 )
 
 test.fact("character literals",
@@ -935,7 +935,7 @@ test.fact("associativity",
 )
 
 test.fact("parentheses",
-	parse("(a or b) and c") ,=>, parsed("(and (or a b) c)"),
+	parse("(a  or  b)  and  c") ,=>, parsed("(and (or a b) c)"),
 	parse("a * b - c") ,=>, parsed("(- (* a b) c)")
 )
 
@@ -1145,7 +1145,7 @@ test.fact("Method for printing - sorts the elements before printing.",
 	parse(`
 implements Stringer
 func (Sequence) String() String {
-    str("[",  " " join sort.Sort(this),  "]")
+    str("[",  " "  join  sort.Sort(this),  "]")
 }
 
 `, ["sort"], ["fmt.Stringer"]), =>, parsed(str(

@@ -33,15 +33,16 @@ commandLineOptions := [
         ["-n", "--nodes", "print out the parse tree that the parser produces"],
         ["-u", "--ugly",  "do not pretty-print the Clojure"],
         ["-f", "--force", "Force compiling even if not out-of-date"],
+        ["-a", "--ambiguity",  "print out all matched parse trees to diagnose ambiguity"],
         ["-h", "--help",  "print help"]
 ]
 
 // A version of pprint that preserves type hints.
 // See https://groups.google.com/forum/#!topic/clojure/5LRmPXutah8
 func prettyPrint(obj, writer) {
-        origDispatch := \pprint/*print-pprint-dispatch*\  // */
-        pprint.withPprintDispatch(
-                func(o) {
+  origDispatch := \pprint/*print-pprint-dispatch*\  // */
+  pprint.withPprintDispatch(
+    func(o) {
 			if met := meta(o); met {
 				print("^")
 				if count(met) == 1 {
@@ -60,10 +61,10 @@ func prettyPrint(obj, writer) {
 				print(" ")
 				pprint.pprintNewline(FILL)
 			}
-                        origDispatch(o)
-                },
-                pprint.pprint(obj, writer)
-        )
+      origDispatch(o)
+    },
+    pprint.pprint(obj, writer)
+  )
 }
 
 func writePrettyTo(cljText, writer BufferedWriter) {
@@ -131,20 +132,23 @@ func compileFile(inFile File, root File, opts) {
 	}
 } (inFile File, root File, inPath, opts, suffixExtra) {
 	outFile := io.file(string.replace(inPath, /\.go(s?)$/, ".clj$1" str suffixExtra))
-        if opts(FORCE) || outFile->lastModified() < inFile->lastModified() {
+	if opts(FORCE) || outFile->lastModified() < inFile->lastModified() {
 		prefixLen := root->getAbsolutePath()->length()
 		relative  := subs(inFile->getAbsolutePath(), prefixLen + 1)
-                println("  ", relative, "...")
+		println("  ", relative, "...")
 		{
 			fgoText        := slurp(inFile)
+			lines          := count(func{ $1 == '\n' }  filter  fgoText)
 			start          := if suffixExtra == "" {SOURCEFILE} else {NONPKGFILE}
 			try {
+				beginTime := System::currentTimeMillis()
 				cljText String := core.Parse(
 					relative,
 					fgoText,
 					start,
-					opts(NODES), opts(SYNC)
+					opts(NODES), opts(SYNC), opts(AMBIGUITY)
 				)
+				duration := System::currentTimeMillis() - beginTime
 				// TODO(eob) open using with-open
 				writer         := io.writer(outFile)
 
@@ -153,13 +157,13 @@ func compileFile(inFile File, root File, opts) {
 					writer->write(cljText)
 					writer->close()
 				} else {
-					cljText writePrettyTo writer
+					cljText  writePrettyTo  writer
 				}
 				if outFile->length() == 0 {
 					outFile->delete()
 					println("\t\tERROR: No output created.")
 				} else {
-					println("\t\t-->", outFile->getPath())
+					println("\t\t-->", outFile->getPath(), int(1000.0*lines/duration), "lines/s")
 					if (outFile->length) / (inFile->length) < 0.4 {
 						println("WARNING: Output file is only",
 							int(100 * (outFile->length) / (inFile->length)),
@@ -170,7 +174,7 @@ func compileFile(inFile File, root File, opts) {
 				println("Parsing ", relative, " failed:\n", e->getMessage())
 			}
 		}
-        }
+  }
 }
 
 func compileTree(root File, opts) {

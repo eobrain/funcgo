@@ -15,12 +15,26 @@ package parser
 
 import insta "instaparse/core"
 
+// whitespaceOrComments := insta.parser(`
+//     ws-or-comments = #'\s+' | comments
+//      comments = comment+
+//      comment = '/*' inside-comment* '*/'
+//              | '//' #'[^\n]'* '\n'
+//      inside-comment =  !( '*/' | '/*' ) #'.' | comment
+// `, AUTO_WHITESPACE, STANDARD)
+
+whitespaceOrComments := insta.parser(`
+    (* ws-or-comments = (#'\s+' | '//' #'[^\n]'* '\n')+ *)
+    ws-or-comments = #'(\s|(//[^\n]*))+'
+`)
+
 var Parse = insta.parser(`
 sourcefile = packageclause (expressions|topwithconst|topwithassign)
 nonpkgfile = (expressions|topwithconst|topwithassign)
  packageclause = <'package'> imported <NL>
                  importdecls
-   <NL> = ';' | '\n'
+   (* <NL> = ';' | '\n'*) (* | '//' #'[^\n]'* '\n' *)
+   <NL> = #'\s*[;\n]\s*' | #'\s*//[^\n]*\n\s*'
    importdecls = {AnyImportDecl}
      <AnyImportDecl> = importdecl | macroimportdecl | externimportdecl | typeimportdecl | exclude
      exclude = <'exclude' '('>
@@ -47,9 +61,11 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
      <ImportSpec> = importspec
        importspec = ( Identifier )?  QQ imported QQ
          imported = Identifier {<'/'> Identifier}
- expressions = expr | expressions <NL> expr
+ expressions = expr
+              | expressions <NL> expr
    <expr>  = precedence00 | Vars | (*shortvardecl |*) ifelseexpr | letifelseexpr | tryexpr | forrange |
                    forlazy | fortimes | forcstyle | Blocky | ExprSwitchStmt
+                     | functiondecl
 
 
      <Blocky> = block | withconst | withassign | loop
@@ -114,11 +130,18 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
                 |'+='|'-='
      precedence00 = precedence0
                  | precedence00 SendOp precedence0
+                 | assoc | dissoc | associn
+       assoc = precedence0 <'+=' '{'> associtem { <','> associtem } <'}'>
+       dissoc = precedence0 <'-=' '{'> associtem { <','> associtem } <'}'>
+	 associtem = precedence0 <':'> precedence0
+       associn = precedence0 <'+=' '{'> associnpath <':'> precedence0 <'}'>
+	 associnpath = precedence0 precedence0 {precedence0}
        <SendOp> = sendop | sendopingo
          sendop     = <'<-'>
          sendopingo = <'<:'>
      precedence0 = precedence1
-                 | precedence0 <#'\s'> symbol <#'\s'> precedence1
+                 | precedence0 <DoubleSpace> symbol <DoubleSpace>precedence1
+       DoubleSpace = <#'[ \t][ \t]'>
        symbol = Identifier
               | Identifier <'.'>  Identifier
               | Identifier <'.'>  operator
@@ -150,22 +173,28 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
 	   javastatic = typename <'::'> JavaIdentifier
 	     <JavaIdentifier> = #'\b[\p{L}_][\p{L}_\p{Nd}]*\b'
                               | underscorejavaidentifier
-               underscorejavaidentifier = <'_'> JavaIdentifier
-	   <Identifier> = !(Keyword | hexlit) (identifier | dashidentifier | isidentifier | mutidentifier |
+               underscorejavaidentifier = #'\b_[\p{L}_][\p{L}_\p{Nd}]*\b'
+	   <Identifier> = !(Keyword | hexlit) (identifier | isidentifier | mutidentifier |
 			  escapedidentifier)
-             Keyword = '\bconst\b' | '\bfor\b' | '\bnew\b' | '\bpackage\b' | '\brange\b' | '\bif\b'
+             Keyword = #'\bcase\b'
+                     | #'\bconst\b'
+                     | #'\bfor\b'
+                     | #'\bif\b'
+                     | #'\bnew\b'
+                     | #'\bpackage\b'
+                   (*| #'\brange\b'*)
+                     | #'\bselect\b'
 	     identifier = #'[\p{L}_[\p{S}&&[^\p{Punct}]]][\p{L}_[\p{S}&&[^\p{Punct}]]\p{Nd}]*'
-	     dashidentifier = <'_'> identifier
 	     isidentifier = <'is'> #'\p{L}' identifier
 	     mutidentifier = <'mutate'> #'\p{L}' identifier
 	     (* escapedidentifier = <'\\'> #'\b[\p{L}_\p{Sm}][\p{L}_\p{Sm}\p{Nd}]*\b' *)
 	     escapedidentifier = #'\\[^\\]+\\'
-     <Vars> = <'var'> ( <'('> VarDecl {VarDecl} <')'> | VarDecl )
+     <Vars> = <'var'> ( <'('> VarDecl+ <')'> | VarDecl )
      <VarDecl> = primarrayvardecl | arrayvardecl | vardecl1 | vardecl2
        primarrayvardecl = Identifier <'['> int_lit  <']'> primitivetype
        arrayvardecl = Identifier <'['> int_lit  <']'> typename
        vardecl1 = Identifier ( typename )? <'='> expr
-       vardecl2 = Identifier  <','> Identifier ( typename )? <'='> expr <','> expr
+       vardecl2 = Identifier  <','> Identifier ( typename )? <'='> precedence00 <','> precedence00
      ifelseexpr = <'if'> expr Blocky ( <'else'> Blocky )?
      letifelseexpr = <'if'> Destruct <':='> expr <NL>
                             expr Blocky ( <'else'> Blocky )?
@@ -177,18 +206,13 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
                          Identifier <'<'> expr <';'>
                          Identifier <'++'>
                          Blocky
-     tryexpr = <'try'> ImpliedDo catches ( finally )?
-       catches = ( catch {catch} )?
+     tryexpr = <'try'> ImpliedDo catches finally?
+       catches = {catch}
          catch = <'catch'> typename Identifier ImpliedDo
-       finally = <'finally'> Blocky
+       finally = <'finally'> ImpliedDo
      <UnaryExpr> = unaryexpr  (* TODO(eob) remove this indirection *)
-       assoc = expr <'+=' '{'> associtem { <','> associtem } <'}'>
-       dissoc = expr <'-=' '{'> associtem { <','> associtem } <'}'>
-	 associtem = expr <':'> expr
-       associn = expr <'+=' '{'> associnpath <':'> expr <'}'>
-	 associnpath = expr expr {expr}
        unaryexpr = unary_op unaryexpr
-                 | PrimaryExpr | javafield | ReaderMacro | assoc | dissoc | associn | prefixedblock
+                 | PrimaryExpr | javafield | ReaderMacro | prefixedblock
 	 <unary_op> = '+' | !'->' '-' | '!' | not | bitnot | take | takeingo
 	   bitnot = <'^'>
 	   not    = <'!'>
@@ -204,7 +228,6 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
                      | prefixedroutine
                      | chan
                      | Operand
-                     | functiondecl
                      | TypeDecl
                      | implements
                      | funclikedecl
@@ -296,8 +319,9 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
 	       (* regex = <'/'> ( #'[^/\n]' | escapedslash )+ <'/'> *)
                regex =  #'/[^/\\]+(\\.[^/\\]*)*/' | #'/[^/\\]*(\\.[^/\\]*)+/'
                  (* escapedslash = <'\\/'> *)
-	       <string_lit> = interpretedstringlit | clojureescape
+	       <string_lit> = interpretedstringlit | rawstringlit | clojureescape
                  interpretedstringlit = #'["“”](?:[^"\\]|\\.)*["“”]'
+                 rawstringlit = <#'\x60'> #'[^\x60]*' <#'\x60'>     (* \x60 is back quote character *)
                  clojureescape = <'\\' #'\x60'> #'[^\x60]*' <#'\x60'>       (* \x60 is back quote *)
 	       <rune_lit> = <'\''> ( unicode_value | byte_value ) <'\''>
 		 <unicode_value> = unicodechar | littleuvalue | escaped_char
@@ -333,6 +357,6 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
   <Ellipsis> = <'...'> | <'…'>
   <QQ> = <'"'> | <'“'>  | <'”'>
 `,
-	AUTO_WHITESPACE, STANDARD, //whitespace,
+	AUTO_WHITESPACE, whitespaceOrComments, // STANDARD, //whitespace,
 	NO_SLURP, true,  // for App Engine compatibility
 )

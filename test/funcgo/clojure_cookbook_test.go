@@ -25,7 +25,7 @@ test.fact("More complex example",
 )
 
 test.fact("Any function of two arguments can be written infix",
-        [] into range(1, 20),
+        []  into  range(1, 20),
         =>,  [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
 )
 
@@ -129,7 +129,7 @@ test.fact("Making CSV from header vector of rows",
 			"luke,vanderhart,1",
 			"ryan,neufeld,2"
 		]
-		str(header, ...("\n" interpose rows))
+		str(header, ...("\n"  interpose  rows))
 	},
         =>, `first_name,last_name,employee_number
 luke,vanderhart,1
@@ -144,7 +144,7 @@ test.fact("Join can be easier",
 	},
         =>, "milk, butter, flour, eggs",
 
-        ", " string.join foodItems,
+        ", "  string.join  foodItems,
         =>, "milk, butter, flour, eggs",
 
         string.join( [1, 2, 3, 4] ),
@@ -197,7 +197,7 @@ test.fact("int function converts characters to integers",
         int('\u03B1'), // Greek letter alpha (by code point)
         =>, 945,
 
-        int map "Hello, world!",
+        int  map  "Hello, world!",
         =>, [72, 101, 108, 108, 111, 44, 32, 119, 111, 114, 108, 100, 33]
 )
 
@@ -228,7 +228,7 @@ test.fact("str is the easiest way of formatting values into a string",
 			", and I really like to program in ", me(FAVORITE_LANGUAGE))
 	},  =>, "My name is Eamonn, and I really like to program in Funcgo",
 
-        str(...(" " interpose [1, 2.000, 3/1, 4/9])),
+        str(...(" "  interpose  [1, 2.000, 3/1, 4/9])),
         =>, "1 2.0 3 4/9"
 )
 
@@ -240,11 +240,11 @@ test.fact("format is another way of constructing strings",
 		func filename(name, i) {
 			format("%03d-%s", i, name)
 		}
-		"my-awesome-file.txt" filename 42
+		"my-awesome-file.txt"  filename  42
 	},
         =>, "042-my-awesome-file.txt",
 
-	"%07.3f" format 0.005,
+	"%07.3f"  format  0.005,
 	=>, "000.005"
 )
 
@@ -261,7 +261,7 @@ var employees = [
 
 test.fact("formatting",
 	withOutStr(
-		println mapv (tableify map ([header] concat employees))
+		println  mapv  (tableify  map  ([header]  concat  employees))
 	),
 	=>, `First Name           | Last Name            | Employee ID         
 Ryan                 | Neufeld              | 2                   
@@ -270,7 +270,7 @@ Luke                 | Vanderhart           | 1
 
 	withOutStr(
 		->>(
-			[header] concat employees,
+			[header]  concat  employees,
 			map(tableify),
 			mapv(println)
 		)
@@ -283,37 +283,37 @@ Luke                 | Vanderhart           | 1
 
 test.fact("Regular expressions, using reFind",
 
-	/\d+/ reFind "I've just finished reading Fahrenheit 451",
+	/\d+/  reFind  "I've just finished reading Fahrenheit 451",
 	=>, "451",
 
-	/Bees/ reFind "Beads aren't cheap.",
+	/Bees/  reFind  "Beads aren't cheap.",
 	=>, nil
 )
 
 test.fact("To match only the whole string use reMatches",
 
-	/\w+/ reFind "my-param",
+	/\w+/  reFind  "my-param",
 	=>, "my",
 
-	/\w+/ reMatches "my-param",
+	/\w+/  reMatches  "my-param",
 	=>, nil,
 
-	/\w+/ reMatches "justLetters",
+	/\w+/  reMatches  "justLetters",
 	=>, "justLetters"
 )
 
 test.fact("Extract strings from a larger string using reSeq",
-	
-        /\w+/ reSeq "My Favorite Things",
+
+        /\w+/  reSeq  "My Favorite Things",
 	=>, ["My", "Favorite", "Things"],
-	
-	/\d{3}-\d{4}/ reSeq "My phone number is 555-1234.",
+
+	/\d{3}-\d{4}/  reSeq  "My phone number is 555-1234.",
 	=>, ["555-1234"],
-	
+
         {
 		// Extract Twitter identifiers in a tweet
 		func mentions(tweet) {
-			/(@|#)(\w+)/ reSeq tweet
+			/(@|#)(\w+)/  reSeq  tweet
 		}
 
 		mentions("So long, @earth, and thanks for all the #fish. #goodbyes")
@@ -323,7 +323,7 @@ test.fact("Extract strings from a larger string using reSeq",
         {
 		// Capture and decompose a phone number and its title
 		rePhoneNumber := /(\w+): \((\d{3})\) (\d{3}-\d{4})/
-		rePhoneNumber reSeq "Home: (919) 555-1234, Work: (191) 555-1234"
+		rePhoneNumber  reSeq  "Home: (919) 555-1234, Work: (191) 555-1234"
 	},
         =>, [["Home: (919) 555-1234", "Home", "919", "555-1234"],
 		["Work: (191) 555-1234", "Work", "191", "555-1234"]]
@@ -369,14 +369,14 @@ test.fact("More complex string replacement requires regular expressions",
 
 test.fact("Use string.split to split strings",
 	
-	"HEADER1,HEADER2,HEADER3" string.split /,/,
+	"HEADER1,HEADER2,HEADER3"  string.split  /,/,
 	=>, ["HEADER1", "HEADER2", "HEADER3"],
 	
-	"Spaces   Newlines\n\n" string.split /\s+/,
+	"Spaces   Newlines\n\n"  string.split  /\s+/,
 	=>, ["Spaces", "Newlines"],
 	
 	// whitespace splitting with implicit trim
-	"field1    field2 field3   "  string.split /\s+/,
+	"field1    field2 field3   "  string.split  /\s+/,
 	=>, ["field1", "field2", "field3"],
 	
 	// avoid implicit trimming by adding limit of -1
@@ -388,7 +388,7 @@ test.fact("Use string.split to split strings",
 		var dataDelimiters = /[ :-]/
 			
 		//No-limit split on any delimiter
-		"2013-04-05 14:39" string.split dataDelimiters
+		"2013-04-05 14:39"  string.split  dataDelimiters
 	},
 	=>, ["2013", "04", "05", "14", "39"],
 
@@ -412,10 +412,10 @@ test.fact("can use inf.pluralize to with word labelling counts",
 	// In import have
 	//      inf "inflections/core"
 
-	1 inf.pluralize "monkey",
+	1  inf.pluralize  "monkey",
 	=>, "1 monkey",
 
-	12 inf.pluralize "monkey",
+	12  inf.pluralize  "monkey",
 	=>, "12 monkeys",
 
 	// Can provide non-standard pluralization as an arg
@@ -432,14 +432,14 @@ test.fact("can use inf.pluralize to with word labelling counts",
 
 	{
 		// Words ending in 'ox' pluralize with 'en' (and not 'es')
-		/(ox)(?i)$/ inf.mutatePlural "$1en"
+		/(ox)(?i)$/  inf.mutatePlural  "$1en"
 
 		inf.plural("box")
 	},
 	=>, "boxen",
 
 	// plural is also the basis for pluralize...
-	2 inf.pluralize "box",
+	2  inf.pluralize  "box",
 	=>, "2 boxen",
 
 	// Convert "snake_case" to "CamelCase"
@@ -502,11 +502,11 @@ test.fact("Can convert between different types of language things (note Funcgo m
 	// keyword and symbol also have 2-argument (infix) versions
 	{
 		var shoppingArea = "bakery"
-		shoppingArea keyword "bagels"
+		shoppingArea  keyword  "bagels"
 	},
 	=>, \:bakery/bagels\,
 
-	shoppingArea symbol "cakes",
+	shoppingArea  symbol  "cakes",
 	=>, quote(bakery.cakes)
 )
 
@@ -594,20 +594,20 @@ test.fact("Can coerce numbers.",
 	Math::floor(2.999),
 	=>, 2.0,
 
-	3 withPrecision (7M / 9),
+	3  withPrecision  (7M / 9),
 	=>, 0.778M,
 
-	1 withPrecision (7M / 9),
+	1  withPrecision  (7M / 9),
 	=>, 0.8M,
 
 	withPrecision(1, ROUNDING, \FLOOR\, (7M / 9)),
 	=>, 0.7M,
 
 	// note non-big arithmetic not effected by withPrecision
-	3 withPrecision (1 / 3),
+	3  withPrecision  (1 / 3),
 	=>, 1/3,
 
-	3 withPrecision (bigdec(1) / 3),
+	3  withPrecision  (bigdec(1) / 3),
 	=>, 0.333M
 )
 
@@ -633,11 +633,11 @@ test.fact("Easy to implement fuzzy equality",
 
 	{
 		var isEqualWithinTen = partial(fuzzyEq, 10)
-		100 isEqualWithinTen 109
+		100  isEqualWithinTen  109
 	},
 	=>, true,
 
-	100 isEqualWithinTen 110,
+	100  isEqualWithinTen  110,
 	=>, false
 )
 
@@ -648,11 +648,11 @@ test.fact("Can sort with fuzzy equality",
 				if fuzzyEq(tolerance, x, y) {
 					0
 				} else {
-					x compare y
-				}
+					x  compare  y
+			 	}
 			}
 		}
-		fuzzyComparator(10) sort [100, 11, 150, 10, 9]
+		fuzzyComparator(10)  sort  [100, 11, 150, 10, 9]
 	},
 	=>, [11, 10, 9, 100, 150]  // 100 and 150 have moved, but not 11, 10, and 9
 )
@@ -675,7 +675,7 @@ test.fact("Can do trig",
 		earthRadius := 6371.009
 
 		func degreesToRadians(point) {
-			func(x){Math::toRadians(x)} mapv point
+			func(x){Math::toRadians(x)}  mapv  point
 		}
 
 		// Calculate the distance in km between two points on Earth. Each
@@ -691,7 +691,7 @@ test.fact("Can do trig",
 			)
 		}
 
-		[49.2000, -98.1000] distanceBetween [35.9939, -78.8989]
+		[49.2000, -98.1000]  distanceBetween  [35.9939, -78.8989]
 	},
 	=>, 2139.42827188432
 )
@@ -699,19 +699,19 @@ test.fact("Can do trig",
 
 test.fact("Can convert numbers to various bases",
 
-	13 Integer::toString 2,
+	13  Integer::toString  2,
 	=>, "1101",
 
-	42 Integer::toString 16,
+	42  Integer::toString  16,
 	=>, "2a",
 
-	35 Integer::toString 36,
+	35  Integer::toString  36,
 	=>, "z",
 
 	{
-		func toBase(radix, n) { n Integer::toString radix }
+		func toBase(radix, n) { n  Integer::toString  radix }
 		{
-			baseTwo := toBase partial 2
+			baseTwo := toBase  partial  2
 			baseTwo(9001)
 		}
 	},

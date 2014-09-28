@@ -327,10 +327,10 @@ test.fact("inline",
 
 func truthTable(op) {
 	[
-		false op false,
-		false op true,
-		true  op false,
-		true  op true
+		false  op  false,
+		false  op  true,
+		true   op  false,
+		true   op  true
 	]
 }
 
@@ -469,7 +469,8 @@ test.fact("exceptions",
 		dangerous := new ArrayList()
 		dangerous->add(0)
 		mutex <- true  // initialize mutex
-		for _ := times 1000 {
+		// for _ := times 1000 {
+		for count := times 1000 {
 			thread {
 				<-mutex   // grab mutex
 				try {

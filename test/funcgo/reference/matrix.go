@@ -16,11 +16,11 @@ func vecSum(a, b) { map(core.+, a, b) }
 func +(m1, m2) { map(vecSum, m1, m2) }
 
 func Transpose(m) {
-	firstColumnT := first map m
+	firstColumnT := first  map  m
 	if colCount(m) == 1 {
 		 [firstColumnT]
 	 } else {
-		 firstColumnT cons Transpose(rest map m)
+		 firstColumnT  cons  Transpose(rest  map  m)
 	 }
 }
 

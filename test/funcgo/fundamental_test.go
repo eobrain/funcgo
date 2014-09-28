@@ -5,7 +5,7 @@ import (
 )
 
 func parse(expr) {
-	fgoc.CompileString("foo.go", "package foo;" str expr)
+	fgoc.CompileString("foo.go", "package foo;"  str  expr)
 }
 
 test.fact("func",
@@ -19,11 +19,11 @@ test.fact("funcform",
 )
 
 test.fact("if",
-	parse("if a{b;c}"),          =>, parse("when(a,do(b,c))"),
-	parse("if a{b;c}else{d;e}"), =>, parse("if(a,do(b,c),do(d,e))"),
-	parse("if a{b}else{d;e}"),   =>, parse("if(a,b,do(d,e))"),
-	parse("if a(b,c){d;e}"),     =>, parse("when(a(b,c),do(d,e))"),
-	parse("if a(b){d;e}"),       =>, parse("when(a(b),do(d,e))")
+	parse("if a{b;c}"),          =>, parse(`\when\(a,do(b,c))`),
+	parse("if a{b;c}else{d;e}"), =>, parse(`\if\(a,do(b,c),do(d,e))`),
+	parse("if a{b}else{d;e}"),   =>, parse(`\if\(a,b,do(d,e))`),
+	parse("if a(b,c){d;e}"),     =>, parse(`\when\(a(b,c),do(d,e))`),
+	parse("if a(b){d;e}"),       =>, parse(`\when\(a(b),do(d,e))`)
 )
 
 test.fact("const",
