@@ -60,7 +60,7 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
          typepackageimportspec = JavaIdentifier {<'.'>  JavaIdentifier}
      <ImportSpec> = importspec
        importspec = ( Identifier )?  QQ imported QQ
-         imported = Identifier {<'/'> Identifier}
+         imported = Identifier {<!regex '/'> Identifier}
  expressions = expr
               | expressions <NL> expr
    <expr>  = precedence00 | Vars | (*shortvardecl |*) ifelseexpr | letifelseexpr | tryexpr | forrange |
@@ -126,7 +126,7 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
                 |and
                 |'<-'|'<:'|equals|noteq|'<'|'<='|'>='|'>'
                 |'+'|!'->' '-'|bitor|bitxor
-                |'*'|'/'|mod|shiftleft|shiftright|bitand|bitandnot
+                |'*'|!regex '/'|mod|shiftleft|shiftright|bitand|bitandnot
                 |'+='|'-='
      precedence00 = precedence0
                  | precedence00 SendOp precedence0
@@ -164,7 +164,7 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
                  bitxor = <'^'>
 	       precedence5 = UnaryExpr
                            | precedence5 mulop UnaryExpr
-	         mulop = '*' | (!'//' '/') | mod | shiftleft | shiftright | bitand | bitandnot
+	         mulop = '*' | (!'//' !regex '/') | mod | shiftleft | shiftright | bitand | bitandnot
                    shiftleft = <'<<'>
                    shiftright = <'>>'>
                    mod = <'%'>
@@ -188,7 +188,7 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
 	     isidentifier = <#'\bis'> #'\p{L}' identifier
 	     mutidentifier = <#'\bmutate'> #'\p{L}' identifier
 	     (* escapedidentifier = <'\\'> #'\b[\p{L}_\p{Sm}][\p{L}_\p{Sm}\p{Nd}]*\b' *)
-	     escapedidentifier = #'\\[^\\]+\\'
+	     escapedidentifier = #'\\[^\n\\]+\\'
      <Vars> = <#'\bvar\b'> ( <'('> VarDecl+ <')'> | VarDecl )
      <VarDecl> = primarrayvardecl | arrayvardecl | vardecl1 | vardecl2
        primarrayvardecl = Identifier <'['> int_lit  <']'> primitivetype
@@ -318,7 +318,8 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
                bigintlit = int_lit #'N\b'
 	       (* regex = <'/'> ( #'[^/\n]' | escapedslash )+ <'/'> *)
                (* regex =  #'/[^/\\]+(\\.[^/\\]*     )*/' | #'/[^/\\]*(\\.[^/\\]*    )+/' *)
-               regex = #'/([^/\n\\]|\\.)+/'
+               (* regex = #'/([^/\n\\]|\\.)+/' *)
+               regex = #'/([^\/\n\\]|\\.)+/'
                  (* escapedslash = <'\\/'> *)
 	       <string_lit> = interpretedstringlit | rawstringlit | clojureescape
                  interpretedstringlit = #'["“”](?:[^"\\]|\\.)*["“”]'

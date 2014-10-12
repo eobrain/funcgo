@@ -431,7 +431,7 @@ func codeGenerator(symbolTable, isGoscript) {
 		SYMBOL: func(identifier){
 			identifier
 		} (pkg, identifier) {
-			if !(symbolTable symbols.HasPackage pkg) {
+			if !(symbolTable  symbols.HasPackage  pkg) {
 				throw(new IOException(format(
 					`package "%s" in %s.%s does not appear in imports %s`,
 					pkg, pkg, identifier, symbols.Packages(symbolTable))))
@@ -467,7 +467,7 @@ func codeGenerator(symbolTable, isGoscript) {
 					""
 				} else {
 					fs     := fields[0]  s.split  / +/
-					fsOnly := func(s String){!s->startsWith("^")} filter fs
+					fsOnly := func(s String){!s->startsWith("^")}  filter  fs
 					str(
 						"Object (toString [this] ",
 						listStr("str", `"{"`, ` " " `  s.join  fsOnly, `"}"`),
@@ -555,8 +555,7 @@ func codeGenerator(symbolTable, isGoscript) {
 				} else {
 					idf
 				};
-			s.replace(idfTweaked,
-				/\p{Ll}\p{Lu}/,
+			s.replace(idfTweaked, /\p{Ll}\p{Lu}/,
 				func{str(first($1), "-", s.lowerCase(last($1)))}
 			)
 		},
@@ -700,7 +699,7 @@ func req(head, tail) {
 func packageclauseFunc(symbolTable, path String, isGoscript, isSync) {
 	[parent, name] := splitPath(path)
 	if isGoscript {
-		symbolTable symbols.PackageCreated "js"
+		symbolTable  symbols.PackageCreated  "js"
 	}
 	func(imported, importDecls String) {
 		fullImported     := parent  str  imported
@@ -738,7 +737,7 @@ func importDeclFunc(isGoscript, isSync) {
 	func() {
 		""
 	} (importSpecs...) {
-		imports := importSpecs concat syncImports(isGoscript, isSync)
+		imports := importSpecs  concat  syncImports(isGoscript, isSync)
 		listStr(":require", ...imports)
 	}
 }
@@ -747,7 +746,7 @@ func macroImportDeclFunc(isGoscript, isSync) {
 	func() {
 		""
 	} (importSpecs...) {
-		imports := importSpecs concat macroSyncImports(isGoscript, isSync)
+		imports := importSpecs  concat  macroSyncImports(isGoscript, isSync)
 		listStr(":require-macros", ...imports)
 	}
 }
