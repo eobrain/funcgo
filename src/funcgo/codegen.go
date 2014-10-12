@@ -40,7 +40,7 @@ kAsyncRules := set{
 func codeGenerator(symbolTable, isGoscript) {
 
 	func noDot(s String) {
-		!(/\./ reFind s)
+		!(/\./  reFind  s)
 	}
 
 	func isJavaClass(clazz) {
@@ -53,9 +53,9 @@ func codeGenerator(symbolTable, isGoscript) {
 	}
 
 	func hasType(typ String) {
-		(symbolTable symbols.HasType typ)
+		(symbolTable  symbols.HasType  typ)
 		|| isGoscript && typ->startsWith("js.")
-		|| !isGoscript && noDot(typ) && isJavaClass("java.lang." str typ)
+		|| !isGoscript && noDot(typ) && isJavaClass("java.lang."  str  typ)
 	}
 
 	func listStr(item...) {
@@ -63,7 +63,7 @@ func codeGenerator(symbolTable, isGoscript) {
 	}
 
 	func blankJoin (xs...){
-		" " s.join xs
+		" "  s.join  xs
 	}
 
 	func vecStr(item...) {
@@ -79,7 +79,7 @@ func codeGenerator(symbolTable, isGoscript) {
 	// Capitalized
 	func isPublic(identifier) {
 		// not lowercode
-		!(/^\p{Ll}/ reFind identifier) || identifier == "main" ||(/^bit-/ reFind identifier)
+		!(/^\p{Ll}/  reFind  identifier) || identifier == "main" ||(/^bit-/  reFind  identifier)
 	}
 
 	// Return a function that always returns the given constant string.
@@ -102,7 +102,7 @@ func codeGenerator(symbolTable, isGoscript) {
 			consts      := butlast(xs)
 			expressions := last(xs)
 			str("(", typ, " [",
-				" " s.join consts,
+				" "  s.join  consts,
 				"] ",
 				expressions,
 				")")
@@ -110,19 +110,19 @@ func codeGenerator(symbolTable, isGoscript) {
 	}
 
 	func importSpec(imported) {
-		importSpec(last(imported s.split /\./), imported)
+		importSpec(last(imported  s.split  /\./), imported)
 	} (identifier, imported) {
 		if identifier == "_" {
 			// package imported for sideeffect only
 			vecStr(imported)
 		} else {
 			// normal import
-			symbolTable symbols.PackageImported identifier
+			symbolTable  symbols.PackageImported  identifier
 			vecStr(imported, ":as", identifier)
 		}
 	}
 	func externImportSpec(identifier) {
-		symbolTable symbols.PackageImported identifier
+		symbolTable  symbols.PackageImported  identifier
 		""
 	}
 
@@ -134,11 +134,11 @@ func codeGenerator(symbolTable, isGoscript) {
 		}
 	} (identifier, typ, expression) {
 		if isPublic(identifier) {
-			listStr("def", "^" str typ, identifier, expression)
+			listStr("def", "^"  str  typ, identifier, expression)
 		} else {
 			listStr("def",
 				"^:private",
-				"^" str typ,
+				"^"  str  typ,
 				identifier,
 				expression
 			)
@@ -182,12 +182,12 @@ func codeGenerator(symbolTable, isGoscript) {
 		},
 		TYPEIMPORTSPEC: func(typepackage, typeclasses...) {
 			for typeclass := range typeclasses {
-				symbolTable symbols.TypeImported typeclass
+				symbolTable  symbols.TypeImported  typeclass
 			}
 			listStr(typepackage, ...typeclasses)
 		},
 		TYPEPACKAGEIMPORTSPEC: func{
-			"." s.join $*
+			"."  s.join  $*
 		},
 		TYPECLASSESIMPORTSPEC: blankJoin,
 		PRECEDENCE00: infix,
@@ -352,7 +352,7 @@ func codeGenerator(symbolTable, isGoscript) {
 		},
 		PRIMARRAYVARDECL: func(identifier, number, primtype) {
 			elements := blankJoin(...(for _ := times readString(number) {"0"}))
-			listStr("def", identifier, listStr("vector-of", ":" str primtype, elements))
+			listStr("def", identifier, listStr("vector-of", ":"  str  primtype, elements))
 		},
 		ARRAYVARDECL: func(identifier, number, typ) {
 			elements := blankJoin(...(for _ := times readString(number) {"nil"}))
@@ -394,7 +394,7 @@ func codeGenerator(symbolTable, isGoscript) {
 		BLOCK: func (expr){
 			expr
 		} (expr0, exprRest...) {
-			str("(do ",  " " s.join (expr0 cons exprRest),	")")
+			str("(do ",  " "  s.join  (expr0  cons  exprRest),	")")
 		},
 		TYPECONVERSION: listStr,
 		INDEXED: func(xs, i){ listStr("nth", xs, i) },
@@ -414,16 +414,16 @@ func codeGenerator(symbolTable, isGoscript) {
 			n          := vArgs->size()
 			if  n % 2 != 1 || (n - 1) / 2 != opPos {
 				throw(new IOException(
-					"LHS and RHS of := do not  match" str blankJoin(vArgs)
+					"LHS and RHS of := do not  match"  str  blankJoin(vArgs)
 				))
 			} else {
-				" " s.join (for i := lazy \`range`(opPos) {
+				" "  s.join  (for i := lazy \`range`(opPos) {
 					str(vArgs[i], " ", vArgs[opPos + 1 + i])
 				})
 			}
 		},
 		VECDESTRUCT: vecStr,
-		DICTDESTRUCT: func{str('{', (" " s.join $*), "}")},
+		DICTDESTRUCT: func{str('{', (" "  s.join  $*), "}")},
 		DICTDESTRUCTELEM: func(destruct, label) {
 			str(destruct, " ", label)
 		},
@@ -453,24 +453,24 @@ func codeGenerator(symbolTable, isGoscript) {
 		FUNCTIONLIT:	func{listStr("fn", $1)},
 		SHORTFUNCTIONLIT:  func(expr) {
 			if first(expr) == '(' && last(expr) == ')' {
-				"#" str expr
+				"#"  str  expr
 			}else{
 				listStr("fn", "[]", expr)
 		}
 		},
 		STRUCTSPEC: func(javaIdentifier, fields...) {
-			symbolTable symbols.TypeCreated javaIdentifier
+			symbolTable  symbols.TypeCreated  javaIdentifier
 			listStr("defrecord",
 				javaIdentifier,
 				vecStr(...fields),
 				if isEmpty(fields) {
 					""
 				} else {
-					fs     := fields[0] s.split / +/
+					fs     := fields[0]  s.split  / +/
 					fsOnly := func(s String){!s->startsWith("^")} filter fs
 					str(
 						"Object (toString [this] ",
-						listStr("str", `"{"`, ` " " ` s.join fsOnly, `"}"`),
+						listStr("str", `"{"`, ` " " `  s.join  fsOnly, `"}"`),
 						")"
 					)
 				}
@@ -478,7 +478,7 @@ func codeGenerator(symbolTable, isGoscript) {
 		},
 		FIELDS: blankJoin,
 		INTERFACESPEC: func(args...){
-			symbolTable symbols.TypeCreated first(args)
+			symbolTable  symbols.TypeCreated  first(args)
 			listStr("defprotocol", ...args)
 		},
 		VOIDMETHODSPEC: func(javaIdentifier) {
@@ -487,12 +487,12 @@ func codeGenerator(symbolTable, isGoscript) {
 			listStr(javaIdentifier, str("[this ", methodparams, "]"))
 		},
 		TYPEDMETHODSPEC: func(javaIdentifier, typ) {
-			listStr("^" str typ, javaIdentifier, "[this]")
+			listStr("^"  str  typ, javaIdentifier, "[this]")
 		} (javaIdentifier, methodparams, typ) {
-			listStr("^" str typ, javaIdentifier, str("[this ", methodparams, "]"))
+			listStr("^"  str  typ, javaIdentifier, str("[this ", methodparams, "]"))
 		},
 		IMPLEMENTS: func(protocol, concrete, methodimpls...) {
-			symbolTable symbols.TypeCreated concrete
+			symbolTable  symbols.TypeCreated  concrete
 			listStr(...concat(list("extend-type", concrete, protocol), methodimpls))
 		},
 		METHODIMPL: func(javaIdentifier, function) {
@@ -505,11 +505,11 @@ func codeGenerator(symbolTable, isGoscript) {
 			str("^", typ, " ", symbol)
 		},
 		PERCENT: constantFunc("%"),
-		PERCENTNUM: func{"%" str $1},
+		PERCENTNUM: func{"%"  str  $1},
 		PERCENTVARADIC: constantFunc("%&"),
-		FUNCTIONPARTS:	func{str("(",  ") (" s.join $*,	 ")")},
+		FUNCTIONPARTS:	func{str("(",  ") ("  s.join  $*,	 ")")},
 		FUNCTIONPART0:	func(expression) {
-			"[] " str expression
+			"[] "  str  expression
 		} (typ, expression) {
 			str("^", typ, " [] ", expression)
 		},
@@ -534,28 +534,28 @@ func codeGenerator(symbolTable, isGoscript) {
 			listStr(name, str("[this ", params, "]"), block)
 		},
 		TYPEDMETHODIMPL: func(name, typ, block) {
-			listStr("^" str typ, name, str("[this]"), block)
+			listStr("^"  str  typ, name, str("[this]"), block)
 		} (name, params, typ, block) {
-			listStr("^" str typ, name, str("[this ", params, "]"), block)
+			listStr("^"  str  typ, name, str("[this ", params, "]"), block)
 		},
 		PARAMETERS:	blankJoin,
-		VARIADIC:	func{"& " str $1},
+		VARIADIC:	func{"& "  str  $1},
 		VECLIT:		vecStr,
 		DICTLIT:	func{str(...$*)},
 		DICTELEMENT:	func(key, value) {str(key, " ", value, " ")},
-		SETLIT:		func{str("#{",	" " s.join $*,	"}")},
+		SETLIT:		func{str("#{",	" "  s.join  $*,	"}")},
 		STRUCTLIT:	func(typ, exprs...) {
-			listStr(typ str ".", ...exprs)
+			listStr(typ  str  ".", ...exprs)
 		},
-		LABEL:		func{":" str s.replace(s.lowerCase($1), /_/, "-")},
+		LABEL:		func{":"  str  s.replace(s.lowerCase($1), /_/, "-")},
 		ISLABEL:	func{str(":", s.replace(s.lowerCase($1), /_/, "-"), "?")},
 		IDENTIFIER:	func(idf string) {
-			s.replace(
-				if idf->length() > 1 {
+			idfTweaked := if idf->length() > 1 {
 					s.replace(idf, /^_/, "-")
 				} else {
 					idf
-				},
+				};
+			s.replace(idfTweaked,
 				/\p{Ll}\p{Lu}/,
 				func{str(first($1), "-", s.lowerCase(last($1)))}
 			)
@@ -571,7 +571,7 @@ func codeGenerator(symbolTable, isGoscript) {
 			}
 			blankJoin(...decls)
 		},
-		IMPORTED:	  func{"." s.join $*},
+		IMPORTED:	  func{"."  s.join  $*},
 		DECIMALLIT:    identity,
 		BIGINTLIT:     str,
 		BIGFLOATLIT:   str,
@@ -593,7 +593,7 @@ func codeGenerator(symbolTable, isGoscript) {
 		CLOJUREESCAPE: identity,
 		LITTLEUVALUE:  func(d1,d2,d3,d4){str(`\u`,d1,d2,d3,d4)},
 		OCTALBYTEVALUE:	 func(d1,d2,d3){str(`\o`,d1,d2,d3)},
-		UNICODECHAR:   func{`\` str $1},
+		UNICODECHAR:   func{`\`  str  $1},
 		NEWLINECHAR:   constantFunc(`\newline`),
 		SPACECHAR:     constantFunc(`\space`),
 		BACKSPACECHAR: constantFunc(`\backspace`),
@@ -633,16 +633,16 @@ func codeGenerator(symbolTable, isGoscript) {
 		SHIFTRIGHT:  constantFunc("bit-shift-right"),
 		NOT:	     constantFunc("not"),
 		MOD:	     constantFunc("mod"),
-		DEREF:		 func{"@"   str $1},
-		SYNTAXQUOTE:	 func{"`"   str $1},
-		UNQUOTE:	 func{"~"   str $1},
-		UNQUOTESPLICING: func{ "~@" str $1},
+		DEREF:		 func{"@"    str  $1},
+		SYNTAXQUOTE:	 func{"`"    str  $1},
+		UNQUOTE:	 func{"~"    str  $1},
+		UNQUOTESPLICING: func{ "~@"  str  $1},
 		JAVAFIELD:	func(expression, identifier) {
 			listStr(".", expression, identifier)
 		},
-		JAVASTATIC:	 func{"/" s.join $*},
+		JAVASTATIC:	 func{"/"  s.join  $*},
 		TYPENAME:	 func(segments...){
-			typ := "." s.join segments
+			typ := "."  s.join  segments
 			if !hasType(typ) {
 				throw(new IOException(format(
 					`type "%s" does not appear in type imports %s`,
@@ -703,7 +703,7 @@ func packageclauseFunc(symbolTable, path String, isGoscript, isSync) {
 		symbolTable symbols.PackageCreated "js"
 	}
 	func(imported, importDecls String) {
-		fullImported     := parent str imported
+		fullImported     := parent  str  imported
 		hasImports       := importDecls->contains(":require ")
 		hasMacroImports  := importDecls->contains(":require-macros ")
 		xtraImports      := if hasImports {

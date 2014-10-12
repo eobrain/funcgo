@@ -32,38 +32,38 @@ func New() {
 
 // Add a package symbol to the table.
 func PackageImported(st, pkg) {
-	dosync(st alter func{
+	dosync(st  alter  func{
 		$1 += {
 			pkg: PACKAGE,
-			UNUSED_PACKAGES: (*st)(UNUSED_PACKAGES) conj pkg
+			UNUSED_PACKAGES: (*st)(UNUSED_PACKAGES)  conj  pkg
 		}
 	})
 }
 
 // Add a package symbol to the table, but don't require it to be used.
 func PackageCreated(st, pkg) {
-	dosync(st alter func{$1 += {
+	dosync(st  alter  func{$1 += {
 		pkg: PACKAGE
 	}})
 }
 
 // Add a package symbol to the table.
 func TypeImported(st, typ) {
-	dosync(st alter func{$1 += {
+	dosync(st  alter  func{$1 += {
 		typ: TYPE,
-		UNUSED_TYPES: (*st)(UNUSED_TYPES) conj typ
+		UNUSED_TYPES: (*st)(UNUSED_TYPES)  conj  typ
 	}})
 	//dosync{
 	//	st := $1 += {
 	//		typ: TYPE,
-	//		UNUSED_TYPES: (*st)(UNUSED_TYPES) conj typ
+	//		UNUSED_TYPES: (*st)(UNUSED_TYPES)  conj  typ
 	//	}
 	//}
 }
 
 // Add a package symbol to the table.
 func TypeCreated(st, typ) {
-	dosync(st alter func{$1 += {
+	dosync(st  alter  func{$1 += {
 		typ: TYPE
 	}})
 	//dosync{
@@ -73,30 +73,30 @@ func TypeCreated(st, typ) {
 
 // Has this package been previously been added to the table?
 func HasPackage(st, pkg) {
-	dosync(st alter func{$1 += {
-		UNUSED_PACKAGES: (*st)(UNUSED_PACKAGES) disj pkg
-	}})
+	dosync(st  alter  func{$1 += {
+		UNUSED_PACKAGES: (*st)(UNUSED_PACKAGES)  disj  pkg
+	}});
 	(*st)(pkg) == PACKAGE
 }
 
 // Has this type been previously been added to the table?
 func HasType(st, typ) {
-	dosync(st alter func{$1 += {
-		UNUSED_TYPES: (*st)(UNUSED_TYPES) disj typ
-	}})
+	dosync(st  alter  func{$1 += {
+		UNUSED_TYPES: (*st)(UNUSED_TYPES)  disj  typ
+	}});
 	(*st)(typ) == TYPE
 }
 
 // Return a string representation of packages in the table.
 func Packages(st) {
 	const packages = for [symbol, key] := lazy *st if key == PACKAGE { symbol }
-	str("[", ", " string.join packages, "]")
+	str("[", ", "  string.join  packages, "]")
 }
 
 // Return a string representation of types in the table.
 func Types(st) {
 	const packages = for [symbol, key] := lazy *st if key == TYPE { symbol }
-	str("[", ", " string.join packages, "]")
+	str("[", ", "  string.join  packages, "]")
 }
 
 func CheckAllUsed(st) {
@@ -105,11 +105,11 @@ func CheckAllUsed(st) {
 		typs = (*st)(UNUSED_TYPES)
 	)
 	if notEmpty(pkgs) {
-		const pkgsS = ", " string.join pkgs
+		const pkgsS = ", "  string.join  pkgs
 		throw(new IOException(str("Packages imported but never used: [", pkgsS, "]")))
 	}
 	if notEmpty(typs) {
-		const typsS = ", " string.join typs
+		const typsS = ", "  string.join  typs
 		throw(new IOException(str("Types imported but never used: [", typsS, "]")))
 	}
 

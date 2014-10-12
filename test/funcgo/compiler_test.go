@@ -574,7 +574,14 @@ test.fact("comment",
 	parse("// comment\n// another\naaa6") ,=>, parsed("aaa6"),
 	parse("// comment\n// another\naaa7") ,=>, parsed("aaa7"),
 	parse("\n\n//////\n// This file is part of the Funcgo compiler.\naaa8")  ,=>, parsed("aaa8"),
-	parse("///////\naaa9")                ,=>, parsed("aaa9")
+	parse(`
+
+//////
+// This file is part of the Funcgo compiler.
+aaa9`)  ,=>, parsed("aaa9"),
+	parse("///////\naaa10")                ,=>, parsed("aaa10"),
+	parse(`///////
+aaa11`)                ,=>, parsed("aaa11")
 )
 test.fact("bug1",
 	parse(`{
@@ -729,6 +736,38 @@ test.fact("bug5",
 	parse(`{a
 foo(b)}`), =>,
 	parsed("(do a (foo b))")
+)
+
+test.fact("bug6a",
+	parseNoPretty(`
+func HasPackage(st, pkg) {
+	dosync(st  alter  func{$1 += {
+		UNUSED_PACKAGES: (*st)(UNUSED_PACKAGES)  disj  pkg
+	}});
+	(*st)(pkg) == PACKAGE
+}
+`), =>, parsedNoPretty(`(defn Has-package [st pkg] (do (dosync (alter st #(assoc %1 :unused-packages (disj (@st :unused-packages) pkg)))) (= (@st pkg) :package)))`)
+)
+
+test.fact("bug6b",
+	parseNoPretty(`
+func HasPackage(st, pkg) {
+	dosync{
+		st  alter  func{$1 += {
+			UNUSED_PACKAGES: (*st)(UNUSED_PACKAGES)  disj  pkg
+		}}
+	}
+	(*st)(pkg) == PACKAGE
+}
+`), =>, parsedNoPretty(`(defn Has-package [st pkg] (do (dosync (alter st #(assoc %1 :unused-packages (disj (@st :unused-packages) pkg)))) (= (@st pkg) :package)))`)
+)
+
+test.fact("bug7",
+	parse(`
+whitespaceOrComments := parser("xxx")
+
+yyy
+`), =>, parsed(`(let [whitespace-or-comments (parser "xxx")] yyy)`)
 )
 
 test.fact("select",

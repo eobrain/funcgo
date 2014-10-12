@@ -80,7 +80,7 @@ func compileExpression(inPath, fgoText) {
 	cljText   := core.Parse(inPath, fgoText, EXPR)
 	strWriter := new StringWriter()
 	writer    := new BufferedWriter(strWriter)
-	cljText writePrettyTo writer
+	cljText  writePrettyTo  writer
 	strWriter->toString()
 }
 
@@ -114,7 +114,7 @@ func CompileString(inPath, fgoText) {
 	cljText   := core.Parse(inPath, fgoText)
 	strWriter := new StringWriter()
 	writer    := new BufferedWriter(strWriter)
-	cljText writePrettyTo writer
+	cljText  writePrettyTo  writer
 	strWriter->toString()
 }
 
@@ -125,13 +125,13 @@ func compileFile(inFile File, root File, opts) {
 		compileFile(
 			inFile,
 			root,
-			inPath str suffix,
+			inPath  str  suffix,
 			opts,
 			if isNil(suffixExtra) {""} else {suffixExtra}
 		)
 	}
 } (inFile File, root File, inPath, opts, suffixExtra) {
-	outFile := io.file(string.replace(inPath, /\.go(s?)$/, ".clj$1" str suffixExtra))
+	outFile := io.file(string.replace(inPath, /\.go(s?)$/, ".clj$1"  str  suffixExtra))
 	if opts(FORCE) || outFile->lastModified() < inFile->lastModified() {
 		prefixLen := root->getAbsolutePath()->length()
 		relative  := subs(inFile->getAbsolutePath(), prefixLen + 1)
@@ -204,7 +204,7 @@ func printError(cmdLine) {
 // Convert Funcgo files to clojure files, using the commandLineOptions
 // to parse the arguments.
 func Compile(args...) {
-	cmdLine   := args cli.parseOpts commandLineOptions
+	cmdLine   := args  cli.parseOpts  commandLineOptions
 	otherArgs := cmdLine(ARGUMENTS)
 	opts      := cmdLine(OPTIONS)
 	here      := io.file(".")
