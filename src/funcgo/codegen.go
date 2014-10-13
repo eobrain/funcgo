@@ -39,6 +39,18 @@ kAsyncRules := set{
 // corresponding Clojure code.
 func codeGenerator(symbolTable, isGoscript) {
 
+	// Convert camelcase to clojure-dasj-seprateted, e.g. fooBar to foo-bar
+	func camelcaseToDashed(idf string) {
+		idfTweaked := if idf->length() > 1 {
+			s.replace(idf, /^_/, "-")
+		} else {
+			idf
+		}
+		s.replace(idfTweaked, /\p{Ll}\p{Lu}/,
+			func{str(first($1), "-", s.lowerCase(last($1)))}
+		)
+	}
+
 	func noDot(s String) {
 		!(/\./  reFind  s)
 	}
@@ -109,18 +121,30 @@ func codeGenerator(symbolTable, isGoscript) {
 		}
 	}
 
+	func stripQuotes(literal string) string{
+		literal->substring(1, literal->length() - 1)
+	}
+
+	func _importSpec(identifier, dotted) {
+		// As side effect, add to symbol table for future error checking
+		symbolTable  symbols.PackageImported  identifier
+		vecStr(dotted, ":as", identifier)
+	}
+
 	func importSpec(imported) {
-		importSpec(last(imported  s.split  /\./), imported)
+		dotted := camelcaseToDashed(s.replace(stripQuotes(imported), '/', '.'))
+		_importSpec(last(dotted  s.split  /\./), dotted)
 	} (identifier, imported) {
+		dotted := camelcaseToDashed(s.replace(stripQuotes(imported), '/', '.'))
 		if identifier == "_" {
 			// package imported for sideeffect only
-			vecStr(imported)
+			vecStr(dotted)
 		} else {
 			// normal import
-			symbolTable  symbols.PackageImported  identifier
-			vecStr(imported, ":as", identifier)
+			_importSpec(identifier, dotted)
 		}
 	}
+
 	func externImportSpec(identifier) {
 		symbolTable  symbols.PackageImported  identifier
 		""
@@ -159,10 +183,6 @@ func codeGenerator(symbolTable, isGoscript) {
 
 	func doStr(expressions) {
 		"do"  listStr  expressions
-	}
-
-	func stripQuotes(literal string) string{
-		literal->substring(1, literal->length() - 1)
 	}
 
 	// Mapping from parse tree to generators of CLJ code.
@@ -549,16 +569,7 @@ func codeGenerator(symbolTable, isGoscript) {
 		},
 		LABEL:		func{":"  str  s.replace(s.lowerCase($1), /_/, "-")},
 		ISLABEL:	func{str(":", s.replace(s.lowerCase($1), /_/, "-"), "?")},
-		IDENTIFIER:	func(idf string) {
-			idfTweaked := if idf->length() > 1 {
-					s.replace(idf, /^_/, "-")
-				} else {
-					idf
-				};
-			s.replace(idfTweaked, /\p{Ll}\p{Lu}/,
-				func{str(first($1), "-", s.lowerCase(last($1)))}
-			)
-		},
+		IDENTIFIER:	camelcaseToDashed,
 		TYPEDIDENTIFIER: func(identifier, typ) {
 			str(`^`, typ, " ", identifier)
 		},
@@ -570,7 +581,7 @@ func codeGenerator(symbolTable, isGoscript) {
 			}
 			blankJoin(...decls)
 		},
-		IMPORTED:	  func{"."  s.join  $*},
+		PKG: func{"."  s.join  $*},
 		DECIMALLIT:    identity,
 		BIGINTLIT:     str,
 		BIGFLOATLIT:   str,

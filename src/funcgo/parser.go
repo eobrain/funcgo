@@ -31,8 +31,8 @@ whitespaceOrComments := insta.parser(`
 var Parse = insta.parser(`
 sourcefile = packageclause (expressions|topwithconst|topwithassign)
 nonpkgfile = (expressions|topwithconst|topwithassign)
- packageclause = <#'\bpackage\b'> imported <NL>
-                 importdecls
+ packageclause = <#'\bpackage\b'> pkg <NL> importdecls
+   pkg =  Identifier {<'/'> Identifier}
    (* <NL> = ';' | '\n'*) (* | '//' #'[^\n]'* '\n' *)
    <NL> = #'\s*[;\n]\s*' | #'\s*//[^\n]*\n\s*'
    importdecls = {AnyImportDecl}
@@ -59,8 +59,7 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
                          )
          typepackageimportspec = JavaIdentifier {<'.'>  JavaIdentifier}
      <ImportSpec> = importspec
-       importspec = ( Identifier )?  QQ imported QQ
-         imported = Identifier {<!regex '/'> Identifier}
+       importspec = ( Identifier )?  string_lit
  expressions = expr
               | expressions <NL> expr
    <expr>  = precedence00 | Vars | (*shortvardecl |*) ifelseexpr | letifelseexpr | tryexpr | forrange |
@@ -126,7 +125,7 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
                 |and
                 |'<-'|'<:'|equals|noteq|'<'|'<='|'>='|'>'
                 |'+'|!'->' '-'|bitor|bitxor
-                |'*'|!regex '/'|mod|shiftleft|shiftright|bitand|bitandnot
+                |'*'|'/'|mod|shiftleft|shiftright|bitand|bitandnot
                 |'+='|'-='
      precedence00 = precedence0
                  | precedence00 SendOp precedence0
@@ -164,7 +163,7 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
                  bitxor = <'^'>
 	       precedence5 = UnaryExpr
                            | precedence5 mulop UnaryExpr
-	         mulop = '*' | (!'//' !regex '/') | mod | shiftleft | shiftright | bitand | bitandnot
+	         mulop = '*' | (!'//' '/') | mod | shiftleft | shiftright | bitand | bitandnot
                    shiftleft = <'<<'>
                    shiftright = <'>>'>
                    mod = <'%'>
@@ -357,7 +356,6 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
                percentnum     = <'$'> #'[1-9]'
                percentvaradic = <'$*'>
   <Ellipsis> = <'...'> | <'…'>
-  <QQ> = <'"'> | <'“'>  | <'”'>
 `,
 	AUTO_WHITESPACE, whitespaceOrComments, // STANDARD, //whitespace,
 	NO_SLURP, true,  // for App Engine compatibility

@@ -11,7 +11,7 @@
                  [commons-lang/commons-lang "2.6"]
                  [inflections "0.9.5"               :scope "test"]
                  [org.clojure/tools.logging "0.3.0" :scope "test"]
-                 [clj-logging-config "1.9.10"       :scope "test"]
+                 [clj-logging-config "1.9.12"       :scope "test"]
                  [midje "1.6.3"                     :scope "test"]]
   :profiles {
              :dev {:plugins [[lein-midje "3.1.1"]]}
