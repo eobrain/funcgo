@@ -1,4 +1,4 @@
-(defproject org.eamonn.funcgo/funcgo-compiler "0.4.1-SNAPSHOT"
+(defproject org.eamonn.funcgo/funcgo-compiler "0.5.0-SNAPSHOT"
   :description "Compile Functional Go into Clojure"
   :url "http://funcgo.org"
   :license {:name "Eclipse Public License"
