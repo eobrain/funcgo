@@ -15,16 +15,7 @@ package parser
 
 import insta "instaparse/core"
 
-// whitespaceOrComments := insta.parser(`
-//     ws-or-comments = #'\s+' | comments
-//      comments = comment+
-//      comment = '/*' inside-comment* '*/'
-//              | '//' #'[^\n]'* '\n'
-//      inside-comment =  !( '*/' | '/*' ) #'.' | comment
-// `, AUTO_WHITESPACE, STANDARD)
-
 whitespaceOrComments := insta.parser(`
-    (* ws-or-comments = (#'\s+' | '//' #'[^\n]'* '\n')+ *)
     ws-or-comments = #'(\s|(//[^\n]*\n))+'
 `, NO_SLURP, true,  // for App Engine compatibility
 );
@@ -34,7 +25,6 @@ sourcefile = packageclause (expressions|topwithconst|topwithassign)
 nonpkgfile = (expressions|topwithconst|topwithassign)
  packageclause = <#'\bpackage\b'> pkg <NL> importdecls
    pkg =  Identifier {<'/'> Identifier}
-   (* <NL> = ';' | '\n'*) (* | '//' #'[^\n]'* '\n' *)
    <NL> = #'\s*[;\n]\s*' | #'\s*//[^\n]*\n\s*'
    importdecls = {AnyImportDecl}
      <AnyImportDecl> = importdecl | macroimportdecl | externimportdecl | typeimportdecl | exclude
@@ -187,7 +177,6 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
 	     identifier = #'[\p{L}_[\p{S}&&[^\p{Punct}]]][\p{L}_[\p{S}&&[^\p{Punct}]]\p{Nd}]*'
 	     isidentifier = <#'\bis'> #'\p{L}' identifier
 	     mutidentifier = <#'\bmutate'> #'\p{L}' identifier
-	     (* escapedidentifier = <'\\'> #'\b[\p{L}_\p{Sm}][\p{L}_\p{Sm}\p{Nd}]*\b' *)
 	     escapedidentifier = #'\\[^\n\\]+\\'
      <Vars> = <#'\bvar\b'> ( <'('> VarDecl+ <')'> | VarDecl )
      <VarDecl> = primarrayvardecl | arrayvardecl | vardecl1 | vardecl2
@@ -261,7 +250,7 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
            len = <#'\blen\b'> Call
          javamethodcall = UnaryExpr <'->'> JavaIdentifier Call
            <Call> =  <'('> ArgumentList? <')'>
-             <ArgumentList> = expressionlist                                         (* [ Ellipsis ] *)
+             <ArgumentList> = expressionlist                                      (* [ Ellipsis ] *)
                expressionlist = expr { <','> expr} ( <','>)?
          <TypeDecl> = <#'\btype\b'> ( TypeSpec | <'('> {TypeSpec} <')'> )
 	   <TypeSpec> = interfacespec | structspec
@@ -297,7 +286,7 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
                    parameters = Destruct {<','> Destruct}
                    variadic = Identifier Ellipsis
                    <ReturnBlock> = <'{' #'\breturn\b'> expr <'}'>
-         <Operand> = Literal | OperandName | label | islabel | new  | <'('> expr <')'>       (*|MethodExpr*)
+         <Operand> = Literal | OperandName | label | islabel | new  | <'('> expr <')'> (*|MethodExpr*)
            label = #'\b\p{Lu}[\p{Lu}_\p{Nd}#\.]*\b'
 	   islabel = <#'\bIS_'> #'\p{Lu}[\p{Lu}_\p{Nd}#\.]*\b'
            <Literal> = BasicLit | veclit | dictlit | setlit | structlit | functionlit | shortfunctionlit
@@ -316,11 +305,7 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
 		 <octal_lit>  = #'0[0-7]+'
 		 hexlit    = <'0x'> #'[0-9a-fA-F]+'
                bigintlit = int_lit #'N\b'
-	       (* regex = <'/'> ( #'[^/\n]' | escapedslash )+ <'/'> *)
-               (* regex =  #'/[^/\\]+(\\.[^/\\]*     )*/' | #'/[^/\\]*(\\.[^/\\]*    )+/' *)
-               (* regex = #'/([^/\n\\]|\\.)+/' *)
                regex = #'/([^\/\n\\]|\\.)+/'
-                 (* escapedslash = <'\\/'> *)
 	       <string_lit> = interpretedstringlit | rawstringlit | clojureescape
                  interpretedstringlit = #'["“”](?:[^"\\]|\\.)*["“”]'
                  rawstringlit = <#'\x60'> #'[^\x60]*' <#'\x60'>     (* \x60 is back quote character *)

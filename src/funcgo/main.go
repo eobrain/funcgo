@@ -163,10 +163,14 @@ func compileFile(inFile File, root File, opts) {
 					outFile->delete()
 					println("\t\tERROR: No output created.")
 				} else {
-					println("\t\t-->", outFile->getPath(), int(1000.0*lines/duration), "lines/s")
+					println("\t\t-->",
+						outFile->getPath(),
+						int(1000.0*lines/duration),
+						"lines/s")
 					if (outFile->length) / (inFile->length) < 0.4 {
 						println("WARNING: Output file is only",
-							int(100 * (outFile->length) / (inFile->length)),
+							int(100 * (outFile->length)
+								/ (inFile->length)),
 							"% the size of the input file")
 					}
 				}

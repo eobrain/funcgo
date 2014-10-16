@@ -23,21 +23,6 @@ import (
 import type java.io.IOException
 
 
-// func escapeRawString(s){
-// 	string.replace(
-// 		s,
-// 		/\x60([^\x60]*)\x60/,
-// 		func(matched){
-// 			raw := matched[1]
-// 			newlines := string.replace(raw, /[^\n]/, "")
-// 			escaped := str(`"`, raw  string.escape  charEscapeString, '"')
-// 			escaped str newlines
-// 		}
-// 	)
-// 	// println("escaped=", str("<<",escaped,">>"), "newlines=",str("<<",newlines,">>"))
-// }
-// Strip trailing comments and whitespace
-// func stripTrailing(s){ string.replace(s, /([ \t]*\/\/[^\n]*|[ \t]+)\n/, "\n") }
 func untabify(s){      string.replace(s, /\t/,           "        ") }
 
 func Ambiguity(fgo) {
@@ -46,34 +31,35 @@ func Ambiguity(fgo) {
 }
 
 func parse(preprocessed, startRule, isAmbiguity) {
-  if isAmbiguity {
+	if isAmbiguity {
 
-    parsedList := insta.parses(parser.Parse, preprocessed, START, startRule)
-    ambiguity := count(parsedList)
-    switch ambiguity {
-    case 0: {
-      "__preprocessed.go"  spit  preprocessed
-      throw(new IOException("Parsing failure.  Turn off ambiguity flag to see details."))
-    }
-    case 1:
-      parsedList[0]
-    default: {
-      print(" WARNING, ambiguity=", ambiguity)
-      parsedList[0]
-    }
-    }
+		parsedList := insta.parses(parser.Parse, preprocessed, START, startRule)
+		ambiguity := count(parsedList)
+		switch ambiguity {
+		case 0: {
+			"__preprocessed.go"  spit  preprocessed
+			throw(new IOException(
+				"Parsing failure.  Turn off ambiguity flag to see details."))
+		}
+		case 1:
+			parsedList[0]
+		default: {
+			print(" WARNING, ambiguity=", ambiguity)
+			parsedList[0]
+		}
+		}
 
-  } else {
+	} else {
 
-    parsed := parser.Parse(preprocessed, START, startRule)
-    if insta.isFailure(parsed) {
-      "__preprocessed.go"  spit  preprocessed
-      throw(new IOException(str(withOutStr(failure.pprintFailure(parsed)))))
-    } else {
-      parsed
-    }
+		parsed := parser.Parse(preprocessed, START, startRule)
+		if insta.isFailure(parsed) {
+			"__preprocessed.go"  spit  preprocessed
+			throw(new IOException(str(withOutStr(failure.pprintFailure(parsed)))))
+		} else {
+			parsed
+		}
 
-  }
+	}
 }
 
 func Parse(path, fgo) {
@@ -81,9 +67,8 @@ func Parse(path, fgo) {
 } (path, fgo, startRule) {
 	Parse(path, fgo, startRule, false, false, false)
 } (path, fgo, startRule, isNodes, isSync, isAmbiguity) {
-	// preprocessed := untabify(stripTrailing(escapeRawString(fgo)))
 	preprocessed := untabify(fgo)
-  parsed := parse(preprocessed, startRule, isAmbiguity)
+	parsed := parse(preprocessed, startRule, isAmbiguity)
 	if isNodes {
 		pprint.pprint(parsed)
 	}
