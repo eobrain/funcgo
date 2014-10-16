@@ -22,7 +22,7 @@ whitespaceOrComments := insta.parser(`
 
 var Parse = insta.parser(`
 sourcefile = packageclause (expressions|topwithconst|topwithassign)
-nonpkgfile = (expressions|topwithconst|topwithassign)
+nonpkgfile = (expressions|topwithconst|topwithassign) <NL>?
  packageclause = <#'\bpackage\b'> pkg <NL> importdecls
    pkg =  Identifier {<'/'> Identifier}
    <NL> = #'\s*[;\n]\s*' | #'\s*//[^\n]*\n\s*'
@@ -175,8 +175,8 @@ nonpkgfile = (expressions|topwithconst|topwithassign)
                    (*| #'\brange\b'*)
                      | #'\bselect\b'
 	     identifier = #'[\p{L}_[\p{S}&&[^\p{Punct}]]][\p{L}_[\p{S}&&[^\p{Punct}]]\p{Nd}]*'
-	     isidentifier = <#'\bis'> #'\p{L}' identifier
-	     mutidentifier = <#'\bmutate'> #'\p{L}' identifier
+	     isidentifier = <#'\bis'> #'\p{L}' identifier         (* TODO(eob) make a regex *)
+	     mutidentifier = <#'\bmutate'> #'\p{L}' identifier    (* TODO(eob) make a regex *)
 	     escapedidentifier = #'\\[^\n\\]+\\'
      <Vars> = <#'\bvar\b'> ( <'('> VarDecl+ <')'> | VarDecl )
      <VarDecl> = primarrayvardecl | arrayvardecl | vardecl1 | vardecl2
