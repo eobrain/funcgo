@@ -26,7 +26,8 @@ import insta "instaparse/core"
 whitespaceOrComments := insta.parser(`
     (* ws-or-comments = (#'\s+' | '//' #'[^\n]'* '\n')+ *)
     ws-or-comments = #'(\s|(//[^\n]*\n))+'
-`);
+`, NO_SLURP, true,  // for App Engine compatibility
+);
 
 var Parse = insta.parser(`
 sourcefile = packageclause (expressions|topwithconst|topwithassign)
