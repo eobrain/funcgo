@@ -21,10 +21,10 @@ client side (JS).
 
 Follow the [install instructions for Leiningen][lein]
 
-On the command line, go to an empty directory and type ...
+On the command line, type ...
 ```sh
-lein new app hello
-cd hello
+lein new app hellofuncgo
+cd hellofuncgo
 lein run
 ```
 This should print out `Hello, World!`, showing that your Clojure
@@ -32,32 +32,37 @@ environment is configured correctly.
 
 #### 2. Convert your project into a Funcgo project.
 
-[![Clojars Project](http://clojars.org/org.eamonn.funcgo/funcgo-lein-plugin/latest-version.svg)](http://clojars.org/org.eamonn.funcgo/funcgo-lein-plugin)
 
-In your favorite text editor, edit the file `project.clj` and insert
-`[org.eamonn.funcgo/funcgo-lein-plugin "0.4.1"]` (or the latest
-version from clojars shown above) in *both* the dependencies section
-*and* the plugins section. You should end up with something like ...
+In your favorite text editor, edit the file `project.clj` and
+1. insert `[org.eamonn.funcgo/funcgo-lein-plugin "x.x.x"]` in *both* the dependencies section
+  *and* the plugins section replacing `x.x.x`
+  with the latest version from clojars
+  [![Clojars Project](http://clojars.org/org.eamonn.funcgo/funcgo-lein-plugin/latest-version.svg)](http://clojars.org/org.eamonn.funcgo/funcgo-lein-plugin)
+2. Remove the `[org.clojure/clojure "1.5.1"]` dependency.
+
+You should end up with something like ...
 
 ```clj
-(defproject hello "0.1.0-SNAPSHOT"
+(defproject hellofuncgo "0.1.0-SNAPSHOT"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.eamonn.funcgo/funcgo-lein-plugin "0.3.0"]]
-  :plugins [ [org.eamonn.funcgo/funcgo-lein-plugin "0.3.0"]]
-  :main ^:skip-aot hello.core
+  :dependencies [ [org.eamonn.funcgo/funcgo-lein-plugin "0.5.1"]]
+  :plugins [ [org.eamonn.funcgo/funcgo-lein-plugin "0.5.1"]]
+  :main ^:skip-aot hellofuncgo.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
 ```
 
-Delete the existing Clojure file `src/hello/core.clj`
+Delete the existing Clojure file ...
+```sh
+rm src/hellofuncgo/core.clj
+```
 
 #### 3. Write Funcgo
 
-Create a new Funcgo file `src/hello/core.go` containing ...
+Create a new Funcgo file `src/hellofuncgo/core.go` containing ...
 ```go
 package core
 
@@ -69,8 +74,7 @@ func _main(args...) {
 On the command line (in the same directory as the `project.clj`
 file) do ...
 ```sh
-lein fgoc
-lein run
+lein do fgoc, run
 ```
 This should print out `Hello, World from Funcgo`.
 
@@ -109,12 +113,14 @@ fgo=>     2+3
 Clojure:  (+ 2 3)
 Result:   5
 
-fgo=>     func{10 * $1} map [1,2,3,4,5,6]
+fgo=>     func{10 * $1}  map  [1,2,3,4,5,6]
 Clojure:  (map #(* 10 %) [1 2 3 4 5 6])
 Result:   (10 20 30 40 50 60)
 
 fgo=>
 ```
+(In the above example, note you *must* have double-spaces around the
+`map` in the infix expression.  This expression is equivalent to `map(func{10 * $1}, [1,2,3,4,5,6])`)
 
 ### Not Using Leiningen?
 
@@ -283,8 +289,9 @@ being passed as the first parameter of `into`.
 This example has the exact same effect as the previous example, but we
 are taking advantage of another feature of Funcgo any function that
 takes two parameters `foo(param1, param2)` can alternatively be
-written in _infix_ notation as `param1 foo param2`.  This can
-sometimes lead to cleaner and more readable code.
+written in _infix_ notation as `param1 foo param2` (with double spaces
+around the `foo`).  This can sometimes lead to cleaner and more
+readable code.
 
 #### Specifying keyword and dictionary literals
 ```go
@@ -500,8 +507,7 @@ PATH.
 To create a new compiler JAR execute ...
 
 ```sh
-lein fgoc
-lein uberjar
+lein do fgoc, uberjar
 ```
 
 ... which will compile the compiler and generate a JAR file
@@ -510,7 +516,7 @@ lein uberjar
 You can run the unit tests by doing
 
 ```sh
-lein midje
+lein do fgoc, midje
 ```
 
 ## Thanks

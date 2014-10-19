@@ -4,12 +4,16 @@ import (
 	test "midje/sweet"
 )
 
-name := "Eamonn"
-
-test.fact("can concatenate strings",
-	str("Hello ",  name),     =>, "Hello Eamonn"
+test.fact("can concatenate strings", {
+	greeting := "Hello "
+	name := "Eamonn"
+	str(greeting,  name)
+},     =>, "Hello Eamonn"
 )
 
-test.fact("can use infix when calling two-parameter-function",
-	"Hello "  str  name,      =>, "Hello Eamonn"
+test.fact("can use infix when calling two-parameter-function", {
+	greeting := "Hello "
+	name := "Eamonn"
+	greeting  str  name
+},      =>, "Hello Eamonn"
 )
