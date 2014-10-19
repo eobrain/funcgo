@@ -942,8 +942,8 @@ of `f(a,b)`.
 	=> "foobar"
 ```
 
-Alternatively you can call such a function in an infix format of `a  f
-b`.
+Alternatively you can call such a function in an infix format
+of `a  f  b`.  The infix function name must be separated by double-spaces.
 
 ## Binary Operators and Precedence
 
