@@ -52,56 +52,6 @@ test.fact("syntax",
 `
 )
 
-test.fact("can destructure",
-
-	{
-		vec          := [111, 222, 333, 444]
-		[a, b, c, d] := vec
-		b
-	}, =>, 222,
-
-	{
-		vec := [111, 222, 333, 444]
-
-		func theSecond([a, b, c, d]) {
-			b
-		}
-		theSecond(vec)
-	}, =>, 222,
-
-	{
-		vec              := [111, 222, 333, 444]
-		[first, rest...] := vec
-		rest
-	}, =>, [222, 333, 444],
-
-	{
-		dict             := {AAA: 11,  BBB: 22,  CCC: 33,  DDD: 44}
-		{c: CCC, a: AAA} := dict
-		c
-	}, =>, 33,
-
-	{
-		dict := {AAA: 11,  BBB: 22,  CCC: 33,  DDD: 44}
-
-		func extractCCC({c: CCC}) {
-			c
-		}
-		extractCCC(dict)
-	}, =>, 33,
-
-	{
-		planets := [
-			{NAME: "Mercury", RADIUS_KM: 2440},
-			{NAME: "Venus",   RADIUS_KM: 6052},
-			{NAME: "Earth",   RADIUS_KM: 6371},
-			{NAME: "Mars",    RADIUS_KM: 3390}
-		]
-		[_, _, {earthRadiusKm: RADIUS_KM}, _] := planets
-		earthRadiusKm
-	}, =>, 6371
-)
-
 test.fact("Looping with tail recursion",
 
 	{
@@ -193,6 +143,209 @@ test.fact("Type switch",
 		"foobar",
 		"Unknown types for :foo and :bar"
 	]
+)
+
+func truthTable(op) {
+	[
+		false  op  false,
+		false  op  true,
+		true   op  false,
+		true   op  true
+	]
+}
+
+test.fact("operators",
+
+        3 * 4                   , =>, 12,
+        16.0 / 2.0              , =>, 8.0,
+	12 % 5                  , =>, 2,
+        0xCAFE << 4             , =>, 0xCAFE0,
+        0xCAFE >> 4             , =>, 0xCAF,
+        0xFACADE &  0xFFF000    , =>, 0xFAC000,
+        0xFACADE &^ 0x000FFF    , =>, 0xFAC000,
+	3 + 4                   , =>, 7,
+        3 - 4                   , =>, -1,
+        0xFACADE |  0xFFF000    , =>, 0xFFFADE,
+        0xFACADE ^  0x000FFF    , =>, 0xFAC521,
+        5 == 5                  , =>, true,
+        5 == 4                  , =>, false,
+        5 == "5"                , =>, false,
+        "5" == "5"              , =>, true,
+	[A, B, C] == [A, B, C]  , =>, true,
+	[A, B, C] == [A, B, DD] , =>, false,
+	{A:1,B:2} == {A:1,B:2}  , =>, true,
+	{A:1,B:2} == {A:1,B:9}  , =>, false,
+        5 > 5                   , =>, false,
+        5 > 4                   , =>, true,
+        5 < 5                   , =>, false,
+        5 < 4                   , =>, false,
+        5 >= 5                  , =>, true,
+        5 >= 4                  , =>, true,
+        5 <= 5                  , =>, true,
+        5 <= 4                  , =>, false,
+	truthTable(func{$1 && $2}), =>, [false, false, false, true],
+	truthTable(func{$1 || $2}), =>, [false,  true,  true, true]
+)
+
+var (
+	a = randInt(100)
+	b = randInt(100)
+	c = randInt(100)
+	p = randInt(2) == 0
+	q = randInt(2) == 0
+	r = randInt(2) == 0
+)
+
+test.fact("you can transpose matrices",
+	{
+		m := [
+			[1, 2, 3],
+			[4, 5, 6]
+		]
+
+		matrix.Transpose(m)
+
+	}, =>, [
+		[1, 4],
+		[2, 5],
+		[3, 6]
+	]
+)
+
+
+test.fact("you can multiply matrices together",
+	{
+		a := [[3, 4]]
+		b := [
+			[5],
+			[6]
+		]
+
+		a  matrix.*  b
+
+	}, =>, [[39]],
+
+	{
+		m := [
+			[1, 2, 3],
+			[4, 5, 6]
+		]
+		mT := [
+			[1, 4],
+			[2, 5],
+			[3, 6]
+		]
+
+		m  matrix.*  mT
+
+	}, =>, [
+		[14, 32],
+		[32, 77]
+	]
+)
+
+test.fact("vars",
+	{
+		var (
+			pp = 111
+			qq = 222
+		)
+		pp + qq
+	}, =>, 333,
+
+	{
+		var rr = 111
+		var ss = 222
+		rr + ss
+	}, =>, 333,
+
+	{
+		var tt int    = 111
+		var uu string = "foo"
+		uu  str  tt
+	}, =>, "foo111"
+)
+
+test.fact("for",
+
+	{
+		fib        := [1, 1, 2, 3, 5, 8]
+		fibSquared := for x := lazy fib {
+			x * x
+		}
+
+		fibSquared
+	}, =>, [1, 1, 4, 9, 25, 64],
+
+	{
+		fib        := [1, 1, 2, 3, 5, 8]
+		fibSquared := func(x){ x * x }  map  fib
+
+		fibSquared
+	}, =>, [1, 1, 4, 9, 25, 64],
+
+	withOutStr({
+		fib := [1, 1, 2, 3, 5, 8]
+		for x := lazy fib {
+			print(" ", x)
+		}
+	}), =>, "",
+
+	withOutStr({
+		fib := [1, 1, 2, 3, 5, 8]
+		func(x){ print(" ", x) }  map  fib
+	}), =>, "",
+
+	withOutStr({
+		fib := [1, 1, 2, 3, 5, 8]
+		for x := range fib {
+			print(" ", x)
+		}
+	}), =>, "  1  1  2  3  5  8",
+
+	withOutStr({
+		for x := times 10 {
+			print(" ", x)
+		}
+	}), =>, "  0  1  2  3  4  5  6  7  8  9"
+
+)
+
+test.fact("exceptions",
+	{
+		try {
+
+			throw(new AssertionError("foo"))
+
+		} catch OutOfMemoryError e {
+			"out of memory"
+		} catch AssertionError e {
+			"assertion failed: "  str  e->getMessage()
+		} finally {
+			"useless"
+		}
+	}, =>, "assertion failed: foo",
+
+	{
+		mutex     := make(chan, 1)
+		dangerous := new ArrayList()
+		dangerous->add(0)
+		mutex <- true  // initialize mutex
+		// for _ := times 1000 {
+		for count := times 1000 {
+			thread {
+				<-mutex   // grab mutex
+				try {
+					i := dangerous->get(0)
+					dangerous->set(0, i + 1)
+				} finally {
+					mutex <- true   // release mutex
+				}
+			}
+		}
+		Thread::sleep(100)
+		dangerous->get(0)
+	}, =>, 1000
 )
 
 test.fact("select (1)",
@@ -315,7 +468,7 @@ test.fact("select (3)",
 
 )
 
-test.fact("inline",
+test.fact("infix",
 
 	str("foo", "bar"),
 	=>, "foobar",
@@ -323,57 +476,6 @@ test.fact("inline",
 	"foo"  str  "bar",
 	=>, "foobar"
 
-)
-
-func truthTable(op) {
-	[
-		false  op  false,
-		false  op  true,
-		true   op  false,
-		true   op  true
-	]
-}
-
-test.fact("operators",
-
-        3 * 4                   , =>, 12,
-        16.0 / 2.0              , =>, 8.0,
-	12 % 5                  , =>, 2,
-        0xCAFE << 4             , =>, 0xCAFE0,
-        0xCAFE >> 4             , =>, 0xCAF,
-        0xFACADE &  0xFFF000    , =>, 0xFAC000,
-        0xFACADE &^ 0x000FFF    , =>, 0xFAC000,
-	3 + 4                   , =>, 7,
-        3 - 4                   , =>, -1,
-        0xFACADE |  0xFFF000    , =>, 0xFFFADE,
-        0xFACADE ^  0x000FFF    , =>, 0xFAC521,
-        5 == 5                  , =>, true,
-        5 == 4                  , =>, false,
-        5 == "5"                , =>, false,
-        "5" == "5"              , =>, true,
-	[A, B, C] == [A, B, C]  , =>, true,
-	[A, B, C] == [A, B, DD] , =>, false,
-	{A:1,B:2} == {A:1,B:2}  , =>, true,
-	{A:1,B:2} == {A:1,B:9}  , =>, false,
-        5 > 5                   , =>, false,
-        5 > 4                   , =>, true,
-        5 < 5                   , =>, false,
-        5 < 4                   , =>, false,
-        5 >= 5                  , =>, true,
-        5 >= 4                  , =>, true,
-        5 <= 5                  , =>, true,
-        5 <= 4                  , =>, false,
-	truthTable(func{$1 && $2}), =>, [false, false, false, true],
-	truthTable(func{$1 || $2}), =>, [false,  true,  true, true]
-)
-
-var (
-	a = randInt(100)
-	b = randInt(100)
-	c = randInt(100)
-	p = randInt(2) == 0
-	q = randInt(2) == 0
-	r = randInt(2) == 0
 )
 
 test.fact("precedence",
@@ -385,155 +487,59 @@ test.fact("precedence",
 	p || q  str  r , =>, (p || q)  str  r
 )
 
-test.fact("vars",
-	{
-		var (
-			pp = 111
-			qq = 222
-		)
-		pp + qq
-	}, =>, 333,
+test.fact("can destructure",
 
 	{
-		var rr = 111
-		var ss = 222
-		pp + qq
-	}, =>, 333,
+		vec          := [111, 222, 333, 444]
+		[a, b, c, d] := vec
+
+		b
+	}, =>, 222,
 
 	{
-		var tt int    = 111
-		var uu string = "foo"
-		uu  str  tt
-	}, =>, "foo111"
-)
+		vec := [111, 222, 333, 444]
 
-test.fact("for",
-
-	{
-		fib        := [1, 1, 2, 3, 5, 8]
-		fibSquared := for x := lazy fib {
-			x * x
+		func theSecond([a, b, c, d]) {
+			b
 		}
-		fibSquared
-	}, =>, [1, 1, 4, 9, 25, 64],
+
+		theSecond(vec)
+	}, =>, 222,
 
 	{
-		fib        := [1, 1, 2, 3, 5, 8]
-		fibSquared := func(x){ x * x }  map  fib
-		fibSquared
-	}, =>, [1, 1, 4, 9, 25, 64],
+		vec              := [111, 222, 333, 444]
+		[first, rest...] := vec
 
-	withOutStr({
-		fib := [1, 1, 2, 3, 5, 8]
-		for x := lazy fib {
-			print(" ", x)
-		}
-	}), =>, "",
-
-	withOutStr({
-		fib := [1, 1, 2, 3, 5, 8]
-		func(x){ print(" ", x) }  map  fib
-	}), =>, "",
-
-	withOutStr({
-		fib := [1, 1, 2, 3, 5, 8]
-		for x := range fib {
-			print(" ", x)
-		}
-	}), =>, "  1  1  2  3  5  8",
-
-	withOutStr({
-		for x := times 10 {
-			print(" ", x)
-		}
-	}), =>, "  0  1  2  3  4  5  6  7  8  9"
-
-)
-
-
-test.fact("exceptions",
-	{
-		try {
-			throw(new AssertionError("foo"))
-		} catch OutOfMemoryError e {
-			"out of memory"
-		} catch AssertionError e {
-			"assertion failed: "  str  e->getMessage()
-		} finally {
-			"useless"
-		}
-	}, =>, "assertion failed: foo",
+		rest
+	}, =>, [222, 333, 444],
 
 	{
-		mutex     := make(chan, 1)
-		dangerous := new ArrayList()
-		dangerous->add(0)
-		mutex <- true  // initialize mutex
-		// for _ := times 1000 {
-		for count := times 1000 {
-			thread {
-				<-mutex   // grab mutex
-				try {
-					i := dangerous->get(0)
-					dangerous->set(0, i + 1)
-				} finally {
-					mutex <- true   // release mutex
-				}
-			}
-		}
-		Thread::sleep(100)
-		dangerous->get(0)
-	}, =>, 1000
-)
+		dict             := {AAA: 11,  BBB: 22,  CCC: 33,  DDD: 44}
+		{c: CCC, a: AAA} := dict
 
-test.fact("you can transpose matrices",
+		c
+	}, =>, 33,
+
 	{
-		m := [
-			[1, 2, 3],
-			[4, 5, 6]
+		dict := {AAA: 11,  BBB: 22,  CCC: 33,  DDD: 44}
+
+		func extractCCC({c: CCC}) {
+			c
+		}
+
+		extractCCC(dict)
+	}, =>, 33,
+
+	{
+		planets := [
+			{NAME: "Mercury", RADIUS_KM: 2440},
+			{NAME: "Venus",   RADIUS_KM: 6052},
+			{NAME: "Earth",   RADIUS_KM: 6371},
+			{NAME: "Mars",    RADIUS_KM: 3390}
 		]
+		[_, _, {earthRadiusKm: RADIUS_KM}, _] := planets
 
-		matrix.Transpose(m)
-
-	}, =>, [
-		[1, 4],
-		[2, 5],
-		[3, 6]
-	]
+		earthRadiusKm
+	}, =>, 6371
 )
-
-
-test.fact("you can multiply matrices together",
-	{
-		a := [[3, 4]]
-		b := [
-			[5],
-			[6]
-		]
-
-		a  matrix.*  b
-
-	}, =>, [[39]],
-
-	{
-		m := [
-			[1, 2, 3],
-			[4, 5, 6]
-		]
-		mT := [
-			[1, 4],
-			[2, 5],
-			[3, 6]
-		]
-
-		m  matrix.*  mT
-
-	}, =>, [
-		[14, 32],
-		[32, 77]
-	]
-)
-
-
-
 

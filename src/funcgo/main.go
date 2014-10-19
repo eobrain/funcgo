@@ -40,9 +40,9 @@ commandLineOptions := [
 // A version of pprint that preserves type hints.
 // See https://groups.google.com/forum/#!topic/clojure/5LRmPXutah8
 func prettyPrint(obj, writer) {
-  origDispatch := \pprint/*print-pprint-dispatch*\  // */
-  pprint.withPprintDispatch(
-    func(o) {
+	origDispatch := \pprint/*print-pprint-dispatch*\          // */ for emacs
+	pprint.withPprintDispatch(
+		func(o) {
 			if met := meta(o); met {
 				print("^")
 				if count(met) == 1 {
@@ -61,10 +61,10 @@ func prettyPrint(obj, writer) {
 				print(" ")
 				pprint.pprintNewline(FILL)
 			}
-      origDispatch(o)
-    },
-    pprint.pprint(obj, writer)
-  )
+			origDispatch(o)
+		},
+		pprint.pprint(obj, writer)
+	)
 }
 
 func writePrettyTo(cljText, writer BufferedWriter) {
@@ -139,7 +139,7 @@ func compileFile(inFile File, root File, opts) {
 		{
 			fgoText        := slurp(inFile)
 			lines          := count(func{ $1 == '\n' }  filter  fgoText)
-			start          := if suffixExtra == "" {SOURCEFILE} else {NONPKGFILE}
+			start          := if suffixExtra == "" { SOURCEFILE } else { NONPKGFILE }
 			try {
 				beginTime := System::currentTimeMillis()
 				cljText String := core.Parse(

@@ -24,14 +24,20 @@ import (
 	test "midje/sweet"
 )
 
-name := "Eamonn"
-
 test.fact("can concatenate strings",
-	str("Hello ",  name),     =>, "Hello Eamonn"
+	{
+		greeting := "Hello "
+		name := "Eamonn"
+		str(greeting,  name)
+	}, =>, "Hello Eamonn"
 )
 
 test.fact("can use infix when calling two-parameter-function",
-	"Hello "  str  name,      =>, "Hello Eamonn"
+	{
+		greeting := "Hello "
+		name := "Eamonn"
+		greeting  str  name
+	},  =>, "Hello Eamonn"
 )
 ```
 The above slightly longer example is in a file called `larger.go`.
@@ -108,21 +114,21 @@ these forms.
 
 1. `import` (the most common case) for Clojure or Funcgo libraries
 
-   ```go
-   import (
+    ```go
+    import (
            test "midje/sweet"
            fgo "funcgo/core"
            fgoc "funcgo/main"
            "clojure/string"
-   )
-   ...
-   test.fact(...
-   ...
-   fgo.Parse(...
-   ...
-   string.trim(...
+    )
+    ...
+    test.fact(...
+    ...
+    fgo.Parse(...
+    ...
+    string.trim(...
 
-   ```
+    ```
 
     As shown above an `import` statement can import multiple Clojure
     or Funcgo libraries.  It specifies the library as a string of
@@ -216,14 +222,14 @@ set once and never changed.
 ```go
 ...
 {
-	cljText   := core.Parse(inPath, fgoText, EXPR)
+	cljText   := core.Parse(inPath, fgoText)
 	strWriter := new StringWriter()
 	writer    := new BufferedWriter(strWriter)
-	cljText writePrettyTo writer
+	cljText  writePrettyTo  writer
 	strWriter->toString()
 }
 ```
-As shown above, constants are defined using the `:=` operator.  
+As shown above, constants are defined using the `:=` operator.
 
 There can only be a single contiguous group of constant declarations in
 each _block_ of expressions, and they must appear at the top of the
@@ -240,7 +246,7 @@ inside that block.
 		strWriter = new StringWriter()
 		writer = new BufferedWriter(strWriter)
 	)
-	cljText writePrettyTo writer
+	cljText  writePrettyTo  writer
 	strWriter->toString()
 }
 ```
@@ -351,7 +357,7 @@ last expression is returned as the result of the block.
 
 ```go
 		product := {
-			log->info("doing the multiplication")
+			logging.info("doing the multiplication")
 			100 * 100
 		}
 		product
@@ -447,7 +453,7 @@ operator after the Java class name (which you should import using the
 	2 * Double::MAX_VALUE          // => Double::POSITIVE_INFINITY
 	Integer::parseInt("-42")       // => -42
 	Math::round(2.999)             // => 3
-	13 Integer::toString 2         // => "1101"
+	13  Integer::toString  2       // => "1101"
 ```
 
 The first example shows how a static field is uses.  The remaining
@@ -479,7 +485,7 @@ You can avoid mangling by surrounding arbitrary closure code in
 backslashes:
 
 ```go
-        origDispatch := \pprint/*print-pprint-dispatch*\
+	origDispatch := \pprint/*print-pprint-dispatch*\
 ```
 
 The above example uses this escaped identifier syntax to refer to the
@@ -504,9 +510,9 @@ func +(x, y) {
 }
 
 test.fact("Can redefine existing operators",
-	2 ^ 3,         =>, 8.0,
-	10 ^ 2,        =>, 100.0,
-	"foo" + "bar", =>, "foobar"
+	2 ^ 3,          =>, 8.0,
+	10 ^ 2,         =>, 100.0,
+	"foo" + "bar",  =>, "foobar"
 )
 ```
 
@@ -520,12 +526,12 @@ exclude you will get warnings about functions being redefined.
 
 ```go
 func \**\(x, y) {
-    Math::pow(x, y)
+	Math::pow(x, y)
 }
 
 test.fact("Can use new operators",
-     2 \**\ 3,  =>, 8.0,
-    10 \**\ 2,  =>, 100.0
+	 2  \**\  3,      =>, 8.0,
+	10  \**\  2,      =>, 100.0
 )
 ```
 
@@ -552,11 +558,11 @@ func vecSum(a, b) { map(core.+, a, b) }
 func +(m1, m2) { map(vecSum, m1, m2) }
 
 func Transpose(m) {
-	firstColumnT := first map m
+	firstColumnT := first  map  m
 	if colCount(m) == 1 {
 		 [firstColumnT]
 	 } else {
-		 firstColumnT cons Transpose(rest map m)
+		 firstColumnT  cons  Transpose(rest  map  m)
 	 }
 }
 
@@ -644,9 +650,9 @@ Or it can use the grouped version of the syntax as shown
 above.
 
 ```go
-		var pp = 111
-		var qq = 222
-		pp + qq
+		var rr = 111
+		var ss = 222
+		rr + ss
 	=> 333
 ```
 
@@ -667,7 +673,7 @@ If you want you can add type hints as shown above.
 ## If-Else
 
 ```go
-		filename := if isJvm { "main.go" } else { "main.gos" }
+			start          := if suffixExtra == "" { SOURCEFILE } else { NONPKGFILE }
 ```
 The above example shows the if-else expression.
 
@@ -717,6 +723,7 @@ There are three types of `for` expression.
 		fibSquared := for x := lazy fib {
 			x * x
 		}
+
 		fibSquared
 	=> [1, 1, 4, 9, 25, 64]
 ```
@@ -728,6 +735,7 @@ executed for each member of the input sequence.
 ```go
 		fib        := [1, 1, 2, 3, 5, 8]
 		fibSquared := func(x){ x * x }  map  fib
+
 		fibSquared
 	=> [1, 1, 4, 9, 25, 64]
 ```
@@ -775,7 +783,7 @@ its body the number of times specified after `times` as shown above.
 Funcgo supports exceptions in a way similar to Java.
 
 ```go
-		eval := try{
+		eval := try {
 			main := loadString(clj(id))
 			withOutStr(main())
 		} catch Throwable e {
@@ -785,7 +793,7 @@ Funcgo supports exceptions in a way similar to Java.
 
 The above example shows an example of catching an exception.  A
 difference from Java is that try-catch is an expression, thus in the
-above case if the exception is caught the `eval` constant will be set 
+above case if the exception is caught the `eval` constant will be set
 to the value of `str(e)`.
 
 ```go
@@ -948,7 +956,7 @@ ones at the top bind most tightly.
 3. `==` `!=` `<` `>` `<=` `>=`
 2. `&&`
 1. `||`
-0. inline function call
+0. infix function call
 
 ```go
 	^a * b          // => (^a) * b,
@@ -968,6 +976,7 @@ assigning each element to the corresponding constant.
 ```go
 		vec          := [111, 222, 333, 444]
 		[a, b, c, d] := vec
+
 		b
     => 222
 ```
@@ -976,10 +985,11 @@ For example, above we unpack the vector `vec`, so that constant `b`
 ends up with the value `222`.
 
 ```go
-		func second([a, b, c, d]) {
+		func theSecond([a, b, c, d]) {
 			b
 		}
-		second(vec)
+
+		theSecond(vec)
 	=> 222
 ```
 
@@ -989,6 +999,7 @@ function to extract the second element from the vector.
 ```go
 		vec              := [111, 222, 333, 444]
 		[first, rest...] := vec
+
 		rest
 	=> [222, 333, 444]
 ```
@@ -1001,6 +1012,7 @@ example, above `first` gets the the first element in the vector and
 ```go
 		dict             := {AAA: 11,  BBB: 22,  CCC: 33,  DDD: 44}
 		{c: CCC, a: AAA} := dict
+
 		c
 	=> 33
 ```
@@ -1012,6 +1024,7 @@ the left-hand-side each match is specified as _constant_`:` _key_.
 		func extractCCC({c: CCC}) {
 			c
 		}
+
 		extractCCC(dict)
 	=> 33
 ```
@@ -1026,6 +1039,7 @@ Dict destructuring also works in function parameters as shown above.
 			{NAME: "Mars",    RADIUS_KM: 3390}
 		]
 		[_, _, {earthRadiusKm: RADIUS_KM}, _] := planets
+
 		earthRadiusKm
 	=> 6371
 ```
