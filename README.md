@@ -34,10 +34,12 @@ environment is configured correctly.
 
 
 In your favorite text editor, edit the file `project.clj` and
+
 1. insert `[org.eamonn.funcgo/funcgo-lein-plugin "x.x.x"]` in *both* the dependencies section
   *and* the plugins section replacing `x.x.x`
   with the latest version from clojars
   [![Clojars Project](http://clojars.org/org.eamonn.funcgo/funcgo-lein-plugin/latest-version.svg)](http://clojars.org/org.eamonn.funcgo/funcgo-lein-plugin)
+
 2. Remove the `[org.clojure/clojure "1.5.1"]` dependency.
 
 You should end up with something like ...
