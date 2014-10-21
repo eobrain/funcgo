@@ -23,62 +23,26 @@ Follow the [install instructions for Leiningen][lein]
 
 On the command line, type ...
 ```sh
-lein new app hellofuncgo
+lein new appfgo hellofuncgo
 cd hellofuncgo
-lein run
-```
-This should print out `Hello, World!`, showing that your Clojure
-environment is configured correctly.
-
-#### 2. Convert your project into a Funcgo project.
-
-
-In your favorite text editor, edit the file `project.clj` and
-
-1. insert `[org.eamonn.funcgo/funcgo-lein-plugin "x.x.x"]` in *both* the dependencies section
-  *and* the plugins section replacing `x.x.x`
-  with the latest version from clojars
-  [![Clojars Project](http://clojars.org/org.eamonn.funcgo/funcgo-lein-plugin/latest-version.svg)](http://clojars.org/org.eamonn.funcgo/funcgo-lein-plugin)
-
-2. Remove the `[org.clojure/clojure "1.5.1"]` dependency.
-
-You should end up with something like ...
-
-```clj
-(defproject hellofuncgo "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
-  :url "http://example.com/FIXME"
-  :license {:name "Eclipse Public License"
-            :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [ [org.eamonn.funcgo/funcgo-lein-plugin "0.5.1"]]
-  :plugins [ [org.eamonn.funcgo/funcgo-lein-plugin "0.5.1"]]
-  :main ^:skip-aot hellofuncgo.core
-  :target-path "target/%s"
-  :profiles {:uberjar {:aot :all}})
-```
-
-Delete the existing Clojure file ...
-```sh
-rm src/hellofuncgo/core.clj
-```
-
-#### 3. Write Funcgo
-
-Create a new Funcgo file `src/hellofuncgo/core.go` containing ...
-```go
-package core
-
-func _main(args...) {
-	println("Hello, World from Funcgo")
-}
-```
-
-On the command line (in the same directory as the `project.clj`
-file) do ...
-```sh
 lein do fgoc, run
 ```
 This should print out `Hello, World from Funcgo`.
+
+You can also execute the tests ...
+
+```sh
+lein do fgoc, test
+```
+
+#### 2. Write Funcgo
+
+Edit `src/hellofuncgo/core.go` and modify it.
+
+Then again do ...
+```sh
+lein do fgoc, run
+```
 
 Congratulations, you have just written and executed your first
 Funcgo program!
