@@ -129,7 +129,7 @@ from the [Clojure Cookbook][cookbook].
 
         => 3
 ```
-Here we define a function `foo` and then call it.  If you are a Go
+Here we define a function `add` and then call it.  If you are a Go
 programmer this should look familiar. However you might notice that
 the types are missing and that there is no `return` statement.
 
