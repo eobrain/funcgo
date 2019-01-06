@@ -470,10 +470,13 @@ Instead download the `lein` script from the
 [Leiningen web site](http://leiningen.org/#install) and put in your
 PATH.
 
+First clone this repo, and cd into the `funcgo` directory.
+
 To create a new compiler JAR execute ...
 
 ```sh
-lein do fgoc, uberjar
+lein with-profile bootstrap fgoc
+lein uberjar
 ```
 
 ... which will compile the compiler and generate a JAR file

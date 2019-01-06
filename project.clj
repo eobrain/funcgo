@@ -15,5 +15,11 @@
                  [midje "1.6.3"                     :scope "test"]]
   :profiles {
              :dev {:plugins [[lein-midje "3.1.1"]]}
+             :bootstrap {
+               :dependencies [[org.eamonn.funcgo/funcgo-lein-plugin "0.5.1"]]
+               :plugins [[org.eamonn.funcgo/funcgo-lein-plugin "0.5.1"]]
+               :main ^:skip-aot funcgo.main
+               :target-path "target/%s"
+             }
              :uberjar {:aot :all}}
   :main funcgo.main)
