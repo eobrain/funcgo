@@ -485,7 +485,7 @@ lein uberjar
 You can run the unit tests by doing
 
 ```sh
-lein do fgoc, midje
+lein do run test, midje
 ```
 
 ## Thanks
