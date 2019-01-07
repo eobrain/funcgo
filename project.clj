@@ -9,7 +9,7 @@
                  [jline "2.11"]
                  [org.clojure/tools.cli "0.3.1"]
                  [commons-lang/commons-lang "2.6"]
-                 [inflections "0.9.5"               :scope "test"]
+                 [inflections "0.9.5"               :scope "test"  :exclusions [org.clojure/clojure]]
                  [org.clojure/tools.logging "0.3.0" :scope "test"]
                  [clj-logging-config "1.9.12"       :scope "test"]
                  [midje "1.6.3"                     :scope "test"]]
